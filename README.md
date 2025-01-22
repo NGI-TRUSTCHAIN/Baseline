@@ -103,4 +103,6 @@ ORM used is [Prisma](https://www.prisma.io/).
 
 ## Contributions
 
-Comming soon.
+Coming soon.
+
+This work is licensed under the [Apache 2.0 license](./LICENSE.md).
