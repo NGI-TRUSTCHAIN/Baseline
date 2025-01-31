@@ -16,8 +16,10 @@ import { GetBpiAccountByIdQuery } from '../capabilities/getBpiAccountById/getBpi
 import { UpdateBpiAccountCommand } from '../capabilities/updateBpiAccount/updateBpiAccount.command';
 import { CreateBpiAccountDto } from './dtos/request/createBpiAccount.dto';
 import { BpiAccountDto } from './dtos/response/bpiAccount.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('accounts')
+@ApiBearerAuth()
 export class AccountController {
   constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
 

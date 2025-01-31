@@ -18,8 +18,10 @@ import { CreateWorkgroupDto } from './dtos/request/createWorkgroup.dto';
 import { UpdateWorkgroupDto } from './dtos/request/updateWorkgroup.dto';
 import { WorkgroupDto } from './dtos/response/workgroup.dto';
 import { CheckAuthz } from '../../../authz/guards/authz.decorator';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('workgroups')
+@ApiBearerAuth()
 export class WorkgroupController {
   constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
 

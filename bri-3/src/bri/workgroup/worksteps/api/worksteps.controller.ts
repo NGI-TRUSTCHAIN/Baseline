@@ -19,8 +19,10 @@ import { UpdateCircuitInputsSchemaDto } from './dtos/request/updateCircuitInputs
 import { CreateWorkstepDto } from './dtos/request/createWorkstep.dto';
 import { UpdateWorkstepDto } from './dtos/request/updateWorkstep.dto';
 import { WorkstepDto } from './dtos/response/workstep.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('worksteps')
+@ApiBearerAuth()
 export class WorkstepController {
   constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
 
