@@ -16,8 +16,10 @@ import { UpdateTransactionCommand } from '../capabilities/updateTransaction/upda
 import { CreateTransactionDto } from './dtos/request/createTransaction.dto';
 import { UpdateTransactionDto } from './dtos/request/updateTransaction.dto';
 import { TransactionDto } from './dtos/response/transaction.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('transactions')
+@ApiBearerAuth()
 export class TransactionController {
   constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
 

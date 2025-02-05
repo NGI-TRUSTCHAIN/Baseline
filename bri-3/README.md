@@ -67,7 +67,8 @@ $ npm run start:prod
 ## Test
 
 ```bash
-# Manual testing - Export of the up-to-date Postman collection that can be used is located here: ./test/bri.postman_collection.json
+# For manual testing, swagger is running on http://localhost:3000/api
+# To get json format to use tools like postman, checkout http://localhost:3000/api-json 
 
 $ npm run start
 ```

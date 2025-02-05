@@ -17,8 +17,10 @@ import { UpdateWorkflowCommand } from '../capabilities/updateWorkflow/updateWork
 import { CreateWorkflowDto } from './dtos/request/createWorkflow.dto';
 import { UpdateWorkflowDto } from './dtos/request/updateWorkflow.dto';
 import { WorkflowDto } from './dtos/response/workflow.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('workflows')
+@ApiBearerAuth()
 export class WorkflowController {
   constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
 

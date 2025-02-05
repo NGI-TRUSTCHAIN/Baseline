@@ -15,8 +15,10 @@ import { UpdateBpiMessageCommand } from '../capabilities/updateBpiMessage/update
 import { CreateBpiMessageDto } from './dtos/request/createBpiMessage.dto';
 import { UpdateBpiMessageDto } from './dtos/request/updateBpiMessage.dto';
 import { BpiMessageDto } from './dtos/response/bpiMessage.dto';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('messages')
+@ApiBearerAuth()
 export class MessageController {
   constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
 
