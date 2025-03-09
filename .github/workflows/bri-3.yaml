@@ -72,47 +72,47 @@ jobs:
             ${{ runner.os }}-node-
       
       - name: Install dependencies
-        working-directory: examples/bri-3
+        working-directory: bri-3
         run: npm ci
 
       - name: Run build
-        working-directory: examples/bri-3
+        working-directory: bri-3
         run: npm run build
 
       - name: Run prettier
-        working-directory: examples/bri-3
+        working-directory: bri-3
         run: npm run format:check
 
       - name: Run linter
-        working-directory: examples/bri-3
+        working-directory: bri-3
         run: npm run lint:check
 
       - name: Run prisma generate
-        working-directory: examples/bri-3
+        working-directory: bri-3
         run: npm run prisma:generate
 
       - name: Run tests
-        working-directory: examples/bri-3
+        working-directory: bri-3
         run: npm run test
 
       - name: Run prisma migrate
-        working-directory: examples/bri-3
+        working-directory: bri-3
         run: npm run prisma:migrate:dev
 
       - name: Run prisma db seed
-        working-directory: examples/bri-3
+        working-directory: bri-3
         run: npx prisma db seed
       
       - name: Install hardhat dependencies
-        working-directory: examples/bri-3/ccsm
+        working-directory: bri-3/ccsm
         run: npm ci
 
       - name: Run hardhat and deploy contracts
-        working-directory: examples/bri-3/ccsm
+        working-directory: bri-3/ccsm
         run: |
           npx hardhat node &
           npx hardhat run scripts/deploy.ts
 
       - name: Run e2e tests
-        working-directory: examples/bri-3
+        working-directory: bri-3
         run: npm run test:e2e
