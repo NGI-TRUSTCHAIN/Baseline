@@ -12,7 +12,7 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-  .setTitle('BRI-3 example')
+    .setTitle('BRI-3 example')
     .setDescription('The bri-3 API description')
     .setVersion('1.0')
     .addTag('bri-3')
