@@ -1,6 +1,5 @@
 import { F1Field, Scalar } from 'ffjavascript';
 import { wasm as wasm_tester } from 'circom_tester';
-import path from 'path';
 
 const p = Scalar.fromString(
   '21888242871839275222246405745257275088548364400416034343698204186575808495617',
@@ -12,8 +11,9 @@ const WITNESS_PUBLIC_INPUT_A_INDEX = 2;
 
 const loadCircuit = async () => {
   const currentDirectory = process.cwd();
-  const fullPath = path.join(currentDirectory, 'businessLogic.circom');
   console.log(`Current directory: ${currentDirectory}`);
+  const fullPath = `${currentDirectory}/businessLogic.circom`;
+
   console.log(`Loading circuit from: ${fullPath}`);
   try {
     const circuit = await wasm_tester(fullPath);
