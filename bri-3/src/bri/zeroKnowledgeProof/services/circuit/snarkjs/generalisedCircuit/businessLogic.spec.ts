@@ -1,5 +1,6 @@
 import { F1Field, Scalar } from 'ffjavascript';
 import { wasm as wasm_tester } from 'circom_tester';
+import * as path from 'path';
 
 const p = Scalar.fromString(
   '21888242871839275222246405745257275088548364400416034343698204186575808495617',
@@ -10,10 +11,7 @@ const WITNESS_IS_OUTPUT_INDEX = 1;
 const WITNESS_PUBLIC_INPUT_A_INDEX = 2;
 
 const loadCircuit = async () => {
-  const currentDirectory = process.cwd();
-  const fullPath =
-    './src/bri/zeroKnowledgeProof/services/circuit/snarkjs/generalisedCircuit/businessLogic.circom';
-
+  const fullPath = path.join(__dirname, 'businessLogic.circom');
   console.log(`Loading circuit from: ${fullPath}`);
   try {
     const circuit = await wasm_tester(fullPath);
