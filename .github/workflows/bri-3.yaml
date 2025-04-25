@@ -70,10 +70,29 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
-      
+
       - name: Install dependencies
         working-directory: bri-3
-        run: npm ci
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libssl-dev zlib1g-dev
+
+          # Install Rust (required for circom)
+          curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh -s -- -y
+          source $HOME/.cargo/env
+
+          # Install circom
+          git clone https://github.com/iden3/circom.git
+          cd circom
+          cargo build --release
+          sudo cp target/release/circom /usr/local/bin/
+          cd ..
+
+          # Verify circom installation
+          circom --version
+
+          # Install project dependencies using npm ci
+          npm ci
 
       - name: Run build
         working-directory: bri-3
@@ -102,7 +121,7 @@ jobs:
       - name: Run prisma db seed
         working-directory: bri-3
         run: npx prisma db seed
-      
+
       - name: Install hardhat dependencies
         working-directory: bri-3/ccsm
         run: npm ci
