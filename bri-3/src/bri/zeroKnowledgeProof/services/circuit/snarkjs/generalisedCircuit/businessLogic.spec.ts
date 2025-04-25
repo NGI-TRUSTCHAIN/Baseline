@@ -12,7 +12,7 @@ const WITNESS_PUBLIC_INPUT_A_INDEX = 2;
 const loadCircuit = async () => {
   const currentDirectory = process.cwd();
   console.log(`Current directory: ${currentDirectory}`);
-  const fullPath = `${currentDirectory}/businessLogic.circom`;
+  const fullPath = 'businessLogic.circom';
 
   console.log(`Loading circuit from: ${fullPath}`);
   try {
