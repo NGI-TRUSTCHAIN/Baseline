@@ -45,6 +45,8 @@
     "@openzeppelin/contracts": "^5.0.2",
     "@personaelabs/spartan-ecdsa": "^2.1.4",
     "@prisma/client": "^5.2.0",
+    "chai": "^5.2.0",
+    "circom_tester": "^0.0.21",
     "circomlib": "^2.0.5",
     "circomlibjs": "^0.1.7",
     "class-transformer": "^0.5.1",
