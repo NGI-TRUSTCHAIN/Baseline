@@ -10,8 +10,7 @@ const WITNESS_IS_OUTPUT_INDEX = 1;
 const WITNESS_PUBLIC_INPUT_A_INDEX = 2;
 
 const loadCircuit = async () => {
-  const fullPath =
-    'Baseline/bri-3/src/bri/zeroKnowledgeProof/services/circuit/snarkjs/generalisedCircuit/businessLogic.circom';
+  const fullPath = './businessLogic.circom';
   console.log(`Loading circuit from: ${fullPath}`);
   try {
     const circuit = await wasm_tester(fullPath);
