@@ -64,11 +64,10 @@ template BusinessLogic(
             inA <== intermediates[idxA];
         }
 
-        // Use circomlib components for logical operations
-        if (op == 2) { // NOT
-            component notGate = NOT();  // Create NOT gate from circomlib
-            notGate.in <== inA;         // Assign input
-            intermediates[logicOpIdx] <== notGate.out;  // Get the output
+        if (op == 2) { // NOT Gate
+            component notGate = NOT();
+            notGate.in <== inA;        
+            intermediates[logicOpIdx] <== notGate.out;
         } else {
             signal inB;
             if (srcB == 0) {
@@ -77,16 +76,16 @@ template BusinessLogic(
                 inB <== intermediates[idxB];
             }
 
-            if (op == 0) { // AND
-                component andGate = AND();  // Create AND gate from circomlib
-                andGate.a <== inA;           // First input
-                andGate.b <== inB;           // Second input
-                intermediates[logicOpIdx] <== andGate.out;  // Get the output
-            } else if (op == 1) { // OR
-                component orGate = OR();  // Create OR gate from circomlib
-                orGate.a <== inA;          // First input
-                orGate.b <== inB;          // Second input
-                intermediates[logicOpIdx] <== orGate.out;  // Get the output
+            if (op == 0) { // AND Gate
+                component andGate = AND();  
+                andGate.a <== inA;           
+                andGate.b <== inB;           
+                intermediates[logicOpIdx] <== andGate.out;  
+            } else if (op == 1) { // OR Gate
+                component orGate = OR();  
+                orGate.a <== inA;          
+                orGate.b <== inB;          
+                intermediates[logicOpIdx] <== orGate.out;  
             }
         }
     } 
