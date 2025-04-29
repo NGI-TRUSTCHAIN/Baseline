@@ -89,6 +89,9 @@ template BusinessLogic(
             }
         }
     } 
+
+    // Step 3: Final output = last intermediate
+    resultOut <== intermediates[nOps-1];
 }
 
 // Declare your main component
