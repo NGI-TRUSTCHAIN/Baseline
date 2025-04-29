@@ -91,7 +91,8 @@ template BusinessLogic(
     } 
 
     // Step 3: Final output = last intermediate
-    resultOut <== intermediates[nOps-1];
+    var resultIdx = truthTableRows - 1;
+    resultOut <== intermediates[resultIdx];
 }
 
 // Declare your main component
