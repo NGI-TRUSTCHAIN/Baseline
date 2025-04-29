@@ -11,17 +11,19 @@ include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
  * @param nIsEqual - Number of IsEqual operations to perform.
  * @param nLessThan - Number of LessThan operations to perform.
  * @param n - Determines the bit width considered when performing the LessThan operation.
- * @param nOps - Number of types of operations to perform (AND, OR, NOT) when combining outputs of multiple operations.
- * @param truthTable - A table that defining how to combine the outputs of the multiple operations (business logic).
+ * @param truthTableRows - Number of rows in the truth table.
  * @param numInputsPerRow - Number of inputs per row in the inputs array.
+ * @param inputs - A 2D array of inputs, where each row contains the inputs for the operations (isEqual, LessThan, etc).
+ * @param truthTable - A table that defining how to combine the outputs of the multiple operations (business logic).
  * @returns True/False after verifying the business logic.
  */
 template BusinessLogic(
-    nIsEqual, nLessThan, n, nOps, truthTable, numInputsPerRow
+    nIsEqual, nLessThan, n, truthTableRows, numInputsPerRow
 ) {
 
    // Input & final result
     signal input inputs[2][numInputsPerRow];
+    signal input truthTable[truthTableRows][5];
     signal output resultOut;
 
     // Components for operations
@@ -30,7 +32,7 @@ template BusinessLogic(
 
     // Outputs from operations
     signal outputs[nIsEqual + nLessThan];
-    signal intermediates[nOps];
+    signal intermediates[truthTableRows];
 
     // Step 1: Get outputs of IsEqual and LessThan operations
     for (var i = 0; i < nIsEqual; i++) {
@@ -48,13 +50,12 @@ template BusinessLogic(
     }
 
     // Step 2: Flexible logic combining using circomlib gates (AND, OR, NOT)
-    for (var opIdx = 0; opIdx < nOps; opIdx++) {
-        var baseIdx = 5 * opIdx;
-        var op = truthTable[baseIdx];
-        var idxA = truthTable[baseIdx + 1];
-        var srcA = truthTable[baseIdx + 2];
-        var idxB = truthTable[baseIdx + 3];
-        var srcB = truthTable[baseIdx + 4];
+    for (var logicOpIdx = 0; logicOpIdx < truthTableRows; logicOpIdx++) {
+        var op = truthTable[logicOpIdx][0];
+        var idxA = truthTable[logicOpIdx][1];
+        var srcA = truthTable[logicOpIdx][2];
+        var idxB = truthTable[logicOpIdx][3];
+        var srcB = truthTable[logicOpIdx][4];
 
         signal inA;
         if (srcA == 0) {
@@ -67,7 +68,7 @@ template BusinessLogic(
         if (op == 2) { // NOT
             component notGate = NOT();  // Create NOT gate from circomlib
             notGate.in <== inA;         // Assign input
-            intermediates[opIdx] <== notGate.out;  // Get the output
+            intermediates[logicOpIdx] <== notGate.out;  // Get the output
         } else {
             signal inB;
             if (srcB == 0) {
@@ -80,17 +81,17 @@ template BusinessLogic(
                 component andGate = AND();  // Create AND gate from circomlib
                 andGate.a <== inA;           // First input
                 andGate.b <== inB;           // Second input
-                intermediates[opIdx] <== andGate.out;  // Get the output
+                intermediates[logicOpIdx] <== andGate.out;  // Get the output
             } else if (op == 1) { // OR
                 component orGate = OR();  // Create OR gate from circomlib
                 orGate.a <== inA;          // First input
                 orGate.b <== inB;          // Second input
-                intermediates[opIdx] <== orGate.out;  // Get the output
+                intermediates[logicOpIdx] <== orGate.out;  // Get the output
             }
         }
     } 
 }
 
 // Declare your main component
-component main = BusinessLogic(nIsEqual, nLessThan, n, nOps, truthTable, numInputsPerRow);
+component main = BusinessLogic(nIsEqual, nLessThan, n, truthTableRows, numInputsPerRow);
 
