@@ -2,6 +2,10 @@ import { F1Field, Scalar } from 'ffjavascript';
 import { wasm as wasm_tester } from 'circom_tester';
 import * as path from 'path';
 
+// This is the prime field used in the circuit
+// The prime field is defined by the following equation:
+// p = 2^255 - 19
+// The prime field is used to define the elliptic curve used in the circuit
 const p = Scalar.fromString(
   '21888242871839275222246405745257275088548364400416034343698204186575808495617',
 );
@@ -10,7 +14,7 @@ const Fr = new F1Field(p);
 const WITNESS_IS_OUTPUT_INDEX = 1;
 const WITNESS_PUBLIC_INPUT_A_INDEX = 2;
 
-const loadCircuit = async () => {
+const loadBusinessLogicCircuit = async () => {
   const fullPath = path.join(__dirname, 'businessLogic.circom');
   console.log(`Loading circuit from: ${fullPath}`);
   try {
@@ -23,6 +27,7 @@ const loadCircuit = async () => {
   }
 };
 
+// This function is used to convert a number to a field element
 expect.extend({
   toEqualInFr(received: unknown, expected: unknown) {
     const pass = Fr.eq(
@@ -59,7 +64,7 @@ describe('BusinessLogic Circuit Test', () => {
   let circuit: any;
 
   beforeAll(async () => {
-    circuit = await loadCircuit();
+    circuit = await loadBusinessLogicCircuit();
   });
 
   it('Should output 1 when a == b with 1 isEqual check and 0 lessThan checks', async () => {
