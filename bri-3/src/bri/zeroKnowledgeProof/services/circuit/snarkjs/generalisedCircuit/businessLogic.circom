@@ -7,7 +7,7 @@ include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
  * This circuit runs business logic by combining multiple operations 
  * (equality, lessThan, greaterThan, range check, membership check, 
  * hash verification, merkle proof verification, signature verification, etc) using
- * logic defined in a truth table (AND, OR, NOT, etc.).
+ * operations defined in a truth table (AND, OR, NOT, etc.).
  * @param nIsEqual - Number of IsEqual operations to perform.
  * @param nLessThan - Number of LessThan operations to perform.
  * @param n - Determines the bit width considered when performing the LessThan operation.
@@ -18,12 +18,11 @@ include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
  * @returns True/False after verifying the business logic.
  */
 template BusinessLogic(
-    nIsEqual, nLessThan, n, truthTableRows, numInputsPerRow
-) {
+    nIsEqual, nLessThan, n, nOps, truthTable, numInputsPerRow
+){
 
    // Input & final result
     signal input inputs[2][numInputsPerRow];
-    signal input truthTable[truthTableRows][5];
     signal output resultOut;
 
     // Components for operations
@@ -32,7 +31,7 @@ template BusinessLogic(
 
     // Outputs from operations
     signal outputs[nIsEqual + nLessThan];
-    signal intermediates[truthTableRows];
+    signal intermediates[nOps];
 
     // Step 1: Get outputs of IsEqual and LessThan operations
     for (var i = 0; i < nIsEqual; i++) {
@@ -50,51 +49,48 @@ template BusinessLogic(
     }
 
     // Step 2: Flexible logic combining using circomlib gates (AND, OR, NOT)
-    for (var logicOpIdx = 0; logicOpIdx < truthTableRows; logicOpIdx++) {
-        var op = truthTable[logicOpIdx][0];
-        var idxA = truthTable[logicOpIdx][1];
-        var srcA = truthTable[logicOpIdx][2];
-        var idxB = truthTable[logicOpIdx][3];
-        var srcB = truthTable[logicOpIdx][4];
+    var inA;
+    var inB;
 
-        signal inA;
-        if (srcA == 0) {
-            inA <== outputs[idxA];
+    for (var opIdx = 0; opIdx < nOps; opIdx++) {
+        var baseIdx = 5 * opIdx;
+        var op = truthTable[baseIdx];
+        var idxA = truthTable[baseIdx + 1];
+        var srcA = truthTable[baseIdx + 2];
+        var idxB = truthTable[baseIdx + 3];
+        var srcB = truthTable[baseIdx + 4];
+
+        inA = srcA == 0 ? outputs[idxA] : intermediates[idxA];
+
+        if (op == 2) { // NOT
+            intermediates[opIdx] <== 1 - inA;
         } else {
-            inA <== intermediates[idxA];
-        }
+            inB = srcB == 0 ? outputs[idxB] : intermediates[idxB];
 
-        if (op == 2) { // NOT Gate
-            component notGate = NOT();
-            notGate.in <== inA;        
-            intermediates[logicOpIdx] <== notGate.out;
-        } else {
-            signal inB;
-            if (srcB == 0) {
-                inB <== outputs[idxB];
-            } else {
-                inB <== intermediates[idxB];
-            }
-
-            if (op == 0) { // AND Gate
-                component andGate = AND();  
-                andGate.a <== inA;           
-                andGate.b <== inB;           
-                intermediates[logicOpIdx] <== andGate.out;  
-            } else if (op == 1) { // OR Gate
-                component orGate = OR();  
-                orGate.a <== inA;          
-                orGate.b <== inB;          
-                intermediates[logicOpIdx] <== orGate.out;  
+            if (op == 0) { // AND
+                intermediates[opIdx] <== inA * inB;
+            } else if (op == 1) { // OR
+                intermediates[opIdx] <== inA + inB - inA * inB;
             }
         }
-    } 
+    }
 
     // Step 3: Final output = last intermediate
-    var resultIdx = truthTableRows - 1;
-    resultOut <== intermediates[resultIdx];
+    resultOut <== intermediates[nOps-1];
 }
 
 // Declare your main component
-component main = BusinessLogic(nIsEqual, nLessThan, n, truthTableRows, numInputsPerRow);
+component main = BusinessLogic(
+    2,       // nIsEqual: Number of IsEqual operations (a == b, c == d)
+    1,       // nLessThan: Number of LessThan operations (e < f)
+    32,      // n: Bit width for LessThan comparisons
+    3,       // nOps: Number of logic operations (OR, AND)
+    [
+        1, 0, 0, 1, 0,  // intermediate[0] = (outputs[0] OR outputs[1]) - (a == b OR c == d)
+        0, 0, 1, 2, 0,  // intermediate[1] = (intermediate[0] AND outputs[2]) - ((a == b OR c == d) AND (e < f))
+        1, 1, 1, 0, 0   // intermediate[2] = (intermediate[1] OR constant 0) - No effect (leaves intermediate[1] unchanged)
+    ],
+    4        // numInputsPerRow: Inputs per sub-array in inputs[2][]
+);
+
 
