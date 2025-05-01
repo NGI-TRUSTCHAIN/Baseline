@@ -66,64 +66,42 @@ describe('BusinessLogic Circuit Test', () => {
   beforeAll(async () => {
     circuit = await loadBusinessLogicCircuit();
   });
+  it('Should output 1 when (a == b OR c == d) AND (e < f)', async () => {
+    const nIsEqual = 2;
+    const nLessThan = 1;
+    const n = 8; // Bit width for LessThan
+    const truthTableRows = 3;
+    const numInputsPerRow = 6; // For 2 isEqual (2*2) and 1 lessThan (1*2)
 
-  it('Should output 1 when a == b with 1 isEqual check and 0 lessThan checks', async () => {
-    //checkSelector = 1 (isEqual)
-    // inputs[0] = [a, b] for isEqual
-    // inputs[1] = [a, b] for lessThan
     const inputs = {
       inputs: [
-        [50, 50],
-        [100, 200],
+        [10, 10, 20, 30, 5, 10], // [a, b, c, d] for isEqual, [e, f] for lessThan
+        [5, 10], // These inputs are not directly used in this test case's logic but are required by the circuit structure
       ],
-      checkSelector: 1,
+      truthTable: [
+        [0, 0, 0, 1, 0], // intermediate[0] = (outputs[0] AND outputs[1]) - Incorrect logic for OR
+        [1, 0, 0, 1, 0], // intermediate[1] = (outputs[0] OR outputs[1])
+        [0, 1, 1, 2, 0], // intermediate[2] = (intermediates[1] AND outputs[2])
+      ],
     };
 
-    // Expected output is 1(true) for a == b (50 == 50)
+    // Expected output is 1 because (10 == 10 OR 20 == 30(false)) AND (5 < 10) => (true OR false) AND true => true AND true => 1
     const expectedOutput = 1;
 
-    const witness = await circuit.calculateWitness(inputs, true);
+    const witness = await circuit.calculateWitness(
+      {
+        nIsEqual: nIsEqual,
+        nLessThan: nLessThan,
+        n: n,
+        truthTableRows: truthTableRows,
+        numInputsPerRow: numInputsPerRow,
+        inputs: inputs.inputs,
+        truthTable: inputs.truthTable,
+      },
+      true,
+    );
     await circuit.checkConstraints(witness);
 
-    expect(witness[WITNESS_PUBLIC_INPUT_A_INDEX + 0]).toEqualInFr(
-      inputs.inputs[0][0],
-    );
-    expect(witness[WITNESS_PUBLIC_INPUT_A_INDEX + 1]).toEqualInFr(
-      inputs.inputs[0][1],
-    );
-    expect(witness[WITNESS_PUBLIC_INPUT_A_INDEX + 4]).toEqualInFr(
-      inputs.checkSelector,
-    );
-    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  });
-
-  it('Should output 1 when a == b with 1 isEqual check and 0 lessThan checks', async () => {
-    //checkSelector = 0 (isLessThan)
-    // inputs[0] = [a, b] for isEqual
-    // inputs[1] = [a, b] for lessThan
-    const inputs = {
-      inputs: [
-        [50, 50],
-        [100, 200],
-      ],
-      checkSelector: 0,
-    };
-
-    // Expected output is 1(true) for a < b (100 < 200)
-    const expectedOutput = 1;
-
-    const witness = await circuit.calculateWitness(inputs, true);
-    await circuit.checkConstraints(witness);
-
-    expect(witness[WITNESS_PUBLIC_INPUT_A_INDEX + 0]).toEqualInFr(
-      inputs.inputs[0][0],
-    );
-    expect(witness[WITNESS_PUBLIC_INPUT_A_INDEX + 1]).toEqualInFr(
-      inputs.inputs[0][1],
-    );
-    expect(witness[WITNESS_PUBLIC_INPUT_A_INDEX + 4]).toEqualInFr(
-      inputs.checkSelector,
-    );
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
 });
