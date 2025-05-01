@@ -67,21 +67,10 @@ describe('BusinessLogic Circuit Test', () => {
     circuit = await loadBusinessLogicCircuit();
   });
   it('Should output 1 when (a == b OR c == d) AND (e < f)', async () => {
-    const nIsEqual = 2;
-    const nLessThan = 1;
-    const n = 8; // Bit width for LessThan
-    const truthTableRows = 3;
-    const numInputsPerRow = 6; // For 2 isEqual (2*2) and 1 lessThan (1*2)
-
     const inputs = {
       inputs: [
-        [10, 10, 20, 30, 5, 10], // [a, b, c, d] for isEqual, [e, f] for lessThan
-        [5, 10], // These inputs are not directly used in this test case's logic but are required by the circuit structure
-      ],
-      truthTable: [
-        [0, 0, 0, 1, 0], // intermediate[0] = (outputs[0] AND outputs[1]) - Incorrect logic for OR
-        [1, 0, 0, 1, 0], // intermediate[1] = (outputs[0] OR outputs[1])
-        [0, 1, 1, 2, 0], // intermediate[2] = (intermediates[1] AND outputs[2])
+        [10, 11, 6, 6], // a == b, c == d
+        [5, 10, 0, 0], // e < f, and dummy values for extra inputs
       ],
     };
 
@@ -90,13 +79,7 @@ describe('BusinessLogic Circuit Test', () => {
 
     const witness = await circuit.calculateWitness(
       {
-        nIsEqual: nIsEqual,
-        nLessThan: nLessThan,
-        n: n,
-        truthTableRows: truthTableRows,
-        numInputsPerRow: numInputsPerRow,
         inputs: inputs.inputs,
-        truthTable: inputs.truthTable,
       },
       true,
     );
