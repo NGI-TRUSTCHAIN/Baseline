@@ -7,7 +7,7 @@ include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
  * This circuit runs business logic by combining multiple operations 
  * (equality, lessThan, greaterThan, range check, membership check, 
  * hash verification, merkle proof verification, signature verification, etc) using
- * operations defined in a truth table (AND, OR, NOT, etc.).
+ * logic defined in a truth table (AND, OR, NOT, etc.).
  * @param nIsEqual - Number of IsEqual operations to perform.
  * @param nLessThan - Number of LessThan operations to perform.
  * @param n - Determines the bit width considered when performing the LessThan operation.
