@@ -7,14 +7,27 @@ include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
  * This circuit runs business logic by combining multiple operations 
  * (equality, lessThan, greaterThan, range check, membership check, 
  * hash verification, merkle proof verification, signature verification, etc) using
- * operations defined in a truth table (AND, OR, NOT, etc.).
- * @param nIsEqual - Number of IsEqual operations to perform.
- * @param nLessThan - Number of LessThan operations to perform.
+ * logic gates defined in a truth table (AND, OR, NOT, etc.).
+ * 
+ * @param nIsEqual - Number of IsEqual operations.
+ * @param nLessThan - Number of LessThan operations.
  * @param n - Determines the bit width considered when performing the LessThan operation.
- * @param truthTableRows - Number of rows in the truth table.
+ * @param nOps - Number of logic gate operations to perform (AND, OR, NOT).
+ * @param truthTable - Defines sequence and inputs of logic gates for combining results of business logic operations (equality, lessThan, etc.).
+ * Each row in the truth table contains:
+ * 1. The logic gate to use (0 = AND, 1 = OR, 2 = NOT).
+ * 2. The index of the first input to use.
+ * 3. The source of the first input (0 for output, 1 for intermediate).
+ * 4. The index of the second input to use.
+ * 5. The source of the second input (0 for output, 1 for intermediate).
  * @param numInputsPerRow - Number of inputs per row in the inputs array.
- * @param inputs - A 2D array of inputs, where each row contains the inputs for the operations (isEqual, LessThan, etc).
- * @param truthTable - A table that defining how to combine the outputs of the multiple operations (business logic).
+ * 
+ * 
+ * @param inputs - A 2D array of inputs, where each row contains the inputs for the business logic operations (isEqual, LessThan, etc).
+ * The first row contains the inputs for the IsEqual operations, and the second row contains the inputs for the LessThan operations.
+ *
+ *
+ *
  * @returns True/False after verifying the business logic.
  */
 template BusinessLogic(
