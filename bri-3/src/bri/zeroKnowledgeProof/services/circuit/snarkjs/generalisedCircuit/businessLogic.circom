@@ -3,6 +3,13 @@ include "../../../../../../../node_modules/circomlib/circuits/comparators.circom
 include "../../../../../../../node_modules/circomlib/circuits/mux1.circom";
 include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
 
+//TODO: Issue #29
+//TODO: Issue #30
+//TODO: Issue #31
+//TODO: Issue #32
+//TODO: Issue #33
+//TODO: Issue #34
+
 /**
  * This circuit runs business logic by combining multiple operations 
  * (equality, lessThan, greaterThan, range check, membership check, 
