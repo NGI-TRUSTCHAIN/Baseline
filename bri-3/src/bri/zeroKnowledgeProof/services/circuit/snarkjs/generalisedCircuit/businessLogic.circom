@@ -97,11 +97,10 @@ component main = BusinessLogic(
     2,       // nIsEqual: Number of IsEqual operations (a == b, c == d)
     1,       // nLessThan: Number of LessThan operations (e < f)
     32,      // n: Bit width for LessThan comparisons
-    3,       // nOps: Number of logic operations (OR, AND)
+    2,       // nOps: Number of logic operations (OR, AND)
     [
-        1, 0, 0, 1, 0,  // intermediate[0] = (outputs[0] OR outputs[1]) - (a == b OR c == d)
-        0, 0, 1, 2, 0,  // intermediate[1] = (intermediate[0] AND outputs[2]) - ((a == b OR c == d) AND (e < f))
-        1, 1, 1, 0, 0   // intermediate[2] = (intermediate[1] OR constant 0) - No effect (leaves intermediate[1] unchanged)
+        1, 0, 0, 1, 0,  // intermediate[0] = (outputs[0] OR outputs[1])
+        0, 0, 1, 2, 0   // intermediate[1] = intermediate[0] AND outputs[2]
     ],
     4        // numInputsPerRow: Inputs per sub-array in inputs[2][]
 );
