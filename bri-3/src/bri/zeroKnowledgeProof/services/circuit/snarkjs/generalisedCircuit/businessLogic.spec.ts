@@ -58,7 +58,7 @@ declare global {
   }
 }
 
-describe('BusinessLogic Circuit Test', () => {
+describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<f)', () => {
   jest.setTimeout(100000);
 
   let circuit: any;
@@ -66,16 +66,121 @@ describe('BusinessLogic Circuit Test', () => {
   beforeAll(async () => {
     circuit = await loadBusinessLogicCircuit();
   });
-  it('Should output 1 when (a == b OR c == d) AND (e < f)', async () => {
+  it('Should output 1 when (true OR true) AND (true)', async () => {
     const inputs = {
       inputs: [
-        [10, 11, 6, 6], // a == b, c == d
-        [5, 10, 0, 0], // e < f, and dummy values for extra inputs
+        [10, 10, 20, 20], // a == b (true), c == d (true)
+        [3, 10, 0, 0], // e < f (true), dummy data to fill the circuit inputs
       ],
     };
 
-    // Expected output is 1 because (10 == 10 OR 20 == 30(false)) AND (5 < 10) => (true OR false) AND true => true AND true => 1
+    // Expected output is 1(true)
     const expectedOutput = 1;
+
+    const witness = await circuit.calculateWitness(
+      {
+        inputs: inputs.inputs,
+      },
+      true,
+    );
+    await circuit.checkConstraints(witness);
+
+    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  });
+  it('Should output 1 when (false OR true) AND (true)', async () => {
+    const inputs = {
+      inputs: [
+        [10, 50, 20, 20], // a == b (false), c == d (true)
+        [3, 10, 0, 0], // e < f (true), dummy data to fill the circuit inputs
+      ],
+    };
+
+    // Expected output is 1(true)
+    const expectedOutput = 1;
+
+    const witness = await circuit.calculateWitness(
+      {
+        inputs: inputs.inputs,
+      },
+      true,
+    );
+    await circuit.checkConstraints(witness);
+
+    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  });
+  it('Should output 1 when (true OR false) AND (true)', async () => {
+    const inputs = {
+      inputs: [
+        [10, 50, 20, 20], // a == b (true), c == d (false)
+        [3, 10, 0, 0], // e < f (true), dummy data to fill the circuit inputs
+      ],
+    };
+
+    // Expected output is 1(true)
+    const expectedOutput = 1;
+
+    const witness = await circuit.calculateWitness(
+      {
+        inputs: inputs.inputs,
+      },
+      true,
+    );
+    await circuit.checkConstraints(witness);
+
+    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  });
+  it('Should output 0 when (false OR false) AND (true)', async () => {
+    const inputs = {
+      inputs: [
+        [10, 40, 50, 20], // a == b (false), c == d (false)
+        [3, 10, 0, 0], // // e < f (true), dummy data to fill the circuit inputs
+      ],
+    };
+
+    // Expected output is 0(false)
+    const expectedOutput = 0;
+
+    const witness = await circuit.calculateWitness(
+      {
+        inputs: inputs.inputs,
+      },
+      true,
+    );
+    await circuit.checkConstraints(witness);
+
+    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  });
+  it('Should output 0 when (false OR true) AND (false)', async () => {
+    const inputs = {
+      inputs: [
+        [10, 40, 70, 70], // a == b (false), c == d (true)
+        [10, 0, 0, 0], // // e < f (false), dummy data to fill the circuit inputs
+      ],
+    };
+
+    // Expected output is 0(false)
+    const expectedOutput = 0;
+
+    const witness = await circuit.calculateWitness(
+      {
+        inputs: inputs.inputs,
+      },
+      true,
+    );
+    await circuit.checkConstraints(witness);
+
+    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  });
+  it('Should output 0 when (false OR false) AND (false)', async () => {
+    const inputs = {
+      inputs: [
+        [10, 40, 30, 70], // a == b (false), c == d (false)
+        [10, 0, 0, 0], // // e < f (false), dummy data to fill the circuit inputs
+      ],
+    };
+
+    // Expected output is 0(false)
+    const expectedOutput = 0;
 
     const witness = await circuit.calculateWitness(
       {
