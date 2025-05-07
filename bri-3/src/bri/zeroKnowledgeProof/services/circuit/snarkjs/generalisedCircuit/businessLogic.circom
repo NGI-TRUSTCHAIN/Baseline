@@ -16,8 +16,7 @@ include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
  * hash verification, merkle proof verification, signature verification, etc) using
  * logic gates defined in a truth table (AND, OR, NOT, etc.).
  * 
- * @param nIsEqual - Number of IsEqual operations.
- * @param nLessThan - Number of LessThan operations.
+ * @param ops - Array of business logic operations to perform. ops[0] = Number of IsEqual operations, ops[1] = Number of LessThan operations.
  * @param n - Determines the bit width considered when performing the LessThan operation.
  * @param nOps - Number of logic gate operations to perform (AND, OR, NOT).
  * @param truthTable - Defines sequence and inputs of logic gates for combining results of business logic operations (equality, lessThan, etc.).
@@ -38,7 +37,7 @@ include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
  * @returns True/False after verifying the business logic.
  */
 template BusinessLogic(
-    nIsEqual, nLessThan, n, nOps, truthTable, numInputsPerRow
+    ops, n, nOps, truthTable, numInputsPerRow
 ){
 
    // Input & final result
@@ -46,26 +45,26 @@ template BusinessLogic(
     signal output resultOut;
 
     // Components for operations
-    component isEquals[nIsEqual];
-    component lessThans[nLessThan];
+    component isEquals[ops[0]];
+    component lessThans[ops[1]];
 
     // Outputs from operations
-    signal outputs[nIsEqual + nLessThan];
+    signal outputs[ops[0] + ops[1]];
     signal intermediates[nOps];
 
     // Step 1: Get outputs of IsEqual and LessThan operations
-    for (var i = 0; i < nIsEqual; i++) {
+    for (var i = 0; i < ops[0]; i++) {
         isEquals[i] = IsEqual();
         isEquals[i].in[0] <== inputs[0][2*i];
         isEquals[i].in[1] <== inputs[0][2*i+1];
         outputs[i] <== isEquals[i].out;
     }
 
-    for (var j = 0; j < nLessThan; j++) {
+    for (var j = 0; j < ops[1]; j++) {
         lessThans[j] = LessThan(n);
         lessThans[j].in[0] <== inputs[1][2*j];
         lessThans[j].in[1] <== inputs[1][2*j+1];
-        outputs[nIsEqual + j] <== lessThans[j].out;
+        outputs[ops[0] + j] <== lessThans[j].out;
     }
 
     // Step 2: Flexible logic combining using circomlib gates (AND, OR, NOT)
@@ -101,8 +100,8 @@ template BusinessLogic(
 
 // Declare your main component
 component main = BusinessLogic(
-    2,       // nIsEqual: Number of IsEqual operations (a == b, c == d)
-    1,       // nLessThan: Number of LessThan operations (e < f)
+    [2,       // nIsEqual: Number of IsEqual operations (a == b, c == d)
+    1],       // nLessThan: Number of LessThan operations (e < f)
     32,      // n: Bit width for LessThan comparisons
     2,       // nOps: Number of logic operations (OR, AND)
     [
