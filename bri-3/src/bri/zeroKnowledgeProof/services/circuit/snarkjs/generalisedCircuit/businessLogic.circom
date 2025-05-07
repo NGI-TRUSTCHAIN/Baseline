@@ -2,7 +2,7 @@ pragma circom 2.1.5;
 include "../../../../../../../node_modules/circomlib/circuits/comparators.circom";
 include "../../../../../../../node_modules/circomlib/circuits/mux1.circom";
 include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
-include "../utils/rangeCheck.circom"
+include "../utils/rangeCheck.circom";
 
 //TODO: Issue #29
 //TODO: Issue #30
@@ -47,7 +47,7 @@ template BusinessLogic(
 
     // Components for operations
     component isEquals[ops[0]];
-    component RangeChecks[ops[1]];
+    component rangeChecks[ops[1]];
 
     // Outputs from operations
     signal outputs[ops[0] + ops[1]];
@@ -111,7 +111,7 @@ component main = BusinessLogic(
         1, 0, 0, 1, 0,  // OR: outputs[0] OR outputs[1]
         0, 0, 1, 2, 0   // AND: intermediate[0] AND outputs[2]
     ],
-    6        // numInputsPerRow: Inputs per sub-array in inputs[2][]
+    4        // numInputsPerRow: Inputs per sub-array in inputs[2][]
 );
 
 

@@ -58,7 +58,7 @@ declare global {
   }
 }
 
-describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<f)', () => {
+describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<=f<=g)', () => {
   jest.setTimeout(100000);
 
   let circuit: any;
@@ -69,8 +69,8 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<f)', () => {
   it('Should output 1 when (true OR true) AND (true)', async () => {
     const inputs = {
       inputs: [
-        [10, 10, 20, 20], // a == b (true), c == d (true)
-        [3, 10, 0, 0], // e < f (true), dummy data to fill the circuit inputs
+        [10, 10, 20, 20], // IsEqual: a==b (true), c==d (true)
+        [10, 3, 20, 0], // RangeCheck: e ≤ f ≤ g → 3 ≤ 10 ≤ 20 (true), dummy data to fill the circuit inputs
       ],
     };
 
@@ -90,8 +90,8 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<f)', () => {
   it('Should output 1 when (false OR true) AND (true)', async () => {
     const inputs = {
       inputs: [
-        [10, 50, 20, 20], // a == b (false), c == d (true)
-        [3, 10, 0, 0], // e < f (true), dummy data to fill the circuit inputs
+        [10, 50, 20, 20], // IsEqual: a == b (false), c == d (true)
+        [10, 3, 20, 0], // RangeCheck: e ≤ f ≤ g → 3 ≤ 10 ≤ 20 (true), dummy data to fill the circuit inputs
       ],
     };
 
@@ -111,8 +111,8 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<f)', () => {
   it('Should output 1 when (true OR false) AND (true)', async () => {
     const inputs = {
       inputs: [
-        [10, 50, 20, 20], // a == b (true), c == d (false)
-        [3, 10, 0, 0], // e < f (true), dummy data to fill the circuit inputs
+        [10, 10, 20, 50], // IsEqual: a == b (true), c == d (false)
+        [10, 3, 20, 0], // RangeCheck: e ≤ f ≤ g → 3 ≤ 10 ≤ 20 (true), dummy data to fill the circuit inputs
       ],
     };
 
@@ -132,8 +132,8 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<f)', () => {
   it('Should output 0 when (false OR false) AND (true)', async () => {
     const inputs = {
       inputs: [
-        [10, 40, 50, 20], // a == b (false), c == d (false)
-        [3, 10, 0, 0], // // e < f (true), dummy data to fill the circuit inputs
+        [10, 40, 50, 20], // IsEqual: a == b (false), c == d (false)
+        [10, 3, 20, 0], // RangeCheck: e ≤ f ≤ g → 3 ≤ 10 ≤ 20 (true), dummy data to fill the circuit inputs
       ],
     };
 
@@ -153,8 +153,8 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<f)', () => {
   it('Should output 0 when (false OR true) AND (false)', async () => {
     const inputs = {
       inputs: [
-        [10, 40, 70, 70], // a == b (false), c == d (true)
-        [10, 0, 0, 0], // // e < f (false), dummy data to fill the circuit inputs
+        [10, 40, 70, 70], // IsEqual: a == b (false), c == d (true)
+        [30, 3, 20, 0], // RangeCheck: e ≤ f ≤ g (false), dummy data to fill the circuit inputs
       ],
     };
 
@@ -175,7 +175,7 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<f)', () => {
     const inputs = {
       inputs: [
         [10, 40, 30, 70], // a == b (false), c == d (false)
-        [10, 0, 0, 0], // // e < f (false), dummy data to fill the circuit inputs
+        [30, 3, 20, 0], // RangeCheck: e ≤ f ≤ g (false), dummy data to fill the circuit inputs
       ],
     };
 

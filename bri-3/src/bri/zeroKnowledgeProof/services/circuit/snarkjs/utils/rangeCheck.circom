@@ -1,6 +1,6 @@
 pragma circom 2.1.5;
 
-include "circomlib/circuits/comparators.circom";
+include "../../../../../../../node_modules/circomlib/circuits/comparators.circom";
 
 template RangeCheck(n) {
     signal input x;
@@ -27,5 +27,3 @@ template RangeCheck(n) {
     isInRange <== gteMin.out * lteMax.out;
 
 }
-
-component main = RangeCheck(32);
