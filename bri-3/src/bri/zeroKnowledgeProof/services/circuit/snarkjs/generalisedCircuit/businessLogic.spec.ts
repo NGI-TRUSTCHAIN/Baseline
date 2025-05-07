@@ -154,7 +154,7 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<=f<=g)', () => {
     const inputs = {
       inputs: [
         [10, 40, 70, 70], // IsEqual: a == b (false), c == d (true)
-        [30, 3, 20, 0], // RangeCheck: e ≤ f ≤ g (false), dummy data to fill the circuit inputs
+        [30, 3, 20, 0], // RangeCheck: e ≤ f ≤ g → 3 ≤ 30 ≤ 20 (false), dummy data to fill the circuit inputs
       ],
     };
 
@@ -175,7 +175,7 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<=f<=g)', () => {
     const inputs = {
       inputs: [
         [10, 40, 30, 70], // a == b (false), c == d (false)
-        [30, 3, 20, 0], // RangeCheck: e ≤ f ≤ g (false), dummy data to fill the circuit inputs
+        [30, 3, 20, 0], // RangeCheck: e ≤ f ≤ g → 3 ≤ 30 ≤ 20 (false), dummy data to fill the circuit inputs
       ],
     };
 
