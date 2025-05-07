@@ -18,7 +18,7 @@ include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
  * 
  * @param ops - Array of business logic operations to perform. ops[0] = Number of IsEqual operations, ops[1] = Number of LessThan operations.
  * @param n - Determines the bit width considered when performing the LessThan operation.
- * @param nOps - Number of logic gate operations to perform (AND, OR, NOT).
+ * @param nLogicGates - Number of logic gate operations to perform (AND, OR, NOT).
  * @param truthTable - Defines sequence and inputs of logic gates for combining results of business logic operations (equality, lessThan, etc.).
  * Each row in the truth table contains:
  * 1. The logic gate to use (0 = AND, 1 = OR, 2 = NOT).
@@ -37,7 +37,7 @@ include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
  * @returns True/False after verifying the business logic.
  */
 template BusinessLogic(
-    ops, n, nOps, truthTable, numInputsPerRow
+    ops, n, nLogicGates, truthTable, numInputsPerRow
 ){
 
    // Input & final result
@@ -50,7 +50,7 @@ template BusinessLogic(
 
     // Outputs from operations
     signal outputs[ops[0] + ops[1]];
-    signal intermediates[nOps];
+    signal intermediates[nLogicGates];
 
     // Step 1: Get outputs of IsEqual and LessThan operations
     for (var i = 0; i < ops[0]; i++) {
@@ -71,7 +71,7 @@ template BusinessLogic(
     var inA;
     var inB;
 
-    for (var opIdx = 0; opIdx < nOps; opIdx++) {
+    for (var opIdx = 0; opIdx < nLogicGates; opIdx++) {
         var baseIdx = 5 * opIdx;
         var op = truthTable[baseIdx];
         var idxA = truthTable[baseIdx + 1];
@@ -95,7 +95,7 @@ template BusinessLogic(
     }
 
     // Step 3: Final output = last intermediate
-    resultOut <== intermediates[nOps-1];
+    resultOut <== intermediates[nLogicGates-1];
 }
 
 // Declare your main component
@@ -103,7 +103,7 @@ component main = BusinessLogic(
     [2,       // nIsEqual: Number of IsEqual operations (a == b, c == d)
     1],       // nLessThan: Number of LessThan operations (e < f)
     32,      // n: Bit width for LessThan comparisons
-    2,       // nOps: Number of logic operations (OR, AND)
+    2,       // nLogicGates: Number of logic operations (OR, AND)
     [
         1, 0, 0, 1, 0,  // intermediate[0] = (outputs[0] OR outputs[1])
         0, 0, 1, 2, 0   // intermediate[1] = intermediate[0] AND outputs[2]
