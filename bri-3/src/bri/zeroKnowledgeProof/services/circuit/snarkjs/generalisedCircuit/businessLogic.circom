@@ -2,6 +2,7 @@ pragma circom 2.1.5;
 include "../../../../../../../node_modules/circomlib/circuits/comparators.circom";
 include "../../../../../../../node_modules/circomlib/circuits/mux1.circom";
 include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
+include "../utils/rangeCheck.circom"
 
 //TODO: Issue #29
 //TODO: Issue #30
@@ -16,7 +17,7 @@ include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
  * hash verification, merkle proof verification, signature verification, etc) using
  * logic gates defined in a truth table (AND, OR, NOT, etc.).
  * 
- * @param ops - Array of business logic operations to perform. ops[0] = Number of IsEqual operations, ops[1] = Number of LessThan operations.
+ * @param ops - Array of business logic operations to perform. ops[0] = Number of IsEqual operations, ops[1] = Number of Range check operations.
  * @param n - Determines the bit width considered when performing the LessThan operation.
  * @param nLogicGates - Number of logic gate operations to perform (AND, OR, NOT).
  * @param truthTable - Defines sequence and inputs of logic gates for combining results of business logic operations (equality, lessThan, etc.).
@@ -46,7 +47,7 @@ template BusinessLogic(
 
     // Components for operations
     component isEquals[ops[0]];
-    component lessThans[ops[1]];
+    component RangeChecks[ops[1]];
 
     // Outputs from operations
     signal outputs[ops[0] + ops[1]];
@@ -61,11 +62,13 @@ template BusinessLogic(
     }
 
     for (var j = 0; j < ops[1]; j++) {
-        lessThans[j] = LessThan(n);
-        lessThans[j].in[0] <== inputs[1][2*j];
-        lessThans[j].in[1] <== inputs[1][2*j+1];
-        outputs[ops[0] + j] <== lessThans[j].out;
+        rangeChecks[j] = RangeCheck(n);
+        rangeChecks[j].x <== inputs[1][3 * j];
+        rangeChecks[j].min <== inputs[1][3 * j + 1];
+        rangeChecks[j].max <== inputs[1][3 * j + 2];
+        outputs[ops[0] + j] <== rangeChecks[j].isInRange;
     }
+
 
     // Step 2: Flexible logic combining using circomlib gates (AND, OR, NOT)
     var inA;
@@ -105,10 +108,10 @@ component main = BusinessLogic(
     32,      // n: Bit width for LessThan comparisons
     2,       // nLogicGates: Number of logic operations (OR, AND)
     [
-        1, 0, 0, 1, 0,  // intermediate[0] = (outputs[0] OR outputs[1])
-        0, 0, 1, 2, 0   // intermediate[1] = intermediate[0] AND outputs[2]
+        1, 0, 0, 1, 0,  // OR: outputs[0] OR outputs[1]
+        0, 0, 1, 2, 0   // AND: intermediate[0] AND outputs[2]
     ],
-    4        // numInputsPerRow: Inputs per sub-array in inputs[2][]
+    6        // numInputsPerRow: Inputs per sub-array in inputs[2][]
 );
 
 
