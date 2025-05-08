@@ -13,14 +13,17 @@ include "../utils/rangeCheck.circom";
 
 /**
  * This circuit runs business logic by combining multiple operations 
- * (equality, lessThan, greaterThan, range check, membership check, 
+ * (equality, range check, membership check, 
  * hash verification, merkle proof verification, signature verification, etc) using
  * logic gates defined in a truth table (AND, OR, NOT, etc.).
  * 
- * @param ops - Array of business logic operations to perform. ops[0] = Number of IsEqual operations, ops[1] = Number of Range check operations.
- * @param n - Determines the bit width considered when performing the LessThan operation.
+ * @param ops - Array of business logic operations to perform. 
+ * ops = [
+    nIsEqual, inputsPerIsEqual,   // e.g., 2 inputs per IsEqual op
+    nRangeCheck, inputsPerRangeCheck   // e.g., 3 inputs per RangeCheck op]
+ * @param n - Determines the bit width considered when performing the RangeCheck operation.
  * @param nLogicGates - Number of logic gate operations to perform (AND, OR, NOT).
- * @param truthTable - Defines sequence and inputs of logic gates for combining results of business logic operations (equality, lessThan, etc.).
+ * @param truthTable - Defines sequence and inputs of logic gates for combining results of business logic operations (equality, RangeCheck, etc.).
  * Each row in the truth table contains:
  * 1. The logic gate to use (0 = AND, 1 = OR, 2 = NOT).
  * 2. The index of the first input to use.
@@ -30,8 +33,8 @@ include "../utils/rangeCheck.circom";
  * @param numInputsPerRow - Number of inputs per row in the inputs array.
  * 
  * 
- * @param inputs - A 2D array of inputs, where each row contains the inputs for the business logic operations (isEqual, LessThan, etc).
- * The first row contains the inputs for the IsEqual operations, and the second row contains the inputs for the LessThan operations.
+ * @param inputs - A 2D array of inputs, where each row contains the inputs for the business logic operations (isEqual, RangeCheck, etc).
+ * The first row contains the inputs for the IsEqual operations, and the second row contains the inputs for the RangeCheck operations.
  *
  *
  *
@@ -46,27 +49,32 @@ template BusinessLogic(
     signal output resultOut;
 
     // Components for operations
-    component isEquals[ops[0]];
-    component rangeChecks[ops[1]];
+    var nIsEqual = ops[0];
+    var inputsPerIsEqual = ops[1];
+    var nRangeCheck = ops[2];
+    var inputsPerRangeCheck = ops[3];
+    
+    component isEquals[nIsEqual];
+    component rangeChecks[nRangeCheck];
 
     // Outputs from operations
-    signal outputs[ops[0] + ops[1]];
+    signal outputs[nIsEqual + nRangeCheck];
     signal intermediates[nLogicGates];
 
-    // Step 1: Get outputs of IsEqual and LessThan operations
-    for (var i = 0; i < ops[0]; i++) {
+    // Step 1: Get outputs of IsEqual and Range Check operations
+    for (var i = 0; i < nIsEqual; i++) {
         isEquals[i] = IsEqual();
-        isEquals[i].in[0] <== inputs[0][2*i];
-        isEquals[i].in[1] <== inputs[0][2*i+1];
+        isEquals[i].in[0] <== inputs[0][inputsPerIsEqual*i];
+        isEquals[i].in[1] <== inputs[0][inputsPerIsEqual*i+1];
         outputs[i] <== isEquals[i].out;
     }
 
-    for (var j = 0; j < ops[1]; j++) {
+    for (var j = 0; j < nRangeCheck; j++) {
         rangeChecks[j] = RangeCheck(n);
-        rangeChecks[j].x <== inputs[1][3 * j];
-        rangeChecks[j].min <== inputs[1][3 * j + 1];
-        rangeChecks[j].max <== inputs[1][3 * j + 2];
-        outputs[ops[0] + j] <== rangeChecks[j].isInRange;
+        rangeChecks[j].x <== inputs[1][inputsPerRangeCheck * j];
+        rangeChecks[j].min <== inputs[1][inputsPerRangeCheck * j + 1];
+        rangeChecks[j].max <== inputs[1][inputsPerRangeCheck * j + 2];
+        outputs[nIsEqual + j] <== rangeChecks[j].isInRange;
     }
 
 
@@ -103,9 +111,9 @@ template BusinessLogic(
 
 // Declare your main component
 component main = BusinessLogic(
-    [2,       // nIsEqual: Number of IsEqual operations (a == b, c == d)
-    1],       // nLessThan: Number of LessThan operations (e < f)
-    32,      // n: Bit width for LessThan comparisons
+    [2, 2,      // nIsEqual, inputsPerIsEqual, 
+    1, 3],       // nRangeCheck, inputsPerRangeCheck
+    32,      // n: Bit width for Range Check  operation comparisons
     2,       // nLogicGates: Number of logic operations (OR, AND)
     [
         1, 0, 0, 1, 0,  // OR: outputs[0] OR outputs[1]
