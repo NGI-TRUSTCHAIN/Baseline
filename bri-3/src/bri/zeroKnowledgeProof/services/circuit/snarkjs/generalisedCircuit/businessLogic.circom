@@ -2,6 +2,7 @@ pragma circom 2.1.5;
 include "../../../../../../../node_modules/circomlib/circuits/comparators.circom";
 include "../../../../../../../node_modules/circomlib/circuits/mux1.circom";
 include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
+include "../utils/rangeCheck.circom";
 
 //TODO: Issue #29
 //TODO: Issue #30
@@ -12,14 +13,17 @@ include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
 
 /**
  * This circuit runs business logic by combining multiple operations 
- * (equality, lessThan, greaterThan, range check, membership check, 
+ * (equality, range check, membership check, 
  * hash verification, merkle proof verification, signature verification, etc) using
  * logic gates defined in a truth table (AND, OR, NOT, etc.).
  * 
- * @param ops - Array of business logic operations to perform. ops[0] = Number of IsEqual operations, ops[1] = Number of LessThan operations.
- * @param n - Determines the bit width considered when performing the LessThan operation.
- * @param nOps - Number of logic gate operations to perform (AND, OR, NOT).
- * @param truthTable - Defines sequence and inputs of logic gates for combining results of business logic operations (equality, lessThan, etc.).
+ * @param ops - Array of business logic operations to perform. 
+ * ops = [
+    nIsEqual, inputsPerIsEqual,   // e.g., 2 inputs per IsEqual op
+    nRangeCheck, inputsPerRangeCheck   // e.g., 3 inputs per RangeCheck op]
+ * @param n - Determines the bit width considered when performing the RangeCheck operation.
+ * @param nLogicGates - Number of logic gate operations to perform (AND, OR, NOT).
+ * @param truthTable - Defines sequence and inputs of logic gates for combining results of business logic operations (equality, RangeCheck, etc.).
  * Each row in the truth table contains:
  * 1. The logic gate to use (0 = AND, 1 = OR, 2 = NOT).
  * 2. The index of the first input to use.
@@ -29,15 +33,15 @@ include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
  * @param numInputsPerRow - Number of inputs per row in the inputs array.
  * 
  * 
- * @param inputs - A 2D array of inputs, where each row contains the inputs for the business logic operations (isEqual, LessThan, etc).
- * The first row contains the inputs for the IsEqual operations, and the second row contains the inputs for the LessThan operations.
+ * @param inputs - A 2D array of inputs, where each row contains the inputs for the business logic operations (isEqual, RangeCheck, etc).
+ * The first row contains the inputs for the IsEqual operations, and the second row contains the inputs for the RangeCheck operations.
  *
  *
  *
  * @returns True/False after verifying the business logic.
  */
 template BusinessLogic(
-    ops, n, nOps, truthTable, numInputsPerRow
+    ops, n, nLogicGates, truthTable, numInputsPerRow
 ){
 
    // Input & final result
@@ -45,33 +49,40 @@ template BusinessLogic(
     signal output resultOut;
 
     // Components for operations
-    component isEquals[ops[0]];
-    component lessThans[ops[1]];
+    var nIsEqual = ops[0];
+    var inputsPerIsEqual = ops[1];
+    var nRangeCheck = ops[2];
+    var inputsPerRangeCheck = ops[3];
+    
+    component isEquals[nIsEqual];
+    component rangeChecks[nRangeCheck];
 
     // Outputs from operations
-    signal outputs[ops[0] + ops[1]];
-    signal intermediates[nOps];
+    signal outputs[nIsEqual + nRangeCheck];
+    signal intermediates[nLogicGates];
 
-    // Step 1: Get outputs of IsEqual and LessThan operations
-    for (var i = 0; i < ops[0]; i++) {
+    // Step 1: Get outputs of IsEqual and Range Check operations
+    for (var i = 0; i < nIsEqual; i++) {
         isEquals[i] = IsEqual();
-        isEquals[i].in[0] <== inputs[0][2*i];
-        isEquals[i].in[1] <== inputs[0][2*i+1];
+        isEquals[i].in[0] <== inputs[0][inputsPerIsEqual*i];
+        isEquals[i].in[1] <== inputs[0][inputsPerIsEqual*i+1];
         outputs[i] <== isEquals[i].out;
     }
 
-    for (var j = 0; j < ops[1]; j++) {
-        lessThans[j] = LessThan(n);
-        lessThans[j].in[0] <== inputs[1][2*j];
-        lessThans[j].in[1] <== inputs[1][2*j+1];
-        outputs[ops[0] + j] <== lessThans[j].out;
+    for (var j = 0; j < nRangeCheck; j++) {
+        rangeChecks[j] = RangeCheck(n);
+        rangeChecks[j].x <== inputs[1][inputsPerRangeCheck * j];
+        rangeChecks[j].min <== inputs[1][inputsPerRangeCheck * j + 1];
+        rangeChecks[j].max <== inputs[1][inputsPerRangeCheck * j + 2];
+        outputs[nIsEqual + j] <== rangeChecks[j].isInRange;
     }
+
 
     // Step 2: Flexible logic combining using circomlib gates (AND, OR, NOT)
     var inA;
     var inB;
 
-    for (var opIdx = 0; opIdx < nOps; opIdx++) {
+    for (var opIdx = 0; opIdx < nLogicGates; opIdx++) {
         var baseIdx = 5 * opIdx;
         var op = truthTable[baseIdx];
         var idxA = truthTable[baseIdx + 1];
@@ -95,18 +106,18 @@ template BusinessLogic(
     }
 
     // Step 3: Final output = last intermediate
-    resultOut <== intermediates[nOps-1];
+    resultOut <== intermediates[nLogicGates-1];
 }
 
 // Declare your main component
 component main = BusinessLogic(
-    [2,       // nIsEqual: Number of IsEqual operations (a == b, c == d)
-    1],       // nLessThan: Number of LessThan operations (e < f)
-    32,      // n: Bit width for LessThan comparisons
-    2,       // nOps: Number of logic operations (OR, AND)
+    [2, 2,      // nIsEqual, inputsPerIsEqual, 
+    1, 3],       // nRangeCheck, inputsPerRangeCheck
+    32,      // n: Bit width for Range Check  operation comparisons
+    2,       // nLogicGates: Number of logic operations (OR, AND)
     [
-        1, 0, 0, 1, 0,  // intermediate[0] = (outputs[0] OR outputs[1])
-        0, 0, 1, 2, 0   // intermediate[1] = intermediate[0] AND outputs[2]
+        1, 0, 0, 1, 0,  // OR: outputs[0] OR outputs[1]
+        0, 0, 1, 2, 0   // AND: intermediate[0] AND outputs[2]
     ],
     4        // numInputsPerRow: Inputs per sub-array in inputs[2][]
 );
