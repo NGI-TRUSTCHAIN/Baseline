@@ -3,6 +3,7 @@ include "../../../../../../../node_modules/circomlib/circuits/comparators.circom
 include "../../../../../../../node_modules/circomlib/circuits/mux1.circom";
 include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
 include "../utils/rangeCheck.circom";
+include "../utils/membershipCheck.circom";
 
 //TODO: Issue #29
 //TODO: Issue #30
@@ -17,11 +18,8 @@ include "../utils/rangeCheck.circom";
  * hash verification, merkle proof verification, signature verification, etc) using
  * logic gates defined in a truth table (AND, OR, NOT, etc.).
  * 
- * @param ops - Array of business logic operations to perform. 
- * ops = [
-    nIsEqual, inputsPerIsEqual,   // e.g., 2 inputs per IsEqual op
-    nRangeCheck, inputsPerRangeCheck   // e.g., 3 inputs per RangeCheck op]
- * @param n - Determines the bit width considered when performing the RangeCheck operation.
+ * @param businessOperations - Number of business logic operations to perform.
+ * @param businessOperationParams - Parameters for each business logic operation.
  * @param nLogicGates - Number of logic gate operations to perform (AND, OR, NOT).
  * @param truthTable - Defines sequence and inputs of logic gates for combining results of business logic operations (equality, RangeCheck, etc.).
  * Each row in the truth table contains:
@@ -30,51 +28,89 @@ include "../utils/rangeCheck.circom";
  * 3. The source of the first input (0 for output, 1 for intermediate).
  * 4. The index of the second input to use.
  * 5. The source of the second input (0 for output, 1 for intermediate).
- * @param numInputsPerRow - Number of inputs per row in the inputs array.
+ * @param nInputs - Total number of inputs to the circuit.
  * 
  * 
- * @param inputs - A 2D array of inputs, where each row contains the inputs for the business logic operations (isEqual, RangeCheck, etc).
- * The first row contains the inputs for the IsEqual operations, and the second row contains the inputs for the RangeCheck operations.
+ * @param inputs - Array of inputs to the circuit.
  *
  *
  *
  * @returns True/False after verifying the business logic.
  */
 template BusinessLogic(
-    ops, n, nLogicGates, truthTable, numInputsPerRow
+    businessOperations, businessOperationParams, nLogicGates, truthTable, nInputs
 ){
 
    // Input & final result
-    signal input inputs[2][numInputsPerRow];
+    signal input inputs[nInputs];
     signal output resultOut;
 
-    // Components for operations
-    var nIsEqual = ops[0];
-    var inputsPerIsEqual = ops[1];
-    var nRangeCheck = ops[2];
-    var inputsPerRangeCheck = ops[3];
-    
+    // Components for operations   
+    // 0: IsEqual
+    var nIsEqual = businessOperations[0];
+    var inputsPerIsEqual = 2;
+    var IsEqualParam = businessOperationParams[0];
     component isEquals[nIsEqual];
+
+    //1: RangeCheck
+    var nRangeCheck = businessOperations[1];
+    var inputsPerRangeCheck = 3;
+    var RangeCheckParam = businessOperationParams[1];
     component rangeChecks[nRangeCheck];
+    
+    //2: MembershipCheck
+    var nMembershipCheck = businessOperations[2];
+    var inputsPerMembershipCheck = 1 + businessOperationParams[2];
+    var MembershipCheckParam = businessOperationParams[2];
+    component membershipChecks[nMembershipCheck];
+
+    //3: Hash verification
+    // var nHashVerification = businessOperations[3];
+    // var inputsPerHashVerification = 2;
+    // var HashVerificationParam = businessOperationParams[3];
+
+    // //4: Signature verification
+    // var nSignatureVerification = businessOperations[4];
+    // var inputsPerSignatureVerification = 2;
+    // var SignatureVerificationParam = businessOperationParams[4]; 
 
     // Outputs from operations
-    signal outputs[nIsEqual + nRangeCheck];
+    signal outputs[nIsEqual + nRangeCheck + nMembershipCheck];
     signal intermediates[nLogicGates];
 
-    // Step 1: Get outputs of IsEqual and Range Check operations
+    //Index for the inputs and output array
+    var inputIndex = 0;
+    var outputIndex = 0;
+
+    // Step 1: Get outputs of Business operations
     for (var i = 0; i < nIsEqual; i++) {
         isEquals[i] = IsEqual();
-        isEquals[i].in[0] <== inputs[0][inputsPerIsEqual*i];
-        isEquals[i].in[1] <== inputs[0][inputsPerIsEqual*i+1];
-        outputs[i] <== isEquals[i].out;
+        isEquals[i].in[0] <== inputs[inputIndex];
+        isEquals[i].in[1] <== inputs[inputIndex + 1];
+        outputs[outputIndex] <== isEquals[i].out;
+        inputIndex += inputsPerIsEqual;
+        outputIndex++;
     }
 
     for (var j = 0; j < nRangeCheck; j++) {
-        rangeChecks[j] = RangeCheck(n);
-        rangeChecks[j].x <== inputs[1][inputsPerRangeCheck * j];
-        rangeChecks[j].min <== inputs[1][inputsPerRangeCheck * j + 1];
-        rangeChecks[j].max <== inputs[1][inputsPerRangeCheck * j + 2];
-        outputs[nIsEqual + j] <== rangeChecks[j].isInRange;
+        rangeChecks[j] = RangeCheck(RangeCheckParam);   
+        rangeChecks[j].x <== inputs[inputIndex];
+        rangeChecks[j].min <== inputs[inputIndex + 1];
+        rangeChecks[j].max <== inputs[inputIndex + 2];
+        outputs[outputIndex] <== rangeChecks[j].isInRange;
+        inputIndex += inputsPerRangeCheck;
+        outputIndex++;
+    }
+
+    for (var k = 0; k < nMembershipCheck; k++) {
+        membershipChecks[k] = MembershipCheck(MembershipCheckParam);
+        membershipChecks[k].x <== inputs[inputIndex];
+        for (var l = 0; l < MembershipCheckParam; l++) {
+            membershipChecks[k].values[l] <== inputs[inputIndex + 1 + l];
+        }
+        outputs[outputIndex] <== membershipChecks[k].isMember;
+        inputIndex += inputsPerMembershipCheck;
+        outputIndex++;
     }
 
 
@@ -111,15 +147,13 @@ template BusinessLogic(
 
 // Declare your main component
 component main = BusinessLogic(
-    [2, 2,      // nIsEqual, inputsPerIsEqual, 
-    1, 3],       // nRangeCheck, inputsPerRangeCheck
-    32,      // n: Bit width for Range Check  operation comparisons
-    2,       // nLogicGates: Number of logic operations (OR, AND)
-    [
-        1, 0, 0, 1, 0,  // OR: outputs[0] OR outputs[1]
-        0, 0, 1, 2, 0   // AND: intermediate[0] AND outputs[2]
-    ],
-    4        // numInputsPerRow: Inputs per sub-array in inputs[2][]
+    [2, 1, 1],        // businessOperations: 2 IsEqual, 1 RangeCheck, 1 MembershipCheck
+    [0, 32, 4],        // businessOperationParams: 0 for eq, 32 bit width, 4 values for membership
+    3,                // nLogicGates: 3 gates (OR, AND, AND)
+    [1,0,0,1,0,       // Gate0: inter0 = eq1 OR eq2
+     0,0,1,2,0,       // Gate1: inter1 = inter0 AND rangeCheck
+     0,1,1,3,0],      // Gate2: inter2 = inter1 AND membership
+    12                // Total inputs: eq+ range + membership = (2+2)+(3)+(1+4) = 12
 );
 
 
