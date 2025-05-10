@@ -58,7 +58,7 @@ declare global {
   }
 }
 
-describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<=f<=g)', () => {
+describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<=f<=g) AND (h ∈ [h, i, j, k])', () => {
   jest.setTimeout(100000);
 
   let circuit: any;
@@ -66,11 +66,23 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<=f<=g)', () => {
   beforeAll(async () => {
     circuit = await loadBusinessLogicCircuit();
   });
-  it('Should output 1 when (true OR true) AND (true)', async () => {
+  it('Should output 1 when (true OR true) AND (true) AND (true)', async () => {
     const inputs = {
       inputs: [
-        [10, 10, 20, 20], // IsEqual: a==b (true), c==d (true)
-        [10, 3, 20, 0], // RangeCheck: e ≤ f ≤ g → 3 ≤ 10 ≤ 20 (true), dummy data to fill the circuit inputs
+        [
+          10,
+          10,
+          20,
+          20, // IsEqual: a==b (true), c==d (true)
+          10,
+          3,
+          20, // RangeCheck: e ≤ f ≤ g → 3 ≤ 10 ≤ 20 (true),
+          4,
+          2,
+          4,
+          6,
+          8, // h ∈ [h, i, j, k] → 4 ∈ [4, 2, 4, 6] (true)
+        ],
       ],
     };
 
@@ -87,109 +99,153 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<=f<=g)', () => {
 
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
-  it('Should output 1 when (false OR true) AND (true)', async () => {
+  it('Should output 1 when (false OR true) AND (true) AND (true)', async () => {
     const inputs = {
       inputs: [
-        [10, 50, 20, 20], // IsEqual: a == b (false), c == d (true)
-        [10, 3, 20, 0], // RangeCheck: e ≤ f ≤ g → 3 ≤ 10 ≤ 20 (true), dummy data to fill the circuit inputs
+        [
+          10,
+          50,
+          20,
+          20, // IsEqual: a==b (false), c==d (true)
+          10,
+          3,
+          20, // RangeCheck: 3 ≤ 10 ≤ 20 (true)
+          4,
+          2,
+          4,
+          6,
+          8, // Membership: 4 ∈ [2, 4, 6, 8] (true)
+        ],
       ],
     };
-
-    // Expected output is 1(true)
     const expectedOutput = 1;
-
-    const witness = await circuit.calculateWitness(
-      {
-        inputs: inputs.inputs,
-      },
-      true,
-    );
+    const witness = await circuit.calculateWitness(inputs, true);
     await circuit.checkConstraints(witness);
-
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
-  it('Should output 1 when (true OR false) AND (true)', async () => {
+
+  it('Should output 1 when (true OR false) AND (true) AND (true)', async () => {
     const inputs = {
       inputs: [
-        [10, 10, 20, 50], // IsEqual: a == b (true), c == d (false)
-        [10, 3, 20, 0], // RangeCheck: e ≤ f ≤ g → 3 ≤ 10 ≤ 20 (true), dummy data to fill the circuit inputs
+        [
+          10,
+          10,
+          20,
+          50, // IsEqual: a==b (true), c==d (false)
+          10,
+          3,
+          20, // RangeCheck: 3 ≤ 10 ≤ 20 (true)
+          6,
+          2,
+          4,
+          6,
+          8, // Membership: 6 ∈ [2, 4, 6, 8] (true)
+        ],
       ],
     };
-
-    // Expected output is 1(true)
     const expectedOutput = 1;
-
-    const witness = await circuit.calculateWitness(
-      {
-        inputs: inputs.inputs,
-      },
-      true,
-    );
+    const witness = await circuit.calculateWitness(inputs, true);
     await circuit.checkConstraints(witness);
-
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
-  it('Should output 0 when (false OR false) AND (true)', async () => {
+
+  it('Should output 0 when (false OR false) AND (true) AND (true)', async () => {
     const inputs = {
       inputs: [
-        [10, 40, 50, 20], // IsEqual: a == b (false), c == d (false)
-        [10, 3, 20, 0], // RangeCheck: e ≤ f ≤ g → 3 ≤ 10 ≤ 20 (true), dummy data to fill the circuit inputs
+        [
+          10,
+          40,
+          50,
+          20, // IsEqual: both false
+          10,
+          3,
+          20, // RangeCheck: true
+          4,
+          2,
+          4,
+          6,
+          8, // Membership: true
+        ],
       ],
     };
-
-    // Expected output is 0(false)
     const expectedOutput = 0;
-
-    const witness = await circuit.calculateWitness(
-      {
-        inputs: inputs.inputs,
-      },
-      true,
-    );
+    const witness = await circuit.calculateWitness(inputs, true);
     await circuit.checkConstraints(witness);
-
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
-  it('Should output 0 when (false OR true) AND (false)', async () => {
+
+  it('Should output 0 when (false OR true) AND (false) AND (true)', async () => {
     const inputs = {
       inputs: [
-        [10, 40, 70, 70], // IsEqual: a == b (false), c == d (true)
-        [30, 3, 20, 0], // RangeCheck: e ≤ f ≤ g → 3 ≤ 30 ≤ 20 (false), dummy data to fill the circuit inputs
+        [
+          10,
+          40,
+          70,
+          70, // IsEqual: false OR true
+          30,
+          3,
+          20, // RangeCheck: 3 ≤ 30 ≤ 20 → false
+          4,
+          2,
+          4,
+          6,
+          8, // Membership: true
+        ],
       ],
     };
-
-    // Expected output is 0(false)
     const expectedOutput = 0;
-
-    const witness = await circuit.calculateWitness(
-      {
-        inputs: inputs.inputs,
-      },
-      true,
-    );
+    const witness = await circuit.calculateWitness(inputs, true);
     await circuit.checkConstraints(witness);
-
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
-  it('Should output 0 when (false OR false) AND (false)', async () => {
+
+  it('Should output 0 when (true OR true) AND (true) AND (false)', async () => {
     const inputs = {
       inputs: [
-        [10, 40, 30, 70], // a == b (false), c == d (false)
-        [30, 3, 20, 0], // RangeCheck: e ≤ f ≤ g → 3 ≤ 30 ≤ 20 (false), dummy data to fill the circuit inputs
+        [
+          10,
+          10,
+          20,
+          20, // IsEqual: both true
+          10,
+          3,
+          20, // RangeCheck: true
+          5,
+          2,
+          4,
+          6,
+          8, // Membership: 5 ∉ [2,4,6,8] → false
+        ],
       ],
     };
-
-    // Expected output is 0(false)
     const expectedOutput = 0;
-
-    const witness = await circuit.calculateWitness(
-      {
-        inputs: inputs.inputs,
-      },
-      true,
-    );
+    const witness = await circuit.calculateWitness(inputs, true);
     await circuit.checkConstraints(witness);
+    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  });
 
+  it('Should output 0 when (false OR false) AND (false) AND (false)', async () => {
+    const inputs = {
+      inputs: [
+        [
+          10,
+          40,
+          30,
+          70, // IsEqual: both false
+          30,
+          3,
+          20, // RangeCheck: false
+          5,
+          2,
+          4,
+          6,
+          8, // Membership: false
+        ],
+      ],
+    };
+    const expectedOutput = 0;
+    const witness = await circuit.calculateWitness(inputs, true);
+    await circuit.checkConstraints(witness);
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
 });
