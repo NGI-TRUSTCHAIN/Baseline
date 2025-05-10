@@ -12,7 +12,6 @@ const p = Scalar.fromString(
 const Fr = new F1Field(p);
 
 const WITNESS_IS_OUTPUT_INDEX = 1;
-const WITNESS_PUBLIC_INPUT_A_INDEX = 2;
 
 const loadBusinessLogicCircuit = async () => {
   const fullPath = path.join(__dirname, 'businessLogic.circom');
