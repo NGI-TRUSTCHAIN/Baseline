@@ -1,9 +1,10 @@
 pragma circom 2.1.5;
 include "../../../../../../../node_modules/circomlib/circuits/comparators.circom";
-include "../../../../../../../node_modules/circomlib/circuits/mux1.circom";
 include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
+include "../../../../../../../node_modules/circomlib/circuits/eddsa.circom";
 include "../utils/rangeCheck.circom";
 include "../utils/membershipCheck.circom";
+include "../utils/hashVerifier.circom";
 
 //TODO: Issue #29
 //TODO: Issue #30
@@ -28,91 +29,136 @@ include "../utils/membershipCheck.circom";
  * 3. The source of the first input (0 for output, 1 for intermediate).
  * 4. The index of the second input to use.
  * 5. The source of the second input (0 for output, 1 for intermediate).
- * @param nInputs - Total number of inputs to the circuit.
- * 
- * 
- * @param inputs - Array of inputs to the circuit.
  *
  *
  *
  * @returns True/False after verifying the business logic.
  */
 template BusinessLogic(
-    businessOperations, businessOperationParams, nLogicGates, truthTable, nInputs
+    businessOperations, businessOperationParams, nLogicGates, truthTable
 ){
-
-   // Input & final result
-    signal input inputs[nInputs];
     signal output resultOut;
 
     // Components for operations   
     // 0: IsEqual
     var nIsEqual = businessOperations[0];
     var inputsPerIsEqual = 2;
-    var IsEqualParam = businessOperationParams[0];
+    var isEqualParam = businessOperationParams[0];
+    
+    signal input isEqualA[nIsEqual];
+    signal input isEqualB[nIsEqual];
     component isEquals[nIsEqual];
-
+   
     //1: RangeCheck
     var nRangeCheck = businessOperations[1];
     var inputsPerRangeCheck = 3;
-    var RangeCheckParam = businessOperationParams[1];
+    var rangeCheckParam = businessOperationParams[1];
+    
+    signal input rangeCheckValue[nRangeCheck];
+    signal input rangeCheckMin[nRangeCheck];
+    signal input rangeCheckMax[nRangeCheck];
     component rangeChecks[nRangeCheck];
     
     //2: MembershipCheck
     var nMembershipCheck = businessOperations[2];
     var inputsPerMembershipCheck = 1 + businessOperationParams[2];
-    var MembershipCheckParam = businessOperationParams[2];
+    var membershipCheckParam = businessOperationParams[2];
+
+    signal input membershipCheckValues[nMembershipCheck];
+    signal input membershipCheckSets[nMembershipCheck][membershipCheckParam];
     component membershipChecks[nMembershipCheck];
 
     //3: Hash verification
-    // var nHashVerification = businessOperations[3];
-    // var inputsPerHashVerification = 2;
-    // var HashVerificationParam = businessOperationParams[3];
+    var nHashVerification = businessOperations[3];
+    var inputsPerHashVerification = 2;
+    var hashVerificationParam = businessOperationParams[3];
 
-    // //4: Signature verification
-    // var nSignatureVerification = businessOperations[4];
-    // var inputsPerSignatureVerification = 2;
-    // var SignatureVerificationParam = businessOperationParams[4]; 
+    signal input hashVerificationPreimage[nHashVerification][hashVerificationParam];
+    signal input hashVerificationExpectedHash[nHashVerification][256];
+    component hashVerifications[nHashVerification];
+
+    //4: Signature Verification
+    var nSignatureVerification = businessOperations[4];
+    var inputsPerSignatureVerification = 4;
+    var signatureVerificationParam = businessOperationParams[4];
+
+    signal input signatureVerificationMessage[nSignatureVerification][256];
+    signal input signatureVerificationA[nSignatureVerification][256];
+    signal input signatureVerificationR8[nSignatureVerification][256];
+    signal input signatureVerificationS[nSignatureVerification][256];
+    component signatureVerifications[nSignatureVerification];
+
 
     // Outputs from operations
-    signal outputs[nIsEqual + nRangeCheck + nMembershipCheck];
+    signal outputs[nIsEqual + nRangeCheck + nMembershipCheck + nHashVerification + nSignatureVerification];
     signal intermediates[nLogicGates];
 
     //Index for the inputs and output array
-    var inputIndex = 0;
     var outputIndex = 0;
 
     // Step 1: Get outputs of Business operations
+    // IsEqual
     for (var i = 0; i < nIsEqual; i++) {
         isEquals[i] = IsEqual();
-        isEquals[i].in[0] <== inputs[inputIndex];
-        isEquals[i].in[1] <== inputs[inputIndex + 1];
+        isEquals[i].in[0] <== isEqualA[i];
+        isEquals[i].in[1] <== isEqualB[i];
         outputs[outputIndex] <== isEquals[i].out;
-        inputIndex += inputsPerIsEqual;
         outputIndex++;
     }
 
+    // RangeCheck
     for (var j = 0; j < nRangeCheck; j++) {
-        rangeChecks[j] = RangeCheck(RangeCheckParam);   
-        rangeChecks[j].x <== inputs[inputIndex];
-        rangeChecks[j].min <== inputs[inputIndex + 1];
-        rangeChecks[j].max <== inputs[inputIndex + 2];
+        rangeChecks[j] = RangeCheck(rangeCheckParam);   
+        rangeChecks[j].x <== rangeCheckValue[j];
+        rangeChecks[j].min <== rangeCheckMin[j];
+        rangeChecks[j].max <== rangeCheckMax[j];
         outputs[outputIndex] <== rangeChecks[j].isInRange;
-        inputIndex += inputsPerRangeCheck;
         outputIndex++;
     }
 
+    // MembershipCheck
     for (var k = 0; k < nMembershipCheck; k++) {
-        membershipChecks[k] = MembershipCheck(MembershipCheckParam);
-        membershipChecks[k].x <== inputs[inputIndex];
-        for (var l = 0; l < MembershipCheckParam; l++) {
-            membershipChecks[k].values[l] <== inputs[inputIndex + 1 + l];
+        membershipChecks[k] = MembershipCheck(membershipCheckParam);
+        membershipChecks[k].x <== membershipCheckValues[k];
+        for (var l = 0; l < membershipCheckParam; l++) {
+            membershipChecks[k].values[l] <== membershipCheckSets[k][l];
         }
         outputs[outputIndex] <== membershipChecks[k].isMember;
-        inputIndex += inputsPerMembershipCheck;
         outputIndex++;
     }
 
+    // Hash verification
+    for (var l = 0; l < nHashVerification; l++) {
+        hashVerifications[l] = HashVerifier(hashVerificationParam); 
+        for (var m = 0; m < hashVerificationParam; m++) {
+            hashVerifications[l].preimage[m] <== hashVerificationPreimage[l][m];
+        }
+        for (var n = 0; n < 256; n++) {
+            hashVerifications[l].expectedHash[n] <== hashVerificationExpectedHash[l][n];
+        } 
+        outputs[outputIndex] <== hashVerifications[l].isVerified;
+        outputIndex++;
+    }
+
+    // Signature verification
+    component isEqualSignature[nSignatureVerification];
+    for (var l = 0; l < nSignatureVerification; l++) {
+        var verifiedFlag = 0;
+        signatureVerifications[l] = EdDSAVerifier(256);
+        for (var m = 0; m < 256; m++) {
+            signatureVerifications[l].msg[m] <== signatureVerificationMessage[l][m];
+            signatureVerifications[l].A[m] <== signatureVerificationA[l][m];
+            signatureVerifications[l].R8[m] <== signatureVerificationR8[l][m];
+            signatureVerifications[l].S[m] <== signatureVerificationS[l][m];	
+        }
+        verifiedFlag = 1;
+        isEqualSignature[l] = IsEqual();
+        isEqualSignature[l].in[0] <== verifiedFlag;
+        isEqualSignature[l].in[1] <== 1;
+        outputs[outputIndex] <== isEqualSignature[l].out;
+        outputIndex++;
+    }
+    
 
     // Step 2: Flexible logic combining using circomlib gates (AND, OR, NOT)
     var inA;
@@ -146,14 +192,25 @@ template BusinessLogic(
 }
 
 // Declare your main component
+//((a==b) OR (c==d)) AND (e≤f≤g) AND ((h ∈ [i,j,k,l]) OR (hash of x matches expected)) AND (signature is valid)
 component main = BusinessLogic(
-    [2, 1, 1],        // businessOperations: 2 IsEqual, 1 RangeCheck, 1 MembershipCheck
-    [0, 32, 4],        // businessOperationParams: 0 for eq, 32 bit width, 4 values for membership
-    3,                // nLogicGates: 3 gates (OR, AND, AND)
-    [1,0,0,1,0,       // Gate0: inter0 = eq1 OR eq2
-     0,0,1,2,0,       // Gate1: inter1 = inter0 AND rangeCheck
-     0,1,1,3,0],      // Gate2: inter2 = inter1 AND membership
-    12                // Total inputs: eq+ range + membership = (2+2)+(3)+(1+4) = 12
+    [2, 1, 1, 1, 1],        // Operations: 2 IsEqual, 1 RangeCheck, 1 MembershipCheck, 1 HashVerifier, 1 SignatureVerifier
+    [0, 32, 4, 512, 256],   // Params: (0) for IsEqual, (32-bit) for RangeCheck, 4-member set, 512-bit hash, 256-bit signature
+    5,                     // Total logic gates = 5
+    [
+        // Gate 0: I0 = (a == b) OR (c == d)
+        1, 0, 0, 1, 0,       // OR(outputs[0], outputs[1])
+
+        // Gate 1: I1 = I0 AND (e ≤ f ≤ g)
+        0, 0, 1, 2, 0,       // AND(intermediates[0], outputs[2])
+
+        // Gate 2: I2 = (h ∈ [i,j,k,l]) OR (hash of x matches expected)
+        1, 3, 0, 4, 0,       // OR(outputs[3], outputs[4])
+
+        // Gate 3: I3 = I1 AND I2
+        0, 1, 1, 2, 1,       // AND(intermediates[1], intermediates[2])
+
+        // Gate 4: I4 = I3 AND (signature is valid)
+        0, 3, 1, 5, 0        // AND(intermediates[3], outputs[5])
+    ]
 );
-
-

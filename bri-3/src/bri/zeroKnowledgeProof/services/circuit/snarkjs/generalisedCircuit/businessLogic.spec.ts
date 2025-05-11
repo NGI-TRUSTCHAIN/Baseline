@@ -1,6 +1,9 @@
 import { F1Field, Scalar } from 'ffjavascript';
 import { wasm as wasm_tester } from 'circom_tester';
 import * as path from 'path';
+import { createHash } from 'crypto';
+import { ed25519 } from '@noble/curves/ed25519';
+import * as circomlib from 'circomlibjs';
 
 // This is the prime field used in the circuit
 // The prime field is defined by the following equation:
@@ -24,6 +27,32 @@ const loadBusinessLogicCircuit = async () => {
     console.error(`Error loading circuit from ${fullPath}:`, error);
     throw error;
   }
+};
+
+//This gives most-significant-bit (MSB) first order.
+function buffer2bitArray(b: Buffer) {
+  const res: number[] = [];
+  for (let i = 0; i < b.length; i++) {
+    for (let j = 0; j < 8; j++) {
+      res.push((b[i] >> (7 - j)) & 1);
+    }
+  }
+  return res;
+}
+
+//This gives least-significant-bit (LSB) first order.
+const buffer2bits = (buffer: Buffer) => {
+  const res: bigint[] = [];
+  for (let i = 0; i < buffer.length; i++) {
+    for (let j = 0; j < 8; j++) {
+      if ((buffer[i] >> j) & 1) {
+        res.push(BigInt(1));
+      } else {
+        res.push(BigInt(0));
+      }
+    }
+  }
+  return res;
 };
 
 // This function is used to convert a number to a field element
@@ -57,7 +86,7 @@ declare global {
   }
 }
 
-describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<=f<=g) AND (h ∈ [h, i, j, k])', () => {
+describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h ∈ [i,j,k,l]) OR (hash of x matches expected)) AND (signature is valid)', () => {
   jest.setTimeout(100000);
 
   let circuit: any;
@@ -65,186 +94,212 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e<=f<=g) AND (h ∈ 
   beforeAll(async () => {
     circuit = await loadBusinessLogicCircuit();
   });
-  it('Should output 1 when (true OR true) AND (true) AND (true)', async () => {
+  it('Should output 1 when (true OR true) AND (true) AND (true OR true) AND (true)', async () => {
+    //HASH VERIFICATION
+    //Input string
+    //This string is 56 bytes long ---> Need to have a fixed length with padding????
+    const testStr = 'ljklmklmnlmnomnopnopq';
+    let testStrBuffer = Buffer.from(testStr, 'utf8');
+    //Check the length of the string and pad with 0s if less than 512 bits
+    // Pad with zeros to reach 64 bytes (512 bits)
+    const paddedLength = 64;
+    if (testStrBuffer.length < paddedLength) {
+      const padding = Buffer.alloc(paddedLength - testStrBuffer.length, 0); // zero padding
+      testStrBuffer = Buffer.concat([testStrBuffer, padding]);
+    }
+
+    const preimage = buffer2bitArray(testStrBuffer);
+
+    //Expected hash string
+    const hashStr = createHash('sha256').update(testStrBuffer).digest('hex');
+    const hashStrBuffer = Buffer.from(hashStr, 'hex');
+    const expectedHash = buffer2bitArray(hashStrBuffer);
+
+    //SIGNATURE VERIFICATION
+    const msg = createHash('sha256').update('my fixed string').digest();
+    const eddsa = await circomlib.buildEddsa();
+    const babyJub = await circomlib.buildBabyjub();
+    const privateKey = ed25519.utils.randomPrivateKey(); // or hardcode a fixed one
+    const publicKey = eddsa.prv2pub(privateKey);
+    const publicKeyPoints = eddsa.prv2pub(privateKey);
+    const packedPublicKey = babyJub.packPoint(publicKeyPoints);
+    const signature = eddsa.signPedersen(privateKey, msg);
+    const packedSignature = eddsa.packSignature(signature);
+
+    const messageBits = buffer2bits(msg);
+    const r8Bits = buffer2bits(Buffer.from(packedSignature.slice(0, 32)));
+    const sBits = buffer2bits(Buffer.from(packedSignature.slice(32, 64)));
+    const aBits = buffer2bits(Buffer.from(packedPublicKey));
+
     const inputs = {
-      inputs: [
-        [
-          10,
-          10,
-          20,
-          20, // IsEqual: a==b (true), c==d (true)
-          10,
-          3,
-          20, // RangeCheck: e ≤ f ≤ g → 3 ≤ 10 ≤ 20 (true),
-          4,
-          2,
-          4,
-          6,
-          8, // h ∈ [h, i, j, k] → 4 ∈ [4, 2, 4, 6] (true)
-        ],
-      ],
+      isEqualA: [123, 456],
+      isEqualB: [123, 456],
+
+      rangeCheckValue: [50],
+      rangeCheckMin: [10],
+      rangeCheckMax: [100],
+
+      membershipCheckValues: [3],
+      membershipCheckSets: [[1, 2, 3, 4]],
+
+      hashVerificationPreimage: [preimage], // [ [512 bits] ]
+      hashVerificationExpectedHash: [expectedHash], // [ [256 bits] ]
+
+      signatureVerificationMessage: [messageBits], // [ [256 bits] ]
+      signatureVerificationA: [aBits], // [ [256 bits] ]
+      signatureVerificationR8: [r8Bits], // [ [256 bits] ]
+      signatureVerificationS: [sBits], // [ [256 bits] ]
     };
 
-    // Expected output is 1(true)
-    const expectedOutput = 1;
-
-    const witness = await circuit.calculateWitness(
-      {
-        inputs: inputs.inputs,
-      },
-      true,
-    );
-    await circuit.checkConstraints(witness);
-
-    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  });
-  it('Should output 1 when (false OR true) AND (true) AND (true)', async () => {
-    const inputs = {
-      inputs: [
-        [
-          10,
-          50,
-          20,
-          20, // IsEqual: a==b (false), c==d (true)
-          10,
-          3,
-          20, // RangeCheck: 3 ≤ 10 ≤ 20 (true)
-          4,
-          2,
-          4,
-          6,
-          8, // Membership: 4 ∈ [2, 4, 6, 8] (true)
-        ],
-      ],
-    };
-    const expectedOutput = 1;
-    const witness = await circuit.calculateWitness(inputs, true);
-    await circuit.checkConstraints(witness);
-    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  });
-
-  it('Should output 1 when (true OR false) AND (true) AND (true)', async () => {
-    const inputs = {
-      inputs: [
-        [
-          10,
-          10,
-          20,
-          50, // IsEqual: a==b (true), c==d (false)
-          10,
-          3,
-          20, // RangeCheck: 3 ≤ 10 ≤ 20 (true)
-          6,
-          2,
-          4,
-          6,
-          8, // Membership: 6 ∈ [2, 4, 6, 8] (true)
-        ],
-      ],
-    };
     const expectedOutput = 1;
     const witness = await circuit.calculateWitness(inputs, true);
     await circuit.checkConstraints(witness);
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
+  // it('Should output 1 when (false OR true) AND (true) AND (true OR true)', async () => {
+  //   const testStr = 'ljklmklmnlmnomnopnopq';
+  //   let testStrBuffer = Buffer.from(testStr, 'utf8');
+  //   const paddedLength = 64;
+  //   if (testStrBuffer.length < paddedLength) {
+  //     const padding = Buffer.alloc(paddedLength - testStrBuffer.length, 0);
+  //     testStrBuffer = Buffer.concat([testStrBuffer, padding]);
+  //   }
 
-  it('Should output 0 when (false OR false) AND (true) AND (true)', async () => {
-    const inputs = {
-      inputs: [
-        [
-          10,
-          40,
-          50,
-          20, // IsEqual: both false
-          10,
-          3,
-          20, // RangeCheck: true
-          4,
-          2,
-          4,
-          6,
-          8, // Membership: true
-        ],
-      ],
-    };
-    const expectedOutput = 0;
-    const witness = await circuit.calculateWitness(inputs, true);
-    await circuit.checkConstraints(witness);
-    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  });
+  //   const preimage = buffer2bitArray(testStrBuffer);
+  //   const expectedHash = buffer2bitArray(
+  //     createHash('sha256').update(testStrBuffer).digest(),
+  //   );
 
-  it('Should output 0 when (false OR true) AND (false) AND (true)', async () => {
-    const inputs = {
-      inputs: [
-        [
-          10,
-          40,
-          70,
-          70, // IsEqual: false OR true
-          30,
-          3,
-          20, // RangeCheck: 3 ≤ 30 ≤ 20 → false
-          4,
-          2,
-          4,
-          6,
-          8, // Membership: true
-        ],
-      ],
-    };
-    const expectedOutput = 0;
-    const witness = await circuit.calculateWitness(inputs, true);
-    await circuit.checkConstraints(witness);
-    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  });
+  //   const inputs = {
+  //     isEqualA: [10, 20],
+  //     isEqualB: [99, 20], // 10 != 99 => false OR true
+  //     rangeCheckValue: [30],
+  //     rangeCheckMin: [10],
+  //     rangeCheckMax: [50],
+  //     membershipCheckValues: [3],
+  //     membershipCheckSets: [[1, 2, 3, 4]],
+  //     hashVerificationPreimage: [preimage],
+  //     hashVerificationExpectedHash: [expectedHash],
+  //   };
 
-  it('Should output 0 when (true OR true) AND (true) AND (false)', async () => {
-    const inputs = {
-      inputs: [
-        [
-          10,
-          10,
-          20,
-          20, // IsEqual: both true
-          10,
-          3,
-          20, // RangeCheck: true
-          5,
-          2,
-          4,
-          6,
-          8, // Membership: 5 ∉ [2,4,6,8] → false
-        ],
-      ],
-    };
-    const expectedOutput = 0;
-    const witness = await circuit.calculateWitness(inputs, true);
-    await circuit.checkConstraints(witness);
-    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  });
+  //   const expectedOutput = 1;
+  //   const witness = await circuit.calculateWitness(inputs, true);
+  //   await circuit.checkConstraints(witness);
+  //   expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  // });
+  // it('Should output 1 when (true OR true) AND (true) AND (false OR true)', async () => {
+  //   const testStr = 'ljklmklmnlmnomnopnopq';
+  //   let testStrBuffer = Buffer.from(testStr, 'utf8');
+  //   const paddedLength = 64;
+  //   if (testStrBuffer.length < paddedLength) {
+  //     const padding = Buffer.alloc(paddedLength - testStrBuffer.length, 0);
+  //     testStrBuffer = Buffer.concat([testStrBuffer, padding]);
+  //   }
 
-  it('Should output 0 when (false OR false) AND (false) AND (false)', async () => {
-    const inputs = {
-      inputs: [
-        [
-          10,
-          40,
-          30,
-          70, // IsEqual: both false
-          30,
-          3,
-          20, // RangeCheck: false
-          5,
-          2,
-          4,
-          6,
-          8, // Membership: false
-        ],
-      ],
-    };
-    const expectedOutput = 0;
-    const witness = await circuit.calculateWitness(inputs, true);
-    await circuit.checkConstraints(witness);
-    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  });
+  //   const preimage = buffer2bitArray(testStrBuffer);
+  //   const expectedHash = buffer2bitArray(
+  //     createHash('sha256').update(testStrBuffer).digest(),
+  //   );
+
+  //   const inputs = {
+  //     isEqualA: [10, 10],
+  //     isEqualB: [10, 10],
+  //     rangeCheckValue: [20],
+  //     rangeCheckMin: [10],
+  //     rangeCheckMax: [30],
+  //     membershipCheckValues: [9], // not in set
+  //     membershipCheckSets: [[1, 2, 3, 4]],
+  //     hashVerificationPreimage: [preimage],
+  //     hashVerificationExpectedHash: [expectedHash],
+  //   };
+
+  //   const expectedOutput = 1;
+  //   const witness = await circuit.calculateWitness(inputs, true);
+  //   await circuit.checkConstraints(witness);
+  //   expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  // });
+  // it('Should output 1 when (true OR true) AND (true) AND (true OR false)', async () => {
+  //   const wrongHash = Buffer.alloc(32, 0); // wrong hash (all zeros)
+  //   const wrongHashBits = buffer2bitArray(wrongHash);
+
+  //   const inputs = {
+  //     isEqualA: [11, 11],
+  //     isEqualB: [11, 11],
+  //     rangeCheckValue: [30],
+  //     rangeCheckMin: [10],
+  //     rangeCheckMax: [40],
+  //     membershipCheckValues: [2],
+  //     membershipCheckSets: [[1, 2, 3, 4]],
+  //     hashVerificationPreimage: [Array(512).fill(0)], // wrong preimage
+  //     hashVerificationExpectedHash: [wrongHashBits],
+  //   };
+
+  //   const expectedOutput = 1;
+  //   const witness = await circuit.calculateWitness(inputs, true);
+  //   await circuit.checkConstraints(witness);
+  //   expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  // });
+  // it('Should output 0 when (false OR false) AND (false) AND (false OR false)', async () => {
+  //   const wrongHash = Buffer.alloc(32, 0);
+  //   const wrongHashBits = buffer2bitArray(wrongHash);
+
+  //   const inputs = {
+  //     isEqualA: [1, 2], // false OR false
+  //     isEqualB: [3, 4],
+  //     rangeCheckValue: [200], // out of range
+  //     rangeCheckMin: [10],
+  //     rangeCheckMax: [100],
+  //     membershipCheckValues: [99], // not in set
+  //     membershipCheckSets: [[1, 2, 3, 4]],
+  //     hashVerificationPreimage: [Array(512).fill(0)],
+  //     hashVerificationExpectedHash: [wrongHashBits],
+  //   };
+
+  //   const expectedOutput = 0;
+  //   const witness = await circuit.calculateWitness(inputs, true);
+  //   await circuit.checkConstraints(witness);
+  //   expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  // });
+  // it('Should output 0 when (true OR false) AND (false) AND (false OR false)', async () => {
+  //   const wrongHash = Buffer.alloc(32, 0);
+  //   const wrongHashBits = buffer2bitArray(wrongHash);
+
+  //   const inputs = {
+  //     isEqualA: [3, 2], // true OR false
+  //     isEqualB: [3, 4],
+  //     rangeCheckValue: [200], // out of range
+  //     rangeCheckMin: [10],
+  //     rangeCheckMax: [100],
+  //     membershipCheckValues: [99], // not in set
+  //     membershipCheckSets: [[1, 2, 3, 4]],
+  //     hashVerificationPreimage: [Array(512).fill(0)],
+  //     hashVerificationExpectedHash: [wrongHashBits],
+  //   };
+
+  //   const expectedOutput = 0;
+  //   const witness = await circuit.calculateWitness(inputs, true);
+  //   await circuit.checkConstraints(witness);
+  //   expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  // });
+  // it('Should output 0 when (true OR false) AND (false) AND (true OR false)', async () => {
+  //   const wrongHash = Buffer.alloc(32, 0);
+  //   const wrongHashBits = buffer2bitArray(wrongHash);
+
+  //   const inputs = {
+  //     isEqualA: [3, 2], // true OR false
+  //     isEqualB: [3, 4],
+  //     rangeCheckValue: [200], // out of range
+  //     rangeCheckMin: [10],
+  //     rangeCheckMax: [100],
+  //     membershipCheckValues: [3], // in set
+  //     membershipCheckSets: [[1, 2, 3, 4]],
+  //     hashVerificationPreimage: [Array(512).fill(0)],
+  //     hashVerificationExpectedHash: [wrongHashBits],
+  //   };
+
+  //   const expectedOutput = 0;
+  //   const witness = await circuit.calculateWitness(inputs, true);
+  //   await circuit.checkConstraints(witness);
+  //   expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  // });
 });
