@@ -62,7 +62,7 @@ template BusinessLogic(
     var inputsPerMembershipCheck = 1 + businessOperationParams[2];
     var membershipCheckParam = businessOperationParams[2];
 
-    signal input membershipCheckValues[nMembershipCheck];
+    signal input membershipCheckValue[nMembershipCheck];
     signal input membershipCheckSets[nMembershipCheck][membershipCheckParam];
     component membershipChecks[nMembershipCheck];
 
@@ -117,7 +117,7 @@ template BusinessLogic(
     // MembershipCheck
     for (var k = 0; k < nMembershipCheck; k++) {
         membershipChecks[k] = parallel MembershipCheck(membershipCheckParam);
-        membershipChecks[k].x <== membershipCheckValues[k];
+        membershipChecks[k].x <== membershipCheckValue[k];
         for (var l = 0; l < membershipCheckParam; l++) {
             membershipChecks[k].values[l] <== membershipCheckSets[k][l];
         }
@@ -191,7 +191,7 @@ template BusinessLogic(
 
 // Declare your main component
 //((a==b) OR (c==d)) AND (e≤f≤g) AND ((h ∈ [i,j,k,l]) OR (hash of x matches expected)) AND (signature is valid)
-component main = BusinessLogic(
+component main {public [isEqualA, rangeCheckValue, membershipCheckValue, hashVerificationPreimage, signatureVerificationMessage ]} = BusinessLogic(
     [2, 1, 1, 1, 1],        // Operations: 2 IsEqual, 1 RangeCheck, 1 MembershipCheck, 1 HashVerifier, 1 SignatureVerifier
     [0, 32, 4, 512, 256],   // Params: (0) for IsEqual, (32-bit) for RangeCheck, (4-member set) for MembershipCheck, (512-bit hash) for HashVerifier, (256-bit signature) for SignatureVerifier
     5,                     // Total logic gates = 5
