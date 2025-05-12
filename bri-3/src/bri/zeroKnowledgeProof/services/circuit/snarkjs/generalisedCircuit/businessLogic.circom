@@ -6,7 +6,6 @@ include "../utils/rangeCheck.circom";
 include "../utils/membershipCheck.circom";
 include "../utils/hashVerifier.circom";
 
-//TODO: Issue #29
 //TODO: Issue #30
 //TODO: Issue #31
 //TODO: Issue #32
@@ -99,7 +98,7 @@ template BusinessLogic(
     // Step 1: Get outputs of Business operations
     // IsEqual
     for (var i = 0; i < nIsEqual; i++) {
-        isEquals[i] = IsEqual();
+        isEquals[i] = parallel IsEqual();
         isEquals[i].in[0] <== isEqualA[i];
         isEquals[i].in[1] <== isEqualB[i];
         outputs[outputIndex] <== isEquals[i].out;
@@ -108,7 +107,7 @@ template BusinessLogic(
 
     // RangeCheck
     for (var j = 0; j < nRangeCheck; j++) {
-        rangeChecks[j] = RangeCheck(rangeCheckParam);   
+        rangeChecks[j] = parallel RangeCheck(rangeCheckParam);   
         rangeChecks[j].x <== rangeCheckValue[j];
         rangeChecks[j].min <== rangeCheckMin[j];
         rangeChecks[j].max <== rangeCheckMax[j];
@@ -118,7 +117,7 @@ template BusinessLogic(
 
     // MembershipCheck
     for (var k = 0; k < nMembershipCheck; k++) {
-        membershipChecks[k] = MembershipCheck(membershipCheckParam);
+        membershipChecks[k] = parallel MembershipCheck(membershipCheckParam);
         membershipChecks[k].x <== membershipCheckValues[k];
         for (var l = 0; l < membershipCheckParam; l++) {
             membershipChecks[k].values[l] <== membershipCheckSets[k][l];
@@ -129,7 +128,7 @@ template BusinessLogic(
 
     // Hash verification
     for (var l = 0; l < nHashVerification; l++) {
-        hashVerifications[l] = HashVerifier(hashVerificationParam); 
+        hashVerifications[l] = parallel HashVerifier(hashVerificationParam); 
         for (var m = 0; m < hashVerificationParam; m++) {
             hashVerifications[l].preimage[m] <== hashVerificationPreimage[l][m];
         }
@@ -144,7 +143,7 @@ template BusinessLogic(
     component isEqualSignature[nSignatureVerification];
     for (var l = 0; l < nSignatureVerification; l++) {
         var verifiedFlag = 0;
-        signatureVerifications[l] = EdDSAVerifier(256);
+        signatureVerifications[l] = parallel EdDSAVerifier(256);
         for (var m = 0; m < 256; m++) {
             signatureVerifications[l].msg[m] <== signatureVerificationMessage[l][m];
             signatureVerifications[l].A[m] <== signatureVerificationA[l][m];
