@@ -7,7 +7,7 @@ import { BpiSubject } from 'src/bri/identity/bpiSubjects/models/bpiSubject';
 import { Workflow } from '../../workflows/models/workflow';
 import { Workstep } from '../../worksteps/models/workstep';
 
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 import { Workgroup, WorkgroupStatus } from '../models/workgroup';
 import { WorkgroupStorageAgent } from './workgroupStorage.agent';
 import {
