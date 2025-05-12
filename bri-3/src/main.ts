@@ -6,10 +6,10 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  
+
   // Set query parser to extended mode for Express v5
   app.set('query parser', 'extended');
-  
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
