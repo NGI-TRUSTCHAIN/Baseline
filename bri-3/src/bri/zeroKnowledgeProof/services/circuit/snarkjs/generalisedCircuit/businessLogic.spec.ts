@@ -159,7 +159,7 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckMin: [10],
       rangeCheckMax: [100],
 
-      membershipCheckValues: [3],
+      membershipCheckValue: [3],
       membershipCheckSets: [[1, 2, 3, 4]],
 
       hashVerificationPreimage: [preimage], // [ [512 bits] ]
@@ -192,7 +192,7 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckValue: [30],
       rangeCheckMin: [10],
       rangeCheckMax: [50],
-      membershipCheckValues: [3],
+      membershipCheckValue: [3],
       membershipCheckSets: [[1, 2, 3, 4]],
       hashVerificationPreimage: [preimage],
       hashVerificationExpectedHash: [expectedHash],
@@ -223,7 +223,7 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckValue: [20],
       rangeCheckMin: [10],
       rangeCheckMax: [30],
-      membershipCheckValues: [9], // not in set
+      membershipCheckValue: [9], // not in set
       membershipCheckSets: [[1, 2, 3, 4]],
       hashVerificationPreimage: [preimage],
       hashVerificationExpectedHash: [expectedHash],
@@ -253,7 +253,7 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckValue: [30],
       rangeCheckMin: [10],
       rangeCheckMax: [40],
-      membershipCheckValues: [2],
+      membershipCheckValue: [2],
       membershipCheckSets: [[1, 2, 3, 4]],
       hashVerificationPreimage: [Array(512).fill(0)], // wrong preimage
       hashVerificationExpectedHash: [wrongHashBits],
@@ -278,7 +278,7 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckValue: [200], // out of range
       rangeCheckMin: [10],
       rangeCheckMax: [100],
-      membershipCheckValues: [99], // not in set
+      membershipCheckValue: [99], // not in set
       membershipCheckSets: [[1, 2, 3, 4]],
       hashVerificationPreimage: [Array(512).fill(0)],
       hashVerificationExpectedHash: [wrongHashBits],
@@ -317,7 +317,7 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckValue: [200], // out of range
       rangeCheckMin: [10],
       rangeCheckMax: [100],
-      membershipCheckValues: [99], // not in set
+      membershipCheckValue: [99], // not in set
       membershipCheckSets: [[1, 2, 3, 4]],
       hashVerificationPreimage: [Array(512).fill(0)],
       hashVerificationExpectedHash: [wrongHashBits],
@@ -342,7 +342,7 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckValue: [200], // out of range
       rangeCheckMin: [10],
       rangeCheckMax: [100],
-      membershipCheckValues: [3], // in set
+      membershipCheckValue: [3], // in set
       membershipCheckSets: [[1, 2, 3, 4]],
       hashVerificationPreimage: [Array(512).fill(0)],
       hashVerificationExpectedHash: [wrongHashBits],
