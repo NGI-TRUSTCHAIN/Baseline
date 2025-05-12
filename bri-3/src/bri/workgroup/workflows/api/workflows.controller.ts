@@ -22,7 +22,10 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 @Controller('workflows')
 @ApiBearerAuth()
 export class WorkflowController {
-  constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
+  constructor(
+    private commandBus: CommandBus,
+    private queryBus: QueryBus,
+  ) {}
 
   @Get('/:id')
   @CheckAuthz({ action: 'read', type: 'Workflow' })

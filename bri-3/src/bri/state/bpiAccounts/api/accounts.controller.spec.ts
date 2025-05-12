@@ -283,9 +283,8 @@ describe('AccountController', () => {
       );
 
       // Act
-      const newBpiAccount = await accountController.createBpiAccount(
-        requestDto,
-      );
+      const newBpiAccount =
+        await accountController.createBpiAccount(requestDto);
 
       // Assert
       expect(uuidValidate(newBpiAccount));

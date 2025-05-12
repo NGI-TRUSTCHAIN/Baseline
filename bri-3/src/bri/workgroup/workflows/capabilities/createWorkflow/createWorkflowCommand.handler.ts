@@ -54,9 +54,8 @@ export class CreateWorkflowCommandHandler
       newBpiAccountCandidate,
     );
 
-    const newWorkflow = await this.storageAgent.storeNewWorkflow(
-      newWorkflowCandidate,
-    );
+    const newWorkflow =
+      await this.storageAgent.storeNewWorkflow(newWorkflowCandidate);
 
     return newWorkflow.id;
   }

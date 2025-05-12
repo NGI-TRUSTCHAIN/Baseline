@@ -35,9 +35,8 @@ export class UpdateWorkflowCommandHandler
       command.workgroupId,
     );
 
-    const updatedWorkflow = await this.storageAgent.updateWorkflow(
-      workflowToUpdate,
-    );
+    const updatedWorkflow =
+      await this.storageAgent.updateWorkflow(workflowToUpdate);
 
     return this.mapper.map(updatedWorkflow, Workflow, WorkflowDto);
   }

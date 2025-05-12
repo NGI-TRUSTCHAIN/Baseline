@@ -79,9 +79,8 @@ export class TransactionAgent {
   public async fetchUpdateCandidateAndThrowIfUpdateValidationFails(
     id: string,
   ): Promise<Transaction> {
-    const transactionToUpdate = await this.txStorageAgent.getTransactionById(
-      id,
-    );
+    const transactionToUpdate =
+      await this.txStorageAgent.getTransactionById(id);
 
     if (!transactionToUpdate) {
       throw new NotFoundException(NOT_FOUND_ERR_MESSAGE);
@@ -111,9 +110,8 @@ export class TransactionAgent {
   public async fetchDeleteCandidateAndThrowIfDeleteValidationFails(
     id: string,
   ): Promise<Transaction> {
-    const transactionToDelete = await this.txStorageAgent.getTransactionById(
-      id,
-    );
+    const transactionToDelete =
+      await this.txStorageAgent.getTransactionById(id);
 
     if (!transactionToDelete) {
       throw new NotFoundException(NOT_FOUND_ERR_MESSAGE);

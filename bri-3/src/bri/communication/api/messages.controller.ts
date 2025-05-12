@@ -20,7 +20,10 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 @Controller('messages')
 @ApiBearerAuth()
 export class MessageController {
-  constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
+  constructor(
+    private commandBus: CommandBus,
+    private queryBus: QueryBus,
+  ) {}
 
   @Get('/:id')
   async getBpiMessageById(@Param('id') id: string): Promise<BpiMessageDto> {

@@ -22,7 +22,10 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 @Controller('subjects')
 @ApiBearerAuth()
 export class SubjectController {
-  constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
+  constructor(
+    private commandBus: CommandBus,
+    private queryBus: QueryBus,
+  ) {}
 
   @Get('/:id')
   @CheckAuthz({ action: 'read', type: 'BpiSubject' })

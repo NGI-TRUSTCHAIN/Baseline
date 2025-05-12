@@ -44,9 +44,8 @@ export class WorkgroupAgent {
   public async fetchUpdateCandidateAndThrowIfUpdateValidationFails(
     id: string,
   ): Promise<Workgroup> {
-    const workgroupToUpdate = await this.workgroupStorageAgent.getWorkgroupById(
-      id,
-    );
+    const workgroupToUpdate =
+      await this.workgroupStorageAgent.getWorkgroupById(id);
 
     if (!workgroupToUpdate) {
       throw new NotFoundException(WORKGROUP_NOT_FOUND_ERR_MESSAGE);
@@ -94,9 +93,8 @@ export class WorkgroupAgent {
   public async fetchDeleteCandidateAndThrowIfDeleteValidationFails(
     id: string,
   ): Promise<Workgroup> {
-    const workgroupToDelete = await this.workgroupStorageAgent.getWorkgroupById(
-      id,
-    );
+    const workgroupToDelete =
+      await this.workgroupStorageAgent.getWorkgroupById(id);
 
     if (!workgroupToDelete) {
       throw new NotFoundException(WORKGROUP_NOT_FOUND_ERR_MESSAGE);

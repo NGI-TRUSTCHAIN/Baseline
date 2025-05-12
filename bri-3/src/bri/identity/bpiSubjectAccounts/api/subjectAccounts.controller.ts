@@ -19,7 +19,10 @@ import { BpiSubjectAccountDto } from './dtos/response/bpiSubjectAccount.dto';
 
 @Controller('subjectAccounts')
 export class SubjectAccountController {
-  constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
+  constructor(
+    private commandBus: CommandBus,
+    private queryBus: QueryBus,
+  ) {}
 
   // TODO: DTO validation
   // TODO: Response DTOs
