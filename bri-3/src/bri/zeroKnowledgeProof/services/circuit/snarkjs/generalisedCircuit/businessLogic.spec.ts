@@ -30,7 +30,7 @@ const loadBusinessLogicCircuit = async () => {
 };
 
 //This gives most-significant-bit (MSB) first order.
-function buffer2bitArray(b: Buffer) {
+function buffer2bitsMSB(b: Buffer) {
   const res: number[] = [];
   for (let i = 0; i < b.length; i++) {
     for (let j = 0; j < 8; j++) {
@@ -41,7 +41,7 @@ function buffer2bitArray(b: Buffer) {
 }
 
 //This gives least-significant-bit (LSB) first order.
-const buffer2bits = (buffer: Buffer) => {
+const buffer2bitsLSB = (buffer: Buffer) => {
   const res: bigint[] = [];
   for (let i = 0; i < buffer.length; i++) {
     for (let j = 0; j < 8; j++) {
@@ -53,6 +53,53 @@ const buffer2bits = (buffer: Buffer) => {
     }
   }
   return res;
+};
+
+//Generate hash inputs
+const generateHashInputs = async (message: string) => {
+  let testStrBuffer = Buffer.from(message, 'utf8');
+  //Check the length of the string and pad with 0s if less than 512 bits
+  // Pad with zeros to reach 64 bytes (512 bits)
+  const paddedLength = 64;
+  if (testStrBuffer.length < paddedLength) {
+    const padding = Buffer.alloc(paddedLength - testStrBuffer.length, 0); // zero padding
+    testStrBuffer = Buffer.concat([testStrBuffer, padding]);
+  }
+
+  const preimage = buffer2bitsMSB(testStrBuffer);
+
+  //Expected hash string
+  const hashStr = createHash('sha256').update(testStrBuffer).digest('hex');
+  const hashStrBuffer = Buffer.from(hashStr, 'hex');
+  const expectedHash = buffer2bitsMSB(hashStrBuffer);
+  return {
+    preimage,
+    expectedHash,
+  };
+};
+
+//Generate signature inputs
+const generateSignatureInputs = async (message: string) => {
+  const msg = createHash('sha256').update(message).digest();
+  const eddsa = await circomlib.buildEddsa();
+  const babyJub = await circomlib.buildBabyjub();
+  const privateKey = ed25519.utils.randomPrivateKey(); // or hardcode a fixed one
+  const publicKey = eddsa.prv2pub(privateKey);
+  const publicKeyPoints = eddsa.prv2pub(privateKey);
+  const packedPublicKey = babyJub.packPoint(publicKeyPoints);
+  const signature = eddsa.signPedersen(privateKey, msg);
+  const packedSignature = eddsa.packSignature(signature);
+
+  const messageBits = buffer2bitsLSB(msg);
+  const r8Bits = buffer2bitsLSB(Buffer.from(packedSignature.slice(0, 32)));
+  const sBits = buffer2bitsLSB(Buffer.from(packedSignature.slice(32, 64)));
+  const aBits = buffer2bitsLSB(Buffer.from(packedPublicKey));
+  return {
+    messageBits,
+    r8Bits,
+    sBits,
+    aBits,
+  };
 };
 
 // This function is used to convert a number to a field element
@@ -96,40 +143,13 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
   });
   it('Should output 1 when (true OR true) AND (true) AND (true OR true) AND (true)', async () => {
     //HASH VERIFICATION
-    //Input string
-    //This string is 56 bytes long ---> Need to have a fixed length with padding????
     const testStr = 'ljklmklmnlmnomnopnopq';
-    let testStrBuffer = Buffer.from(testStr, 'utf8');
-    //Check the length of the string and pad with 0s if less than 512 bits
-    // Pad with zeros to reach 64 bytes (512 bits)
-    const paddedLength = 64;
-    if (testStrBuffer.length < paddedLength) {
-      const padding = Buffer.alloc(paddedLength - testStrBuffer.length, 0); // zero padding
-      testStrBuffer = Buffer.concat([testStrBuffer, padding]);
-    }
-
-    const preimage = buffer2bitArray(testStrBuffer);
-
-    //Expected hash string
-    const hashStr = createHash('sha256').update(testStrBuffer).digest('hex');
-    const hashStrBuffer = Buffer.from(hashStr, 'hex');
-    const expectedHash = buffer2bitArray(hashStrBuffer);
+    const { preimage, expectedHash } = await generateHashInputs(testStr);
 
     //SIGNATURE VERIFICATION
-    const msg = createHash('sha256').update('my fixed string').digest();
-    const eddsa = await circomlib.buildEddsa();
-    const babyJub = await circomlib.buildBabyjub();
-    const privateKey = ed25519.utils.randomPrivateKey(); // or hardcode a fixed one
-    const publicKey = eddsa.prv2pub(privateKey);
-    const publicKeyPoints = eddsa.prv2pub(privateKey);
-    const packedPublicKey = babyJub.packPoint(publicKeyPoints);
-    const signature = eddsa.signPedersen(privateKey, msg);
-    const packedSignature = eddsa.packSignature(signature);
-
-    const messageBits = buffer2bits(msg);
-    const r8Bits = buffer2bits(Buffer.from(packedSignature.slice(0, 32)));
-    const sBits = buffer2bits(Buffer.from(packedSignature.slice(32, 64)));
-    const aBits = buffer2bits(Buffer.from(packedPublicKey));
+    const { messageBits, r8Bits, sBits, aBits } = await generateSignatureInputs(
+      'This is a test message for signature verification',
+    );
 
     const inputs = {
       isEqualA: [123, 456],
@@ -156,150 +176,194 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
     await circuit.checkConstraints(witness);
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
-  // it('Should output 1 when (false OR true) AND (true) AND (true OR true)', async () => {
-  //   const testStr = 'ljklmklmnlmnomnopnopq';
-  //   let testStrBuffer = Buffer.from(testStr, 'utf8');
-  //   const paddedLength = 64;
-  //   if (testStrBuffer.length < paddedLength) {
-  //     const padding = Buffer.alloc(paddedLength - testStrBuffer.length, 0);
-  //     testStrBuffer = Buffer.concat([testStrBuffer, padding]);
-  //   }
+  it('Should output 1 when (false OR true) AND (true) AND (true OR true) AND (true)', async () => {
+    //HASH VERIFICATION
+    const testStr = 'ljklmklmnlmnomnopnopq';
+    const { preimage, expectedHash } = await generateHashInputs(testStr);
 
-  //   const preimage = buffer2bitArray(testStrBuffer);
-  //   const expectedHash = buffer2bitArray(
-  //     createHash('sha256').update(testStrBuffer).digest(),
-  //   );
+    //SIGNATURE VERIFICATION
+    const { messageBits, r8Bits, sBits, aBits } = await generateSignatureInputs(
+      'This is a test message for signature verification',
+    );
 
-  //   const inputs = {
-  //     isEqualA: [10, 20],
-  //     isEqualB: [99, 20], // 10 != 99 => false OR true
-  //     rangeCheckValue: [30],
-  //     rangeCheckMin: [10],
-  //     rangeCheckMax: [50],
-  //     membershipCheckValues: [3],
-  //     membershipCheckSets: [[1, 2, 3, 4]],
-  //     hashVerificationPreimage: [preimage],
-  //     hashVerificationExpectedHash: [expectedHash],
-  //   };
+    const inputs = {
+      isEqualA: [10, 20],
+      isEqualB: [99, 20], // 10 != 99 => false OR true
+      rangeCheckValue: [30],
+      rangeCheckMin: [10],
+      rangeCheckMax: [50],
+      membershipCheckValues: [3],
+      membershipCheckSets: [[1, 2, 3, 4]],
+      hashVerificationPreimage: [preimage],
+      hashVerificationExpectedHash: [expectedHash],
+      signatureVerificationMessage: [messageBits],
+      signatureVerificationA: [aBits],
+      signatureVerificationR8: [r8Bits],
+      signatureVerificationS: [sBits],
+    };
 
-  //   const expectedOutput = 1;
-  //   const witness = await circuit.calculateWitness(inputs, true);
-  //   await circuit.checkConstraints(witness);
-  //   expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  // });
-  // it('Should output 1 when (true OR true) AND (true) AND (false OR true)', async () => {
-  //   const testStr = 'ljklmklmnlmnomnopnopq';
-  //   let testStrBuffer = Buffer.from(testStr, 'utf8');
-  //   const paddedLength = 64;
-  //   if (testStrBuffer.length < paddedLength) {
-  //     const padding = Buffer.alloc(paddedLength - testStrBuffer.length, 0);
-  //     testStrBuffer = Buffer.concat([testStrBuffer, padding]);
-  //   }
+    const expectedOutput = 1;
+    const witness = await circuit.calculateWitness(inputs, true);
+    await circuit.checkConstraints(witness);
+    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  });
+  it('Should output 1 when (true OR true) AND (true) AND (false OR true) AND (true)', async () => {
+    //HASH VERIFICATION
+    const testStr = 'ljklmklmnlmnomnopnopq';
+    const { preimage, expectedHash } = await generateHashInputs(testStr);
 
-  //   const preimage = buffer2bitArray(testStrBuffer);
-  //   const expectedHash = buffer2bitArray(
-  //     createHash('sha256').update(testStrBuffer).digest(),
-  //   );
+    //SIGNATURE VERIFICATION
+    const { messageBits, r8Bits, sBits, aBits } = await generateSignatureInputs(
+      'This is a test message for signature verification',
+    );
 
-  //   const inputs = {
-  //     isEqualA: [10, 10],
-  //     isEqualB: [10, 10],
-  //     rangeCheckValue: [20],
-  //     rangeCheckMin: [10],
-  //     rangeCheckMax: [30],
-  //     membershipCheckValues: [9], // not in set
-  //     membershipCheckSets: [[1, 2, 3, 4]],
-  //     hashVerificationPreimage: [preimage],
-  //     hashVerificationExpectedHash: [expectedHash],
-  //   };
+    const inputs = {
+      isEqualA: [10, 10],
+      isEqualB: [10, 10],
+      rangeCheckValue: [20],
+      rangeCheckMin: [10],
+      rangeCheckMax: [30],
+      membershipCheckValues: [9], // not in set
+      membershipCheckSets: [[1, 2, 3, 4]],
+      hashVerificationPreimage: [preimage],
+      hashVerificationExpectedHash: [expectedHash],
+      signatureVerificationMessage: [messageBits],
+      signatureVerificationA: [aBits],
+      signatureVerificationR8: [r8Bits],
+      signatureVerificationS: [sBits],
+    };
 
-  //   const expectedOutput = 1;
-  //   const witness = await circuit.calculateWitness(inputs, true);
-  //   await circuit.checkConstraints(witness);
-  //   expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  // });
-  // it('Should output 1 when (true OR true) AND (true) AND (true OR false)', async () => {
-  //   const wrongHash = Buffer.alloc(32, 0); // wrong hash (all zeros)
-  //   const wrongHashBits = buffer2bitArray(wrongHash);
+    const expectedOutput = 1;
+    const witness = await circuit.calculateWitness(inputs, true);
+    await circuit.checkConstraints(witness);
+    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  });
+  it('Should output 1 when (true OR true) AND (true) AND (true OR false) AND (true)', async () => {
+    const wrongHash = Buffer.alloc(32, 0); // wrong hash (all zeros)
+    const wrongHashBits = buffer2bitsMSB(wrongHash);
 
-  //   const inputs = {
-  //     isEqualA: [11, 11],
-  //     isEqualB: [11, 11],
-  //     rangeCheckValue: [30],
-  //     rangeCheckMin: [10],
-  //     rangeCheckMax: [40],
-  //     membershipCheckValues: [2],
-  //     membershipCheckSets: [[1, 2, 3, 4]],
-  //     hashVerificationPreimage: [Array(512).fill(0)], // wrong preimage
-  //     hashVerificationExpectedHash: [wrongHashBits],
-  //   };
+    //SIGNATURE VERIFICATION
+    const { messageBits, r8Bits, sBits, aBits } = await generateSignatureInputs(
+      'This is a test message for signature verification',
+    );
 
-  //   const expectedOutput = 1;
-  //   const witness = await circuit.calculateWitness(inputs, true);
-  //   await circuit.checkConstraints(witness);
-  //   expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  // });
-  // it('Should output 0 when (false OR false) AND (false) AND (false OR false)', async () => {
-  //   const wrongHash = Buffer.alloc(32, 0);
-  //   const wrongHashBits = buffer2bitArray(wrongHash);
+    const inputs = {
+      isEqualA: [11, 11],
+      isEqualB: [11, 11],
+      rangeCheckValue: [30],
+      rangeCheckMin: [10],
+      rangeCheckMax: [40],
+      membershipCheckValues: [2],
+      membershipCheckSets: [[1, 2, 3, 4]],
+      hashVerificationPreimage: [Array(512).fill(0)], // wrong preimage
+      hashVerificationExpectedHash: [wrongHashBits],
+      signatureVerificationMessage: [messageBits],
+      signatureVerificationA: [aBits],
+      signatureVerificationR8: [r8Bits],
+      signatureVerificationS: [sBits],
+    };
 
-  //   const inputs = {
-  //     isEqualA: [1, 2], // false OR false
-  //     isEqualB: [3, 4],
-  //     rangeCheckValue: [200], // out of range
-  //     rangeCheckMin: [10],
-  //     rangeCheckMax: [100],
-  //     membershipCheckValues: [99], // not in set
-  //     membershipCheckSets: [[1, 2, 3, 4]],
-  //     hashVerificationPreimage: [Array(512).fill(0)],
-  //     hashVerificationExpectedHash: [wrongHashBits],
-  //   };
+    const expectedOutput = 1;
+    const witness = await circuit.calculateWitness(inputs, true);
+    await circuit.checkConstraints(witness);
+    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  });
+  it('Should output 0 when (false OR false) AND (false) AND (false OR false) AND (false)', async () => {
+    const wrongHash = Buffer.alloc(32, 0);
+    const wrongHashBits = buffer2bitsMSB(wrongHash);
 
-  //   const expectedOutput = 0;
-  //   const witness = await circuit.calculateWitness(inputs, true);
-  //   await circuit.checkConstraints(witness);
-  //   expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  // });
-  // it('Should output 0 when (true OR false) AND (false) AND (false OR false)', async () => {
-  //   const wrongHash = Buffer.alloc(32, 0);
-  //   const wrongHashBits = buffer2bitArray(wrongHash);
+    const inputs = {
+      isEqualA: [1, 2], // false OR false
+      isEqualB: [3, 4],
+      rangeCheckValue: [200], // out of range
+      rangeCheckMin: [10],
+      rangeCheckMax: [100],
+      membershipCheckValues: [99], // not in set
+      membershipCheckSets: [[1, 2, 3, 4]],
+      hashVerificationPreimage: [Array(512).fill(0)],
+      hashVerificationExpectedHash: [wrongHashBits],
+      signatureVerificationMessage: [Array(256).fill(0)],
+      signatureVerificationA: [Array(256).fill(0)],
+      signatureVerificationR8: [Array(256).fill(0)],
+      signatureVerificationS: [Array(256).fill(0)],
+    };
 
-  //   const inputs = {
-  //     isEqualA: [3, 2], // true OR false
-  //     isEqualB: [3, 4],
-  //     rangeCheckValue: [200], // out of range
-  //     rangeCheckMin: [10],
-  //     rangeCheckMax: [100],
-  //     membershipCheckValues: [99], // not in set
-  //     membershipCheckSets: [[1, 2, 3, 4]],
-  //     hashVerificationPreimage: [Array(512).fill(0)],
-  //     hashVerificationExpectedHash: [wrongHashBits],
-  //   };
+    const expectedOutput = 0;
+    //If calculateWitness fails, it will throw an error and the test will fail
+    try {
+      const witness = await circuit.calculateWitness(inputs, true);
+      await circuit.checkConstraints(witness);
+    } catch (error) {
+      //Signature verification failed using assert
+      //This is expected to fail
+      expect(error).toBeDefined();
+      expect(error.message).toMatch('Error: Assert Failed.');
+      expect(0).toEqualInFr(expectedOutput);
+      return;
+    }
+  });
+  it('Should output 0 when (true OR false) AND (false) AND (false OR false) AND (true)', async () => {
+    const wrongHash = Buffer.alloc(32, 0);
+    const wrongHashBits = buffer2bitsMSB(wrongHash);
 
-  //   const expectedOutput = 0;
-  //   const witness = await circuit.calculateWitness(inputs, true);
-  //   await circuit.checkConstraints(witness);
-  //   expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  // });
-  // it('Should output 0 when (true OR false) AND (false) AND (true OR false)', async () => {
-  //   const wrongHash = Buffer.alloc(32, 0);
-  //   const wrongHashBits = buffer2bitArray(wrongHash);
+    //SIGNATURE VERIFICATION
+    const { messageBits, r8Bits, sBits, aBits } = await generateSignatureInputs(
+      'This is a test message for signature verification',
+    );
 
-  //   const inputs = {
-  //     isEqualA: [3, 2], // true OR false
-  //     isEqualB: [3, 4],
-  //     rangeCheckValue: [200], // out of range
-  //     rangeCheckMin: [10],
-  //     rangeCheckMax: [100],
-  //     membershipCheckValues: [3], // in set
-  //     membershipCheckSets: [[1, 2, 3, 4]],
-  //     hashVerificationPreimage: [Array(512).fill(0)],
-  //     hashVerificationExpectedHash: [wrongHashBits],
-  //   };
+    const inputs = {
+      isEqualA: [3, 2], // true OR false
+      isEqualB: [3, 4],
+      rangeCheckValue: [200], // out of range
+      rangeCheckMin: [10],
+      rangeCheckMax: [100],
+      membershipCheckValues: [99], // not in set
+      membershipCheckSets: [[1, 2, 3, 4]],
+      hashVerificationPreimage: [Array(512).fill(0)],
+      hashVerificationExpectedHash: [wrongHashBits],
+      signatureVerificationMessage: [messageBits],
+      signatureVerificationA: [aBits],
+      signatureVerificationR8: [r8Bits],
+      signatureVerificationS: [sBits],
+    };
 
-  //   const expectedOutput = 0;
-  //   const witness = await circuit.calculateWitness(inputs, true);
-  //   await circuit.checkConstraints(witness);
-  //   expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
-  // });
+    const expectedOutput = 0;
+    const witness = await circuit.calculateWitness(inputs, true);
+    await circuit.checkConstraints(witness);
+    expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
+  });
+  it('Should output 0 when (true OR false) AND (false) AND (true OR false) AND (false)', async () => {
+    const wrongHash = Buffer.alloc(32, 0);
+    const wrongHashBits = buffer2bitsMSB(wrongHash);
+
+    const inputs = {
+      isEqualA: [3, 2], // true OR false
+      isEqualB: [3, 4],
+      rangeCheckValue: [200], // out of range
+      rangeCheckMin: [10],
+      rangeCheckMax: [100],
+      membershipCheckValues: [3], // in set
+      membershipCheckSets: [[1, 2, 3, 4]],
+      hashVerificationPreimage: [Array(512).fill(0)],
+      hashVerificationExpectedHash: [wrongHashBits],
+      signatureVerificationMessage: [Array(256).fill(0)],
+      signatureVerificationA: [Array(256).fill(0)],
+      signatureVerificationR8: [Array(256).fill(0)],
+      signatureVerificationS: [Array(256).fill(0)],
+    };
+
+    const expectedOutput = 0;
+    //If calculateWitness fails, it will throw an error and the test will fail
+    try {
+      const witness = await circuit.calculateWitness(inputs, true);
+      await circuit.checkConstraints(witness);
+    } catch (error) {
+      //Signature verification failed using assert
+      //This is expected to fail
+      expect(error).toBeDefined();
+      expect(error.message).toMatch('Error: Assert Failed.');
+      expect(0).toEqualInFr(expectedOutput);
+      return;
+    }
+  });
 });
