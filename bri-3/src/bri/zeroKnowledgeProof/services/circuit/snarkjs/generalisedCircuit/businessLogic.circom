@@ -8,7 +8,6 @@ include "../utils/hashVerifier.circom";
 
 //TODO: Issue #30
 //TODO: Issue #31
-//TODO: Issue #32
 //TODO: Issue #33
 //TODO: Issue #34
 
