@@ -39,7 +39,7 @@ template BusinessLogic(
 ){
     signal output resultOut;
 
-    // Components for operations   
+    // Input & Components for operations   
     // 0: IsEqual
     var nIsEqual = businessOperations[0];
     var inputsPerIsEqual = 2;
@@ -195,7 +195,7 @@ template BusinessLogic(
 //((a==b) OR (c==d)) AND (e≤f≤g) AND ((h ∈ [i,j,k,l]) OR (hash of x matches expected)) AND (signature is valid)
 component main = BusinessLogic(
     [2, 1, 1, 1, 1],        // Operations: 2 IsEqual, 1 RangeCheck, 1 MembershipCheck, 1 HashVerifier, 1 SignatureVerifier
-    [0, 32, 4, 512, 256],   // Params: (0) for IsEqual, (32-bit) for RangeCheck, 4-member set, 512-bit hash, 256-bit signature
+    [0, 32, 4, 512, 256],   // Params: (0) for IsEqual, (32-bit) for RangeCheck, (4-member set) for MembershipCheck, (512-bit hash) for HashVerifier, (256-bit signature) for SignatureVerifier
     5,                     // Total logic gates = 5
     [
         // Gate 0: I0 = (a == b) OR (c == d)
