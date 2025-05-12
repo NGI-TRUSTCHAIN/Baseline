@@ -24,7 +24,6 @@ include "../utils/hashVerifier.circom";
  * 3. MembershipCheck
  * 4. Hash verification
  * 5. Signature verification
- *
  * @param businessOperationParams - Parameters for each business logic operation.
  * @param nLogicGates - Number of logic gate operations to perform (AND, OR, NOT).
  * @param truthTable - Defines sequence and inputs of logic gates for combining results of business logic operations (equality, RangeCheck, etc.).
@@ -193,7 +192,7 @@ template BusinessLogic(
     }
 
     // Step 3: Final output = last intermediate
-    resultOut <== intermediates[nLogicGates-1];
+    resultOut <== nLogicGates == 0 ? outputs[0] : intermediates[nLogicGates - 1];
 }
 
 // Declare your main component
