@@ -103,3 +103,9 @@ Server framework used is [NestJs](https://nestjs.com/).
 Architectural pattern is CQRS, using the NestJs [CRQS Module](https://docs.nestjs.com/recipes/cqrs).
 
 ORM used is [Prisma](https://www.prisma.io/).
+
+## Contributions
+
+Coming soon.
+
+This work is licensed under the [Apache 2.0 license](./LICENSE.md).

@@ -62,7 +62,7 @@
     "fixed-merkle-tree": "^0.7.3",
     "jose": "4.14.4",
     "logplease": "^1.2.15",
-    "merkletreejs": "^0.5.2",
+    "merkletreejs": "^0.4.1",
     "nats": "^2.29.3",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.0",
