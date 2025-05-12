@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Logger } from 'tslog';
+import { Logger, ILogObj } from 'tslog';
 
 @Injectable()
 export class LoggingService {
-  private _logger: Logger;
+  private _logger: Logger<ILogObj>;
 
   constructor() {
-    this._logger = new Logger({
-      ignoreStackLevels: 4,
-    });
+    this._logger = new Logger({});
   }
 
   public logError(message: string) {
