@@ -104,33 +104,7 @@ export class EthereumService implements ICcsmService {
       witness.proof.value['eval_r'],
     ];
 
-    console.log('Raw proof elements:', proofElements);
-    console.log(
-      'Proof elements types:',
-      proofElements.map((el) => typeof el),
-    );
-    console.log(
-      'Proof elements values:',
-      proofElements.map((el) => (el === undefined ? 'undefined' : el)),
-    );
-
-    const proofHex =
-      '0x' +
-      proofElements
-        .map((element, index) => {
-          console.log(`Converting element ${index}:`, element);
-          try {
-            const result = this.formatHexString(element);
-            console.log(`Successfully converted element ${index} to:`, result);
-            return result;
-          } catch (error) {
-            console.error(`Failed to convert element ${index}:`, error);
-            throw error;
-          }
-        })
-        .join('');
-
-    console.log('Final proofHex:', proofHex);
+    const proofHex = '0x' + proofElements.map(this.formatHexString).join('');
 
     const pubInputs = witness.publicInputs!.map((input) => BigInt(input));
 
@@ -157,27 +131,20 @@ export class EthereumService implements ICcsmService {
   }
 
   private formatHexString(value: string | number | bigint): string {
-    console.log('formatHexString input:', value, 'type:', typeof value);
     let hexValue: string;
     if (typeof value === 'string' && value.startsWith('0x')) {
       // If it's already a hex string, just pad it
       hexValue = value;
-      console.log('Input was hex string:', hexValue);
     } else {
       // Otherwise, convert to BigInt first
       try {
-        console.log('Attempting to convert to BigInt:', value);
         const bigIntValue = BigInt(value);
         hexValue = '0x' + bigIntValue.toString(16).padStart(64, '0');
-        console.log('Successfully converted to hex:', hexValue);
       } catch (error) {
         console.error('Error converting value to BigInt:', value);
-        console.error('Error details:', error);
         throw error;
       }
     }
-    const result = hexValue.slice(2); // Remove '0x' prefix
-    console.log('Final formatted hex:', result);
-    return result;
+    return hexValue.slice(2); // Remove '0x' prefix
   }
 }
