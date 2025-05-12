@@ -18,6 +18,13 @@ include "../utils/hashVerifier.circom";
  * logic gates defined in a truth table (AND, OR, NOT, etc.).
  * 
  * @param businessOperations - Number of business logic operations to perform.
+ * The circuit currently supports:
+ * 1. IsEqual
+ * 2. RangeCheck
+ * 3. MembershipCheck
+ * 4. Hash verification
+ * 5. Signature verification
+ *
  * @param businessOperationParams - Parameters for each business logic operation.
  * @param nLogicGates - Number of logic gate operations to perform (AND, OR, NOT).
  * @param truthTable - Defines sequence and inputs of logic gates for combining results of business logic operations (equality, RangeCheck, etc.).
