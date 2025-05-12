@@ -20,8 +20,5 @@
     "useDefineForClassFields": true,
     "allowJs": true,
     "resolveJsonModule": true
-  },
-  "ts-node": {
-    "compiler": "ttypescript"
   }
 }
