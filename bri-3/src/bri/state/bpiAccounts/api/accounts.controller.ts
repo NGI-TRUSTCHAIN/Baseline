@@ -21,7 +21,10 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 @Controller('accounts')
 @ApiBearerAuth()
 export class AccountController {
-  constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
+  constructor(
+    private commandBus: CommandBus,
+    private queryBus: QueryBus,
+  ) {}
 
   @Get('/:id')
   @CheckAuthz({ action: 'read', type: 'BpiAccount' })

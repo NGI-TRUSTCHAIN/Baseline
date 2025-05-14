@@ -111,12 +111,12 @@ function processOperator(
       operator === 'and'
         ? AND
         : operator === 'or'
-        ? OR
-        : operator === 'xor'
-        ? XOR
-        : operator === 'nand'
-        ? NAND
-        : NOR;
+          ? OR
+          : operator === 'xor'
+            ? XOR
+            : operator === 'nand'
+              ? NAND
+              : NOR;
 
     const row = createRow(
       opType,

@@ -29,9 +29,8 @@ export class UpdateTransactionCommandHandler
       command.signature,
     );
 
-    const updatedTransaction = await this.storageAgent.updateTransactionPayload(
-      transactionToUpdate,
-    );
+    const updatedTransaction =
+      await this.storageAgent.updateTransactionPayload(transactionToUpdate);
 
     return this.mapper.map(updatedTransaction, Transaction, TransactionDto);
   }

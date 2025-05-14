@@ -24,7 +24,7 @@ import { BpiSubjectAgent } from '../../../identity/bpiSubjects/agents/bpiSubject
 import { ArchiveWorkgroupCommandHandler } from '../capabilities/archiveWorkgroup/archiveWorkgroupCommand.handler';
 import { Workgroup, WorkgroupStatus } from '../models/workgroup';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 import { WorkgroupProfile } from '../workgroups.profile';
 import { PrismaService } from '../../../../shared/prisma/prisma.service';
 import { PrismaClient } from '@prisma/client';

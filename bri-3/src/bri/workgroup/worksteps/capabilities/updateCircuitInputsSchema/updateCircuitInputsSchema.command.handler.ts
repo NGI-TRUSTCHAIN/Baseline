@@ -30,9 +30,8 @@ export class UpdateCircuitInputsSchemaCommandHandler
       command.schema,
     );
 
-    const updatedWorkstep = await this.storageAgent.updateWorkstep(
-      workstepToUpdate,
-    );
+    const updatedWorkstep =
+      await this.storageAgent.updateWorkstep(workstepToUpdate);
 
     return this.mapper.map(updatedWorkstep, Workstep, WorkstepDto);
   }

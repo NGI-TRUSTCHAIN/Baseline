@@ -5,7 +5,7 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 import { TestDataHelper } from '../../../../shared/testing/testData.helper';
 import { BpiAccountAgent } from '../../../state/bpiAccounts/agents/bpiAccounts.agent';
 import { BpiAccountStorageAgent } from '../../../state/bpiAccounts/agents/bpiAccountsStorage.agent';

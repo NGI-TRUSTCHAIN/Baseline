@@ -7,7 +7,7 @@ import { AutomapperModule } from '@automapper/nestjs';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import MerkleTree from 'merkletreejs';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 import { MerkleTreeStorageAgent } from '../../../merkleTree/agents/merkleTreeStorage.agent';
 import { MerkleModule } from '../../../merkleTree/merkle.module';
 import { BpiMerkleTree } from '../../../merkleTree/models/bpiMerkleTree';
@@ -283,9 +283,8 @@ describe('AccountController', () => {
       );
 
       // Act
-      const newBpiAccount = await accountController.createBpiAccount(
-        requestDto,
-      );
+      const newBpiAccount =
+        await accountController.createBpiAccount(requestDto);
 
       // Assert
       expect(uuidValidate(newBpiAccount));

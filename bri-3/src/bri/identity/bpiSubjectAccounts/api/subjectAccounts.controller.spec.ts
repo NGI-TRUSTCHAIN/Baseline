@@ -21,7 +21,7 @@ import { classes } from '@automapper/classes';
 import { SubjectsProfile } from '../../bpiSubjects/subjects.profile';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { BpiSubjectAccount } from '../models/bpiSubjectAccount';
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 import { PublicKey, PublicKeyType } from '../../bpiSubjects/models/publicKey';
 
 describe('SubjectAccountController', () => {

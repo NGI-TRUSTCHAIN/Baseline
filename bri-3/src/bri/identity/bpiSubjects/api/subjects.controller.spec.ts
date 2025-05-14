@@ -20,7 +20,7 @@ import { AuthzFactory } from '../../../authz/authz.factory';
 import { AuthzModule } from '../../../authz/authz.module';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 import { BpiSubject } from '../models/bpiSubject';
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 import { PublicKey, PublicKeyType } from '../models/publicKey';
 import { PrismaMapper } from '../../../../shared/prisma/prisma.mapper';
 import { MerkleTreeService } from '../../../merkleTree/services/merkleTree.service';

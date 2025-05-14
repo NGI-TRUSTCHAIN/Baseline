@@ -35,9 +35,8 @@ export class BpiMessageAgent {
   public async fetchBpiSubjectAndThrowIfNotExists(
     bpiSubjectId: string,
   ): Promise<BpiSubject> {
-    const bpiSubject = await this.bpiSubjectStorageAgent.getBpiSubjectById(
-      bpiSubjectId,
-    );
+    const bpiSubject =
+      await this.bpiSubjectStorageAgent.getBpiSubjectById(bpiSubjectId);
 
     if (!bpiSubject) {
       throw new NotFoundException(BPI_SUBJECT_NOT_FOUND_ERR_MESSAGE);
@@ -65,18 +64,16 @@ export class BpiMessageAgent {
     fromBpiSubjectId: string,
     toBpiSubjectId: string,
   ): Promise<[BpiSubject?, BpiSubject?]> {
-    const fromBpiSubject = await this.bpiSubjectStorageAgent.getBpiSubjectById(
-      fromBpiSubjectId,
-    );
+    const fromBpiSubject =
+      await this.bpiSubjectStorageAgent.getBpiSubjectById(fromBpiSubjectId);
 
     if (!fromBpiSubject) {
       this.logger.logError(`BpiMessageAgent: From Bpi Subjects do not exist.`);
       return [undefined, undefined];
     }
 
-    const toBpiSubject = await this.bpiSubjectStorageAgent.getBpiSubjectById(
-      toBpiSubjectId,
-    );
+    const toBpiSubject =
+      await this.bpiSubjectStorageAgent.getBpiSubjectById(toBpiSubjectId);
 
     if (!toBpiSubject) {
       this.logger.logError(`BpiMessageAgent: To Bpi Subject do not exist.`);

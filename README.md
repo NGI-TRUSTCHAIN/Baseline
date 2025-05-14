@@ -25,6 +25,8 @@ This reference implementation is being built from scratch and will contain a lim
 
 [Node LTS] (https://nodejs.org/en/)
 
+[Circom 2] (https://docs.circom.io/getting-started/installation/)
+
 ## Installation
 
 ```bash
@@ -67,7 +69,8 @@ $ npm run start:prod
 ## Test
 
 ```bash
-# Manual testing - Export of the up-to-date Postman collection that can be used is located here: ./test/bri.postman_collection.json
+# For manual testing, swagger is running on http://localhost:3000/api
+# To get json format to use tools like postman, checkout http://localhost:3000/api-json 
 
 $ npm run start
 ```

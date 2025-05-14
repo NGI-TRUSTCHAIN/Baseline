@@ -7,7 +7,7 @@ import { BpiSubject } from 'src/bri/identity/bpiSubjects/models/bpiSubject';
 import { Workflow } from '../../workflows/models/workflow';
 import { Workstep } from '../../worksteps/models/workstep';
 
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 import { Workgroup, WorkgroupStatus } from '../models/workgroup';
 import { WorkgroupStorageAgent } from './workgroupStorage.agent';
 import {
@@ -44,9 +44,8 @@ export class WorkgroupAgent {
   public async fetchUpdateCandidateAndThrowIfUpdateValidationFails(
     id: string,
   ): Promise<Workgroup> {
-    const workgroupToUpdate = await this.workgroupStorageAgent.getWorkgroupById(
-      id,
-    );
+    const workgroupToUpdate =
+      await this.workgroupStorageAgent.getWorkgroupById(id);
 
     if (!workgroupToUpdate) {
       throw new NotFoundException(WORKGROUP_NOT_FOUND_ERR_MESSAGE);
@@ -94,9 +93,8 @@ export class WorkgroupAgent {
   public async fetchDeleteCandidateAndThrowIfDeleteValidationFails(
     id: string,
   ): Promise<Workgroup> {
-    const workgroupToDelete = await this.workgroupStorageAgent.getWorkgroupById(
-      id,
-    );
+    const workgroupToDelete =
+      await this.workgroupStorageAgent.getWorkgroupById(id);
 
     if (!workgroupToDelete) {
       throw new NotFoundException(WORKGROUP_NOT_FOUND_ERR_MESSAGE);

@@ -21,7 +21,10 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 @Controller('transactions')
 @ApiBearerAuth()
 export class TransactionController {
-  constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
+  constructor(
+    private commandBus: CommandBus,
+    private queryBus: QueryBus,
+  ) {}
 
   @Get()
   async getTransactions(): Promise<TransactionDto[]> {
