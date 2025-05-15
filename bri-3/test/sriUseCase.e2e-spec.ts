@@ -566,7 +566,12 @@ async function createWorkstepAndReturnId(
       workgroupId: workgroupId,
       securityPolicy: 'Dummy security policy',
       privacyPolicy: 'Dummy privacy policy',
-      verifierContractAddress: verifierContractAddress,
+      workstepConfig: {
+        type: 'BLOCKCHAIN',
+        executionParams: {
+          verifierContractAddress: verifierContractAddress,
+        }
+      }
     })
     .expect(201);
 

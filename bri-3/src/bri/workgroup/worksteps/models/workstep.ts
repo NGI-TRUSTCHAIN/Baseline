@@ -18,7 +18,7 @@ export class WorkstepConfig {
   type: WorkstepType;
 
   @AutoMap()
-  config: WorkstepExecutionParams;
+  executionParams: WorkstepExecutionParams;
 }
 
 export class Workstep {

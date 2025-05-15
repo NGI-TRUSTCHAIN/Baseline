@@ -215,7 +215,7 @@ export class TransactionAgent {
         );
 
         txResult.verifiedOnChain = await this.ccsmService.verifyProof(
-          workstep.workstepConfig.config.verifierContractAddress!,
+          workstep.workstepConfig.executionParams.verifierContractAddress!,
           verifierContractAbiFilePath,
           txResult.witness,
         );
@@ -223,7 +223,7 @@ export class TransactionAgent {
 
       case WorkstepType.API:
         await this.executeApiCall(
-          workstep.workstepConfig.config.apiUrl!,
+          workstep.workstepConfig.executionParams.apiUrl!,
           JSON.parse(tx.payload),
         );
         break;
@@ -379,7 +379,7 @@ export class TransactionAgent {
   private async executeApiCall(url: string, payload: any): Promise<void> {
     try {
       const response = await fetch(url, {
-        method: 'POST',
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
