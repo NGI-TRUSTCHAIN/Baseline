@@ -20,7 +20,6 @@ export class GetWorkstepByIdQueryHandler
   async execute(query: GetWorkstepByIdQuery) {
     const workstep = await this.storageAgent.getWorkstepById(query.id);
 
-    console.log('TEST: WORKSTEP', workstep);
     if (!workstep) {
       throw new NotFoundException(NOT_FOUND_ERR_MESSAGE);
     }

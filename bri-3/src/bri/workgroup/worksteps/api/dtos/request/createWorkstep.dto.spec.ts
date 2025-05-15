@@ -7,7 +7,7 @@ import { WorkstepConfig, WorkstepType } from '../../../models/workstep';
 describe('CreateWorkstepDto', () => {
   const workstepConfig: WorkstepConfig = {
     type: WorkstepType.BLOCKCHAIN,
-    config: {
+    executionParams: {
       verifierContractAddress: 'verifierContractAddress',
     },
   };

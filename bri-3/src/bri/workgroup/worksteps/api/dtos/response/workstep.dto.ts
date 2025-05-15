@@ -14,7 +14,7 @@ export class WorkstepConfigDto {
   type: WorkstepType;
 
   @AutoMap()
-  config: WorkstepExecutionParamsDto;
+  executionParams: WorkstepExecutionParamsDto;
 }
 export class WorkstepDto {
   @AutoMap()

@@ -29,7 +29,7 @@ describe('WorkstepController', () => {
   const createTestWorkstep = () => {
     const workstepConfig: WorkstepConfig = {
       type: WorkstepType.BLOCKCHAIN,
-      config: {
+      executionParams: {
         verifierContractAddress: 'verifierContractAddress',
       },
     };
