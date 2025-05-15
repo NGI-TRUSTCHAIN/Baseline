@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Workstep } from '../models/workstep';
+import { Workstep, WorkstepType, WorkstepConfig } from '../models/workstep';
 
 import { v4 } from 'uuid';
 import { CircuitInputsParserService } from '../../../zeroKnowledgeProof/services/circuit/circuitInputsParser/circuitInputParser.service';
@@ -24,7 +24,7 @@ export class WorkstepAgent {
     workgroupId: string,
     securityPolicy: string,
     privacyPolicy: string,
-    verifierContractAddress: string,
+    workstepConfig: WorkstepConfig,
   ): Workstep {
     return new Workstep(
       v4(),
@@ -34,7 +34,7 @@ export class WorkstepAgent {
       workgroupId,
       securityPolicy,
       privacyPolicy,
-      verifierContractAddress,
+      workstepConfig,
     );
   }
 
