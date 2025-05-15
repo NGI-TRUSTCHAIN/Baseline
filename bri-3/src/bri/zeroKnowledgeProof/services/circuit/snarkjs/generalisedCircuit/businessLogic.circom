@@ -1,13 +1,13 @@
 pragma circom 2.1.5;
 include "../../../../../../../node_modules/circomlib/circuits/comparators.circom";
-include "../../../../../../../node_modules/circomlib/circuits/mux1.circom";
 include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
+include "../../../../../../../node_modules/circomlib/circuits/eddsa.circom";
 include "../utils/rangeCheck.circom";
+include "../utils/merkleProofVerifier.circom";
+include "../utils/hashVerifier.circom";
 
-//TODO: Issue #29
 //TODO: Issue #30
 //TODO: Issue #31
-//TODO: Issue #32
 //TODO: Issue #33
 //TODO: Issue #34
 
@@ -17,11 +17,14 @@ include "../utils/rangeCheck.circom";
  * hash verification, merkle proof verification, signature verification, etc) using
  * logic gates defined in a truth table (AND, OR, NOT, etc.).
  * 
- * @param ops - Array of business logic operations to perform. 
- * ops = [
-    nIsEqual, inputsPerIsEqual,   // e.g., 2 inputs per IsEqual op
-    nRangeCheck, inputsPerRangeCheck   // e.g., 3 inputs per RangeCheck op]
- * @param n - Determines the bit width considered when performing the RangeCheck operation.
+ * @param businessOperations - Number of business logic operations to perform.
+ * The circuit currently supports:
+ * 1. IsEqual
+ * 2. RangeCheck
+ * 3. MerkleProofVerification
+ * 4. Hash verification
+ * 5. Signature verification
+ * @param businessOperationParams - Parameters for each business logic operation.
  * @param nLogicGates - Number of logic gate operations to perform (AND, OR, NOT).
  * @param truthTable - Defines sequence and inputs of logic gates for combining results of business logic operations (equality, RangeCheck, etc.).
  * Each row in the truth table contains:
@@ -30,53 +33,135 @@ include "../utils/rangeCheck.circom";
  * 3. The source of the first input (0 for output, 1 for intermediate).
  * 4. The index of the second input to use.
  * 5. The source of the second input (0 for output, 1 for intermediate).
- * @param numInputsPerRow - Number of inputs per row in the inputs array.
- * 
- * 
- * @param inputs - A 2D array of inputs, where each row contains the inputs for the business logic operations (isEqual, RangeCheck, etc).
- * The first row contains the inputs for the IsEqual operations, and the second row contains the inputs for the RangeCheck operations.
  *
  *
  *
  * @returns True/False after verifying the business logic.
  */
 template BusinessLogic(
-    ops, n, nLogicGates, truthTable, numInputsPerRow
+    businessOperations, businessOperationParams, nLogicGates, truthTable
 ){
-
-   // Input & final result
-    signal input inputs[2][numInputsPerRow];
     signal output resultOut;
 
-    // Components for operations
-    var nIsEqual = ops[0];
-    var inputsPerIsEqual = ops[1];
-    var nRangeCheck = ops[2];
-    var inputsPerRangeCheck = ops[3];
+    // Input & Components for operations   
+    // 0: IsEqual
+    var nIsEqual = businessOperations[0];
+    var isEqualParam = businessOperationParams[0];
     
+    signal input isEqualA[nIsEqual];
+    signal input isEqualB[nIsEqual];
     component isEquals[nIsEqual];
+   
+    //1: RangeCheck
+    var nRangeCheck = businessOperations[1];
+    var rangeCheckParam = businessOperationParams[1];
+    
+    signal input rangeCheckValue[nRangeCheck];
+    signal input rangeCheckMin[nRangeCheck];
+    signal input rangeCheckMax[nRangeCheck];
     component rangeChecks[nRangeCheck];
+    
+    //2: Merkle Proof Check
+    var nMerkleProofVerification = businessOperations[2];
+    var merkleProofVerificationParam = businessOperationParams[2];
+
+    signal input merkleProofLeaf[nMerkleProofVerification][256];
+    signal input merkleProofRoot[nMerkleProofVerification][256];
+    signal input merkleProofPathElement[nMerkleProofVerification][merkleProofVerificationParam * 256];
+    signal input merkleProofPathIndex[nMerkleProofVerification][merkleProofVerificationParam];
+    component merkleProofVerifications[nMerkleProofVerification];
+
+    //3: Hash verification
+    var nHashVerification = businessOperations[3];
+    var inputsPerHashVerification = 2;
+    var hashVerificationParam = businessOperationParams[3];
+
+    signal input hashVerificationPreimage[nHashVerification][hashVerificationParam];
+    signal input hashVerificationExpectedHash[nHashVerification][256];
+    component hashVerifications[nHashVerification];
+
+    //4: Signature Verification
+    var nSignatureVerification = businessOperations[4];
+    var inputsPerSignatureVerification = 4;
+    var signatureVerificationParam = businessOperationParams[4];
+
+    signal input signatureVerificationMessage[nSignatureVerification][256];
+    signal input signatureVerificationA[nSignatureVerification][256];
+    signal input signatureVerificationR8[nSignatureVerification][256];
+    signal input signatureVerificationS[nSignatureVerification][256];
+    component signatureVerifications[nSignatureVerification];
+
 
     // Outputs from operations
-    signal outputs[nIsEqual + nRangeCheck];
+    signal outputs[nIsEqual + nRangeCheck + nMerkleProofVerification + nHashVerification + nSignatureVerification];
     signal intermediates[nLogicGates];
 
-    // Step 1: Get outputs of IsEqual and Range Check operations
+    //Index for the inputs and output array
+    var outputIndex = 0;
+
+    // Step 1: Get outputs of Business operations
+    // IsEqual
     for (var i = 0; i < nIsEqual; i++) {
-        isEquals[i] = IsEqual();
-        isEquals[i].in[0] <== inputs[0][inputsPerIsEqual*i];
-        isEquals[i].in[1] <== inputs[0][inputsPerIsEqual*i+1];
-        outputs[i] <== isEquals[i].out;
+        isEquals[i] = parallel IsEqual();
+        isEquals[i].in[0] <== isEqualA[i];
+        isEquals[i].in[1] <== isEqualB[i];
+        outputs[outputIndex] <== isEquals[i].out;
+        outputIndex++;
     }
 
+    // RangeCheck
     for (var j = 0; j < nRangeCheck; j++) {
-        rangeChecks[j] = RangeCheck(n);
-        rangeChecks[j].x <== inputs[1][inputsPerRangeCheck * j];
-        rangeChecks[j].min <== inputs[1][inputsPerRangeCheck * j + 1];
-        rangeChecks[j].max <== inputs[1][inputsPerRangeCheck * j + 2];
-        outputs[nIsEqual + j] <== rangeChecks[j].isInRange;
+        rangeChecks[j] = parallel RangeCheck(rangeCheckParam);   
+        rangeChecks[j].x <== rangeCheckValue[j];
+        rangeChecks[j].min <== rangeCheckMin[j];
+        rangeChecks[j].max <== rangeCheckMax[j];
+        outputs[outputIndex] <== rangeChecks[j].isInRange;
+        outputIndex++;
     }
 
+    // MerkleProofVerification
+    component isEqualMerkleProof[nMerkleProofVerification];
+    for (var l = 0; l < nMerkleProofVerification; l++) {
+        var verifiedFlag = 0;
+        merkleProofVerifications[l] = parallel MerkleProofVerifier(merkleProofVerificationParam);
+        merkleProofVerifications[l].leaf <== merkleProofLeaf[l];
+        merkleProofVerifications[l].root <== merkleProofRoot[l];
+        for (var j = 0; j < merkleProofVerificationParam; j++) {
+            for (var k = 0; k < 256; k++) {
+                merkleProofVerifications[l].pathElements[j][k] <== merkleProofPathElement[l][j * 256 + k];
+            }
+        }
+        merkleProofVerifications[l].pathIndices <== merkleProofPathIndex[l];
+        outputs[outputIndex] <== merkleProofVerifications[l].isVerified;
+        outputIndex++;
+    }
+
+    // Hash verification
+    for (var l = 0; l < nHashVerification; l++) {
+        hashVerifications[l] = parallel HashVerifier(hashVerificationParam);
+        hashVerifications[l].preimage <== hashVerificationPreimage[l]; 
+        hashVerifications[l].expectedHash <== hashVerificationExpectedHash[l];
+        outputs[outputIndex] <== hashVerifications[l].isVerified;
+        outputIndex++;
+    }
+
+    // Signature verification
+    component isEqualSignature[nSignatureVerification];
+    for (var l = 0; l < nSignatureVerification; l++) {
+        var verifiedFlag = 0;
+        signatureVerifications[l] = parallel EdDSAVerifier(256);
+        signatureVerifications[l].msg <== signatureVerificationMessage[l];
+        signatureVerifications[l].A <== signatureVerificationA[l];
+        signatureVerifications[l].R8 <== signatureVerificationR8[l];
+        signatureVerifications[l].S <== signatureVerificationS[l];
+        verifiedFlag = 1;
+        isEqualSignature[l] = IsEqual();
+        isEqualSignature[l].in[0] <== verifiedFlag;
+        isEqualSignature[l].in[1] <== 1;
+        outputs[outputIndex] <== isEqualSignature[l].out;
+        outputIndex++;
+    }
+    
 
     // Step 2: Flexible logic combining using circomlib gates (AND, OR, NOT)
     var inA;
@@ -105,21 +190,31 @@ template BusinessLogic(
         }
     }
 
-    // Step 3: Final output = last intermediate
-    resultOut <== intermediates[nLogicGates-1];
+    // Step 3: Final output
+    resultOut <== nLogicGates == 0 ? outputs[0] : intermediates[nLogicGates - 1];
 }
 
 // Declare your main component
-component main = BusinessLogic(
-    [2, 2,      // nIsEqual, inputsPerIsEqual, 
-    1, 3],       // nRangeCheck, inputsPerRangeCheck
-    32,      // n: Bit width for Range Check  operation comparisons
-    2,       // nLogicGates: Number of logic operations (OR, AND)
+//((a==b) OR (c==d)) AND (e≤f≤g) AND ((h ∈ [i,j,k,l]) OR (hash of x matches expected)) AND (signature is valid)
+//CAUTION: Signature validation must always be ANDed with the other logic gates (due to assert in EDdsa circom).
+component main {public [isEqualA, rangeCheckValue, merkleProofLeaf, hashVerificationPreimage, signatureVerificationMessage ]} = BusinessLogic(
+    [2, 1, 1, 1, 1],        // Operations: 2 IsEqual, 1 RangeCheck, 1 MerkleProofVerification, 1 HashVerifier, 1 SignatureVerifier
+    [0, 32, 2, 512, 256],   // Params: (0) for IsEqual, (32-bit) for RangeCheck, (4-member set) for MerkleProofVerification, (512-bit hash) for HashVerifier, (256-bit signature) for SignatureVerifier
+    5,                     // Total logic gates = 5
     [
-        1, 0, 0, 1, 0,  // OR: outputs[0] OR outputs[1]
-        0, 0, 1, 2, 0   // AND: intermediate[0] AND outputs[2]
-    ],
-    4        // numInputsPerRow: Inputs per sub-array in inputs[2][]
+        // Gate 0: I0 = (a == b) OR (c == d)
+        1, 0, 0, 1, 0,       // OR(outputs[0], outputs[1])
+
+        // Gate 1: I1 = I0 AND (e ≤ f ≤ g)
+        0, 0, 1, 2, 0,       // AND(intermediates[0], outputs[2])
+
+        // Gate 2: I2 = (h ∈ [i,j,k,l]) OR (hash of x matches expected)
+        1, 3, 0, 4, 0,       // OR(outputs[3], outputs[4])
+
+        // Gate 3: I3 = I1 AND I2
+        0, 1, 1, 2, 1,       // AND(intermediates[1], intermediates[2])
+
+        // Gate 4: I4 = I3 AND (signature is valid)
+        0, 3, 1, 5, 0        // AND(intermediates[3], outputs[5])
+    ]
 );
-
-
