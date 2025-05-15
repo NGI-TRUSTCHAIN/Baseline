@@ -4,6 +4,8 @@ import * as path from 'path';
 import { createHash } from 'crypto';
 import { ed25519 } from '@noble/curves/ed25519';
 import * as circomlib from 'circomlibjs';
+import { MerkleTree } from 'fixed-merkle-tree';
+import e from 'express';
 
 // This is the prime field used in the circuit
 // The prime field is defined by the following equation:
@@ -55,6 +57,63 @@ const buffer2bitsLSB = (buffer: Buffer) => {
   return res;
 };
 
+function is256BitBinaryString(str: string): boolean {
+  return str.length === 256 && /^[01]+$/.test(str);
+}
+function LeafToBits(leaf: string, bitPadding: number): number[] {
+  let leafStrBuffer = Buffer.from(leaf, 'utf8');
+  const paddedLength = bitPadding / 8;
+  if (leafStrBuffer.length < paddedLength) {
+    const padding = Buffer.alloc(paddedLength - leafStrBuffer.length, 0); // zero padding
+    leafStrBuffer = Buffer.concat([leafStrBuffer, padding]);
+  }
+
+  const leafBits = buffer2bitsMSB(leafStrBuffer);
+  return leafBits;
+}
+function bitsToBuffer(bits: number[]): Buffer {
+  const byteArray: number[] = []; // 👈 Fix here
+  for (let i = 0; i < bits.length; i += 8) {
+    let byte = 0;
+    for (let j = 0; j < 8; j++) {
+      byte = (byte << 1) | (bits[i + j] || 0); // MSB first
+    }
+    byteArray.push(byte);
+  }
+  return Buffer.from(byteArray);
+}
+
+const generateMerkleHash = (left: string, right: string) => {
+  //CONVERTING LEAF TO BIT
+  let leftBits;
+  let rightBits;
+
+  if (!is256BitBinaryString(left)) {
+    leftBits = LeafToBits(left, 256);
+  } else {
+    leftBits = left.split('').map(Number);
+  }
+  if (!is256BitBinaryString(right)) {
+    rightBits = LeafToBits(right, 256);
+  } else {
+    rightBits = right.split('').map(Number);
+  }
+
+  //Concatenate the two bit arrays
+  const totalBits = leftBits.concat(rightBits);
+
+  //Convert totalBits to Buffer
+  const totalBitsBuffer = bitsToBuffer(totalBits); //512
+
+  //Generate hash string
+  const hashStr = createHash('sha256').update(totalBitsBuffer).digest('hex');
+
+  //Convert hash string to bits array
+  const expectedHash = buffer2bitsMSB(Buffer.from(hashStr, 'hex'));
+
+  return expectedHash.join('');
+};
+
 //Generate hash inputs
 const generateHashInputs = async (message: string) => {
   let testStrBuffer = Buffer.from(message, 'utf8');
@@ -77,6 +136,14 @@ const generateHashInputs = async (message: string) => {
     expectedHash,
   };
 };
+
+function flattenMerkleProofPathElement(
+  merkleProofPathElement: number[][][],
+): number[][] {
+  return merkleProofPathElement.map(
+    (proof) => proof.flat(), // Flatten [depth][256] into [depth * 256]
+  );
+}
 
 //Generate signature inputs
 const generateSignatureInputs = async (message: string) => {
@@ -142,6 +209,18 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
     circuit = await loadBusinessLogicCircuit();
   });
   it('Should output 1 when (true OR true) AND (true) AND (true OR true) AND (true)', async () => {
+    //MERKLE PROOF VERIFICATION
+    //Height of the tree = 1 (2 leaves and 1 root)
+    const tree = new MerkleTree(
+      2,
+      ['In Progress', 'Paid', 'Approved', 'Rejected'],
+      {
+        hashFunction: generateMerkleHash,
+        zeroElement: '0',
+      },
+    );
+    const path = tree.proof('Paid');
+
     //HASH VERIFICATION
     const testStr = 'ljklmklmnlmnomnopnopq';
     const { preimage, expectedHash } = await generateHashInputs(testStr);
@@ -159,8 +238,20 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckMin: [10],
       rangeCheckMax: [100],
 
-      membershipCheckValue: [3],
-      membershipCheckSets: [[1, 2, 3, 4]],
+      merkleProofLeaf: [LeafToBits('Paid', 256)],
+      merkleProofRoot: [String(tree.root).split('').map(Number)],
+      merkleProofPathElement: flattenMerkleProofPathElement([
+        path.pathElements.map((node) => {
+          let nodeBits;
+          if (!is256BitBinaryString(String(node))) {
+            nodeBits = LeafToBits(String(node), 256);
+          } else {
+            nodeBits = String(node).split('').map(Number);
+          }
+          return nodeBits;
+        }),
+      ]),
+      merkleProofPathIndex: [[path.pathIndices]],
 
       hashVerificationPreimage: [preimage], // [ [512 bits] ]
       hashVerificationExpectedHash: [expectedHash], // [ [256 bits] ]
@@ -177,6 +268,18 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
   it('Should output 1 when (false OR true) AND (true) AND (true OR true) AND (true)', async () => {
+    //MERKLE PROOF VERIFICATION
+    //Height of the tree = 1 (2 leaves and 1 root)
+    const tree = new MerkleTree(
+      2,
+      ['In Progress', 'Paid', 'Approved', 'Rejected'],
+      {
+        hashFunction: generateMerkleHash,
+        zeroElement: '0',
+      },
+    );
+    const path = tree.proof('Paid');
+
     //HASH VERIFICATION
     const testStr = 'ljklmklmnlmnomnopnopq';
     const { preimage, expectedHash } = await generateHashInputs(testStr);
@@ -192,8 +295,20 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckValue: [30],
       rangeCheckMin: [10],
       rangeCheckMax: [50],
-      membershipCheckValue: [3],
-      membershipCheckSets: [[1, 2, 3, 4]],
+      merkleProofLeaf: [LeafToBits('Paid', 256)],
+      merkleProofRoot: [String(tree.root).split('').map(Number)],
+      merkleProofPathElement: flattenMerkleProofPathElement([
+        path.pathElements.map((node) => {
+          let nodeBits;
+          if (!is256BitBinaryString(String(node))) {
+            nodeBits = LeafToBits(String(node), 256);
+          } else {
+            nodeBits = String(node).split('').map(Number);
+          }
+          return nodeBits;
+        }),
+      ]),
+      merkleProofPathIndex: [[path.pathIndices]],
       hashVerificationPreimage: [preimage],
       hashVerificationExpectedHash: [expectedHash],
       signatureVerificationMessage: [messageBits],
@@ -208,6 +323,18 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
   it('Should output 1 when (true OR true) AND (true) AND (false OR true) AND (true)', async () => {
+    //MERKLE PROOF VERIFICATION
+    //Height of the tree = 1 (2 leaves and 1 root)
+    const tree = new MerkleTree(
+      2,
+      ['In Progress', 'Paid', 'Approved', 'Rejected'],
+      {
+        hashFunction: generateMerkleHash,
+        zeroElement: '0',
+      },
+    );
+    const path = tree.proof('Paid');
+
     //HASH VERIFICATION
     const testStr = 'ljklmklmnlmnomnopnopq';
     const { preimage, expectedHash } = await generateHashInputs(testStr);
@@ -223,8 +350,20 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckValue: [20],
       rangeCheckMin: [10],
       rangeCheckMax: [30],
-      membershipCheckValue: [9], // not in set
-      membershipCheckSets: [[1, 2, 3, 4]],
+      merkleProofLeaf: [LeafToBits('In Progress', 256)],
+      merkleProofRoot: [String(tree.root).split('').map(Number)],
+      merkleProofPathElement: flattenMerkleProofPathElement([
+        path.pathElements.map((node) => {
+          let nodeBits;
+          if (!is256BitBinaryString(String(node))) {
+            nodeBits = LeafToBits(String(node), 256);
+          } else {
+            nodeBits = String(node).split('').map(Number);
+          }
+          return nodeBits;
+        }),
+      ]),
+      merkleProofPathIndex: [[path.pathIndices]],
       hashVerificationPreimage: [preimage],
       hashVerificationExpectedHash: [expectedHash],
       signatureVerificationMessage: [messageBits],
@@ -239,7 +378,20 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
   it('Should output 1 when (true OR true) AND (true) AND (true OR false) AND (true)', async () => {
-    const wrongHash = Buffer.alloc(32, 0); // wrong hash (all zeros)
+    //MERKLE PROOF VERIFICATION
+    //Height of the tree = 1 (2 leaves and 1 root)
+    const tree = new MerkleTree(
+      2,
+      ['In Progress', 'Paid', 'Approved', 'Rejected'],
+      {
+        hashFunction: generateMerkleHash,
+        zeroElement: '0',
+      },
+    );
+    const path = tree.proof('Paid');
+
+    //HASH VERIFICATION
+    const wrongHash = Buffer.alloc(32, 0);
     const wrongHashBits = buffer2bitsMSB(wrongHash);
 
     //SIGNATURE VERIFICATION
@@ -248,19 +400,35 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
     );
 
     const inputs = {
-      isEqualA: [11, 11],
-      isEqualB: [11, 11],
-      rangeCheckValue: [30],
+      isEqualA: [123, 456],
+      isEqualB: [123, 456],
+
+      rangeCheckValue: [50],
       rangeCheckMin: [10],
-      rangeCheckMax: [40],
-      membershipCheckValue: [2],
-      membershipCheckSets: [[1, 2, 3, 4]],
-      hashVerificationPreimage: [Array(512).fill(0)], // wrong preimage
+      rangeCheckMax: [100],
+
+      merkleProofLeaf: [LeafToBits('Paid', 256)],
+      merkleProofRoot: [String(tree.root).split('').map(Number)],
+      merkleProofPathElement: flattenMerkleProofPathElement([
+        path.pathElements.map((node) => {
+          let nodeBits;
+          if (!is256BitBinaryString(String(node))) {
+            nodeBits = LeafToBits(String(node), 256);
+          } else {
+            nodeBits = String(node).split('').map(Number);
+          }
+          return nodeBits;
+        }),
+      ]),
+      merkleProofPathIndex: [[path.pathIndices]],
+
+      hashVerificationPreimage: [Array(512).fill(0)],
       hashVerificationExpectedHash: [wrongHashBits],
-      signatureVerificationMessage: [messageBits],
-      signatureVerificationA: [aBits],
-      signatureVerificationR8: [r8Bits],
-      signatureVerificationS: [sBits],
+
+      signatureVerificationMessage: [messageBits], // [ [256 bits] ]
+      signatureVerificationA: [aBits], // [ [256 bits] ]
+      signatureVerificationR8: [r8Bits], // [ [256 bits] ]
+      signatureVerificationS: [sBits], // [ [256 bits] ]
     };
 
     const expectedOutput = 1;
@@ -269,6 +437,19 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
   it('Should output 0 when (false OR false) AND (false) AND (false OR false) AND (false)', async () => {
+    //MERKLE PROOF VERIFICATION
+    //Height of the tree = 1 (2 leaves and 1 root)
+    const tree = new MerkleTree(
+      2,
+      ['In Progress', 'Paid', 'Approved', 'Rejected'],
+      {
+        hashFunction: generateMerkleHash,
+        zeroElement: '0',
+      },
+    );
+    const path = tree.proof('Paid');
+
+    //HASH VERIFICATION
     const wrongHash = Buffer.alloc(32, 0);
     const wrongHashBits = buffer2bitsMSB(wrongHash);
 
@@ -278,8 +459,20 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckValue: [200], // out of range
       rangeCheckMin: [10],
       rangeCheckMax: [100],
-      membershipCheckValue: [99], // not in set
-      membershipCheckSets: [[1, 2, 3, 4]],
+      merkleProofLeaf: [LeafToBits('In Progress', 256)],
+      merkleProofRoot: [String(tree.root).split('').map(Number)],
+      merkleProofPathElement: flattenMerkleProofPathElement([
+        path.pathElements.map((node) => {
+          let nodeBits;
+          if (!is256BitBinaryString(String(node))) {
+            nodeBits = LeafToBits(String(node), 256);
+          } else {
+            nodeBits = String(node).split('').map(Number);
+          }
+          return nodeBits;
+        }),
+      ]),
+      merkleProofPathIndex: [[path.pathIndices]],
       hashVerificationPreimage: [Array(512).fill(0)],
       hashVerificationExpectedHash: [wrongHashBits],
       signatureVerificationMessage: [Array(256).fill(0)],
@@ -303,6 +496,19 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
     }
   });
   it('Should output 0 when (true OR false) AND (false) AND (false OR false) AND (true)', async () => {
+    //MERKLE PROOF VERIFICATION
+    //Height of the tree = 1 (2 leaves and 1 root)
+    const tree = new MerkleTree(
+      2,
+      ['In Progress', 'Paid', 'Approved', 'Rejected'],
+      {
+        hashFunction: generateMerkleHash,
+        zeroElement: '0',
+      },
+    );
+    const path = tree.proof('Paid');
+
+    //HASH VERIFICATION
     const wrongHash = Buffer.alloc(32, 0);
     const wrongHashBits = buffer2bitsMSB(wrongHash);
 
@@ -317,8 +523,20 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckValue: [200], // out of range
       rangeCheckMin: [10],
       rangeCheckMax: [100],
-      membershipCheckValue: [99], // not in set
-      membershipCheckSets: [[1, 2, 3, 4]],
+      merkleProofLeaf: [LeafToBits('In Progress', 256)],
+      merkleProofRoot: [String(tree.root).split('').map(Number)],
+      merkleProofPathElement: flattenMerkleProofPathElement([
+        path.pathElements.map((node) => {
+          let nodeBits;
+          if (!is256BitBinaryString(String(node))) {
+            nodeBits = LeafToBits(String(node), 256);
+          } else {
+            nodeBits = String(node).split('').map(Number);
+          }
+          return nodeBits;
+        }),
+      ]),
+      merkleProofPathIndex: [[path.pathIndices]],
       hashVerificationPreimage: [Array(512).fill(0)],
       hashVerificationExpectedHash: [wrongHashBits],
       signatureVerificationMessage: [messageBits],
@@ -333,6 +551,19 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
   it('Should output 0 when (true OR false) AND (false) AND (true OR false) AND (false)', async () => {
+    //MERKLE PROOF VERIFICATION
+    //Height of the tree = 1 (2 leaves and 1 root)
+    const tree = new MerkleTree(
+      2,
+      ['In Progress', 'Paid', 'Approved', 'Rejected'],
+      {
+        hashFunction: generateMerkleHash,
+        zeroElement: '0',
+      },
+    );
+    const path = tree.proof('Paid');
+
+    //HASH VERIFICATION
     const wrongHash = Buffer.alloc(32, 0);
     const wrongHashBits = buffer2bitsMSB(wrongHash);
 
@@ -342,8 +573,20 @@ describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h �
       rangeCheckValue: [200], // out of range
       rangeCheckMin: [10],
       rangeCheckMax: [100],
-      membershipCheckValue: [3], // in set
-      membershipCheckSets: [[1, 2, 3, 4]],
+      merkleProofLeaf: [LeafToBits('Paid', 256)],
+      merkleProofRoot: [String(tree.root).split('').map(Number)],
+      merkleProofPathElement: flattenMerkleProofPathElement([
+        path.pathElements.map((node) => {
+          let nodeBits;
+          if (!is256BitBinaryString(String(node))) {
+            nodeBits = LeafToBits(String(node), 256);
+          } else {
+            nodeBits = String(node).split('').map(Number);
+          }
+          return nodeBits;
+        }),
+      ]),
+      merkleProofPathIndex: [[path.pathIndices]],
       hashVerificationPreimage: [Array(512).fill(0)],
       hashVerificationExpectedHash: [wrongHashBits],
       signatureVerificationMessage: [Array(256).fill(0)],
