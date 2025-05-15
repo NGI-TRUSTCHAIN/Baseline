@@ -570,8 +570,8 @@ async function createWorkstepAndReturnId(
         type: 'BLOCKCHAIN',
         executionParams: {
           verifierContractAddress: verifierContractAddress,
-        }
-      }
+        },
+      },
     })
     .expect(201);
 
