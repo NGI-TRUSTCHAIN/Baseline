@@ -3,7 +3,7 @@ include "../../../../../../../node_modules/circomlib/circuits/comparators.circom
 include "../../../../../../../node_modules/circomlib/circuits/gates.circom";
 include "../../../../../../../node_modules/circomlib/circuits/eddsa.circom";
 include "../utils/rangeCheck.circom";
-include "../utils/membershipCheck.circom";
+include "../utils/merkleProofVerifier.circom";
 include "../utils/hashVerifier.circom";
 
 //TODO: Issue #30
@@ -21,7 +21,7 @@ include "../utils/hashVerifier.circom";
  * The circuit currently supports:
  * 1. IsEqual
  * 2. RangeCheck
- * 3. MembershipCheck
+ * 3. MerkleProofVerification
  * 4. Hash verification
  * 5. Signature verification
  * @param businessOperationParams - Parameters for each business logic operation.
@@ -46,7 +46,6 @@ template BusinessLogic(
     // Input & Components for operations   
     // 0: IsEqual
     var nIsEqual = businessOperations[0];
-    var inputsPerIsEqual = 2;
     var isEqualParam = businessOperationParams[0];
     
     signal input isEqualA[nIsEqual];
@@ -55,7 +54,6 @@ template BusinessLogic(
    
     //1: RangeCheck
     var nRangeCheck = businessOperations[1];
-    var inputsPerRangeCheck = 3;
     var rangeCheckParam = businessOperationParams[1];
     
     signal input rangeCheckValue[nRangeCheck];
@@ -63,14 +61,15 @@ template BusinessLogic(
     signal input rangeCheckMax[nRangeCheck];
     component rangeChecks[nRangeCheck];
     
-    //2: MembershipCheck
-    var nMembershipCheck = businessOperations[2];
-    var inputsPerMembershipCheck = 1 + businessOperationParams[2];
-    var membershipCheckParam = businessOperationParams[2];
+    //2: Merkle Proof Check
+    var nMerkleProofVerification = businessOperations[2];
+    var merkleProofVerificationParam = businessOperationParams[2];
 
-    signal input membershipCheckValue[nMembershipCheck];
-    signal input membershipCheckSets[nMembershipCheck][membershipCheckParam];
-    component membershipChecks[nMembershipCheck];
+    signal input merkleProofLeaf[nMerkleProofVerification][256];
+    signal input merkleProofRoot[nMerkleProofVerification][256];
+    signal input merkleProofPathElement[nMerkleProofVerification][merkleProofVerificationParam * 256];
+    signal input merkleProofPathIndex[nMerkleProofVerification][merkleProofVerificationParam];
+    component merkleProofVerifications[nMerkleProofVerification];
 
     //3: Hash verification
     var nHashVerification = businessOperations[3];
@@ -94,7 +93,7 @@ template BusinessLogic(
 
 
     // Outputs from operations
-    signal outputs[nIsEqual + nRangeCheck + nMembershipCheck + nHashVerification + nSignatureVerification];
+    signal outputs[nIsEqual + nRangeCheck + nMerkleProofVerification + nHashVerification + nSignatureVerification];
     signal intermediates[nLogicGates];
 
     //Index for the inputs and output array
@@ -120,26 +119,28 @@ template BusinessLogic(
         outputIndex++;
     }
 
-    // MembershipCheck
-    for (var k = 0; k < nMembershipCheck; k++) {
-        membershipChecks[k] = parallel MembershipCheck(membershipCheckParam);
-        membershipChecks[k].x <== membershipCheckValue[k];
-        for (var l = 0; l < membershipCheckParam; l++) {
-            membershipChecks[k].values[l] <== membershipCheckSets[k][l];
+    // MerkleProofVerification
+    component isEqualMerkleProof[nMerkleProofVerification];
+    for (var l = 0; l < nMerkleProofVerification; l++) {
+        var verifiedFlag = 0;
+        merkleProofVerifications[l] = parallel MerkleProofVerifier(merkleProofVerificationParam);
+        merkleProofVerifications[l].leaf <== merkleProofLeaf[l];
+        merkleProofVerifications[l].root <== merkleProofRoot[l];
+        for (var j = 0; j < merkleProofVerificationParam; j++) {
+            for (var k = 0; k < 256; k++) {
+                merkleProofVerifications[l].pathElements[j][k] <== merkleProofPathElement[l][j * 256 + k];
+            }
         }
-        outputs[outputIndex] <== membershipChecks[k].isMember;
+        merkleProofVerifications[l].pathIndices <== merkleProofPathIndex[l];
+        outputs[outputIndex] <== merkleProofVerifications[l].isVerified;
         outputIndex++;
     }
 
     // Hash verification
     for (var l = 0; l < nHashVerification; l++) {
-        hashVerifications[l] = parallel HashVerifier(hashVerificationParam); 
-        for (var m = 0; m < hashVerificationParam; m++) {
-            hashVerifications[l].preimage[m] <== hashVerificationPreimage[l][m];
-        }
-        for (var n = 0; n < 256; n++) {
-            hashVerifications[l].expectedHash[n] <== hashVerificationExpectedHash[l][n];
-        } 
+        hashVerifications[l] = parallel HashVerifier(hashVerificationParam);
+        hashVerifications[l].preimage <== hashVerificationPreimage[l]; 
+        hashVerifications[l].expectedHash <== hashVerificationExpectedHash[l];
         outputs[outputIndex] <== hashVerifications[l].isVerified;
         outputIndex++;
     }
@@ -149,12 +150,10 @@ template BusinessLogic(
     for (var l = 0; l < nSignatureVerification; l++) {
         var verifiedFlag = 0;
         signatureVerifications[l] = parallel EdDSAVerifier(256);
-        for (var m = 0; m < 256; m++) {
-            signatureVerifications[l].msg[m] <== signatureVerificationMessage[l][m];
-            signatureVerifications[l].A[m] <== signatureVerificationA[l][m];
-            signatureVerifications[l].R8[m] <== signatureVerificationR8[l][m];
-            signatureVerifications[l].S[m] <== signatureVerificationS[l][m];	
-        }
+        signatureVerifications[l].msg <== signatureVerificationMessage[l];
+        signatureVerifications[l].A <== signatureVerificationA[l];
+        signatureVerifications[l].R8 <== signatureVerificationR8[l];
+        signatureVerifications[l].S <== signatureVerificationS[l];
         verifiedFlag = 1;
         isEqualSignature[l] = IsEqual();
         isEqualSignature[l].in[0] <== verifiedFlag;
@@ -191,15 +190,16 @@ template BusinessLogic(
         }
     }
 
-    // Step 3: Final output = last intermediate
+    // Step 3: Final output
     resultOut <== nLogicGates == 0 ? outputs[0] : intermediates[nLogicGates - 1];
 }
 
 // Declare your main component
 //((a==b) OR (c==d)) AND (e≤f≤g) AND ((h ∈ [i,j,k,l]) OR (hash of x matches expected)) AND (signature is valid)
-component main {public [isEqualA, rangeCheckValue, membershipCheckValue, hashVerificationPreimage, signatureVerificationMessage ]} = BusinessLogic(
-    [2, 1, 1, 1, 1],        // Operations: 2 IsEqual, 1 RangeCheck, 1 MembershipCheck, 1 HashVerifier, 1 SignatureVerifier
-    [0, 32, 4, 512, 256],   // Params: (0) for IsEqual, (32-bit) for RangeCheck, (4-member set) for MembershipCheck, (512-bit hash) for HashVerifier, (256-bit signature) for SignatureVerifier
+//CAUTION: Signature validation must always be ANDed with the other logic gates (due to assert in EDdsa circom).
+component main {public [isEqualA, rangeCheckValue, merkleProofLeaf, hashVerificationPreimage, signatureVerificationMessage ]} = BusinessLogic(
+    [2, 1, 1, 1, 1],        // Operations: 2 IsEqual, 1 RangeCheck, 1 MerkleProofVerification, 1 HashVerifier, 1 SignatureVerifier
+    [0, 32, 2, 512, 256],   // Params: (0) for IsEqual, (32-bit) for RangeCheck, (4-member set) for MerkleProofVerification, (512-bit hash) for HashVerifier, (256-bit signature) for SignatureVerifier
     5,                     // Total logic gates = 5
     [
         // Gate 0: I0 = (a == b) OR (c == d)
