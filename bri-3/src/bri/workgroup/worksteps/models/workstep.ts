@@ -1,5 +1,26 @@
 import { AutoMap } from '@automapper/classes';
 
+export enum WorkstepType {
+  BLOCKCHAIN = 'BLOCKCHAIN',
+  API = 'API',
+}
+
+export class WorkstepExecutionParams {
+  @AutoMap()
+  verifierContractAddress?: string;
+
+  @AutoMap()
+  apiUrl?: string;
+}
+
+export class WorkstepConfig {
+  @AutoMap()
+  type: WorkstepType;
+
+  @AutoMap()
+  config: WorkstepExecutionParams;
+}
+
 export class Workstep {
   @AutoMap()
   id: string; // TODO: Add uuid after #491
@@ -26,7 +47,7 @@ export class Workstep {
   circuitInputsTranslationSchema: string;
 
   @AutoMap()
-  verifierContractAddress: string;
+  workstepConfig: WorkstepConfig;
 
   constructor(
     id: string,
@@ -36,7 +57,7 @@ export class Workstep {
     workgroupId: string,
     securityPolicy: string,
     privacyPolicy: string,
-    verifierContractAddress: string,
+    workstepConfig: WorkstepConfig,
   ) {
     this.id = id;
     this.name = name;
@@ -45,7 +66,7 @@ export class Workstep {
     this.workgroupId = workgroupId;
     this.securityPolicy = securityPolicy;
     this.privacyPolicy = privacyPolicy;
-    this.verifierContractAddress = verifierContractAddress;
+    this.workstepConfig = workstepConfig;
   }
 
   public updateName(newName: string): void {
@@ -76,7 +97,7 @@ export class Workstep {
     this.circuitInputsTranslationSchema = schema;
   }
 
-  public updateVerifierContractAddress(verifierContractAddress: string): void {
-    this.verifierContractAddress = verifierContractAddress;
+  public updateWorkstepConfig(newConfig: WorkstepConfig): void {
+    this.workstepConfig = newConfig;
   }
 }

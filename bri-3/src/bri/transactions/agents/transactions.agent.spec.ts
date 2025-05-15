@@ -31,6 +31,7 @@ import { Transaction } from '../models/transaction';
 import { TransactionStatus } from '../models/transactionStatus.enum';
 import { TransactionAgent } from './transactions.agent';
 import { TransactionStorageAgent } from './transactionStorage.agent';
+import { WorkstepType } from '../../workgroup/worksteps/models/workstep';
 
 let agent: TransactionAgent;
 let authAgent: AuthAgent;
@@ -192,7 +193,12 @@ beforeEach(async () => {
       securityPolicy: '',
       privacyPolicy: '',
       workgroupId: workgroup.id,
-      verifierContractAddress: '',
+      workstepConfig: {
+        type: WorkstepType.BLOCKCHAIN,
+        config: {
+          verifierContractAddress: '',
+        },
+      },
     },
   });
 

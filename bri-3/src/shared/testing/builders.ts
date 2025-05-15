@@ -8,7 +8,10 @@ import { PublicKey } from '../../bri/identity/bpiSubjects/models/publicKey';
 import { BpiMerkleTree } from '../../bri/merkleTree/models/bpiMerkleTree';
 import { Workflow } from '../../bri/workgroup/workflows/models/workflow';
 import { Workgroup } from '../../bri/workgroup/workgroups/models/workgroup';
-import { Workstep } from '../../bri/workgroup/worksteps/models/workstep';
+import {
+  Workstep,
+  WorkstepConfig,
+} from '../../bri/workgroup/worksteps/models/workstep';
 
 export class WorkstepBuilder {
   private id: string;
@@ -18,7 +21,7 @@ export class WorkstepBuilder {
   private workgroupId: string;
   private securityPolicy: string;
   private privacyPolicy: string;
-  private verifierContractAddress: string;
+  private workstepConfig: WorkstepConfig;
 
   constructor() {}
 
@@ -57,8 +60,8 @@ export class WorkstepBuilder {
     return this;
   }
 
-  setVerifierContractAddress(verifierContractAddress: string): WorkstepBuilder {
-    this.verifierContractAddress = verifierContractAddress;
+  setWorkstepConfig(workstepConfig: WorkstepConfig): WorkstepBuilder {
+    this.workstepConfig = workstepConfig;
     return this;
   }
 
@@ -71,7 +74,7 @@ export class WorkstepBuilder {
       this.workgroupId,
       this.securityPolicy,
       this.privacyPolicy,
-      this.verifierContractAddress,
+      this.workstepConfig,
     );
   }
 }

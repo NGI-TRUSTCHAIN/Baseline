@@ -27,6 +27,7 @@ import {
 import { TransactionResult } from '../models/transactionResult';
 import { TransactionStorageAgent } from './transactionStorage.agent';
 import { ICcsmService } from '../../ccsm/services/ccsm.interface';
+import { WorkstepType } from '../../workgroup/worksteps/models/workstep';
 
 @Injectable()
 export class TransactionAgent {
@@ -190,32 +191,48 @@ export class TransactionAgent {
       `${process.env.MERKLE_TREE_HASH_ALGH}`,
     );
 
-    const {
-      circuitProvingKeyPath,
-      circuitVerificatioKeyPath,
-      circuitPath,
-      circuitWitnessCalculatorPath,
-      circuitWitnessFilePath,
-      verifierContractAbiFilePath,
-    } = this.constructCircuitPathsFromWorkstepName(workstep.name);
+    switch (workstep.workstepConfig.type) {
+      case WorkstepType.BLOCKCHAIN:
+        const {
+          circuitProvingKeyPath,
+          circuitVerificatioKeyPath,
+          circuitPath,
+          circuitWitnessCalculatorPath,
+          circuitWitnessFilePath,
+          verifierContractAbiFilePath,
+        } = this.constructCircuitPathsFromWorkstepName(workstep.name);
 
-    txResult.witness = await this.circuitService.createWitness(
-      await this.prepareCircuitInputs(
-        tx,
-        workstep.circuitInputsTranslationSchema,
-      ),
-      circuitPath,
-      circuitProvingKeyPath,
-      circuitVerificatioKeyPath,
-      circuitWitnessCalculatorPath,
-      circuitWitnessFilePath,
-    );
+        txResult.witness = await this.circuitService.createWitness(
+          await this.prepareCircuitInputs(
+            tx,
+            workstep.circuitInputsTranslationSchema,
+          ),
+          circuitPath,
+          circuitProvingKeyPath,
+          circuitVerificatioKeyPath,
+          circuitWitnessCalculatorPath,
+          circuitWitnessFilePath,
+        );
 
-    txResult.verifiedOnChain = await this.ccsmService.verifyProof(
-      workstep.verifierContractAddress,
-      verifierContractAbiFilePath,
-      txResult.witness,
-    );
+        txResult.verifiedOnChain = await this.ccsmService.verifyProof(
+          workstep.workstepConfig.config.verifierContractAddress!,
+          verifierContractAbiFilePath,
+          txResult.witness,
+        );
+        break;
+
+      case WorkstepType.API:
+        await this.executeApiCall(
+          workstep.workstepConfig.config.apiUrl!,
+          JSON.parse(tx.payload),
+        );
+        break;
+
+      default:
+        throw new Error(
+          `Unsupported workstep type: ${workstep.workstepConfig.type}`,
+        );
+    }
 
     txResult.hash = this.constructTxHash(
       txResult.merkelizedPayload,
@@ -357,5 +374,23 @@ export class TransactionAgent {
     const witnessHash = hashFn(JSON.stringify(witness)).toString('hex');
 
     return hashFn(`${merkelizedInvoiceRoot}${witnessHash}`).toString('hex');
+  }
+
+  private async executeApiCall(url: string, payload: any): Promise<void> {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API call failed with status ${response.status}`);
+      }
+    } catch (error) {
+      throw new Error(`Failed to execute API call: ${error.message}`);
+    }
   }
 }
