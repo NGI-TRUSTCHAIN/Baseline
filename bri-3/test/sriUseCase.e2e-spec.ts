@@ -20,6 +20,10 @@ import {
   createEddsaPublicKey,
   createEddsaSignature,
 } from '../src/shared/testing/utils';
+import {
+  WorkstepConfig,
+  WorkstepType,
+} from '../src/bri/workgroup/worksteps/models/workstep';
 
 jest.setTimeout(240000);
 let accessToken: string;
@@ -34,12 +38,14 @@ let createdWorkgroupId: string;
 let createdWorkstep1Id: string;
 let createdWorkstep2Id: string;
 let createdWorkstep3Id: string;
+let createdWorkstepApiId: string;
 let createdWorkflowId: string;
 let createdBpiSubjectAccountSupplierId: string;
 let createdBpiSubjectAccountBuyerId: string;
 let createdTransaction1Id: string;
 let createdTransaction2Id: string;
 let createdTransaction3Id: string;
+let createdTransactionApiId: string;
 
 describe('SRI use-case end-to-end test', () => {
   beforeAll(async () => {
@@ -138,25 +144,56 @@ describe('SRI use-case end-to-end test', () => {
     createdWorkstep1Id = await createWorkstepAndReturnId(
       'workstep1',
       createdWorkgroupId,
-      '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
+      {
+        type: WorkstepType.BLOCKCHAIN,
+        executionParams: {
+          verifierContractAddress: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
+        },
+      },
     );
 
     createdWorkstep2Id = await createWorkstepAndReturnId(
       'workstep2',
       createdWorkgroupId,
-      '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
+      {
+        type: WorkstepType.BLOCKCHAIN,
+        executionParams: {
+          verifierContractAddress: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
+        },
+      },
     );
 
     createdWorkstep3Id = await createWorkstepAndReturnId(
       'workstep3',
       createdWorkgroupId,
-      '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
+      {
+        type: WorkstepType.BLOCKCHAIN,
+        executionParams: {
+          verifierContractAddress: '0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9',
+        },
+      },
+    );
+
+    createdWorkstepApiId = await createWorkstepAndReturnId(
+      'workstep4',
+      createdWorkgroupId,
+      {
+        type: WorkstepType.API,
+        executionParams: {
+          apiUrl: 'http://localhost:3001/api/publicApi/sales-invoice/xml',
+        },
+      },
     );
 
     createdWorkflowId = await createWorkflowAndReturnId(
       'worksflow1',
       createdWorkgroupId,
-      [createdWorkstep1Id, createdWorkstep2Id, createdWorkstep3Id],
+      [
+        createdWorkstep1Id,
+        createdWorkstep2Id,
+        createdWorkstep3Id,
+        createdWorkstepApiId,
+      ],
       [createdBpiSubjectAccountSupplierId, createdBpiSubjectAccountBuyerId],
     );
   });
@@ -448,6 +485,28 @@ describe('SRI use-case end-to-end test', () => {
     expect(stateTreeLeafValue).toBeTruthy();
     expect(stateTreeLeafValue.leafIndex).toBe(2);
   });
+
+  it('Submits transaction 4 for execution of the workstep 4 with api call', async () => {
+    createdTransactionApiId = await createTransactionAndReturnId(
+      v4(),
+      3,
+      createdWorkflowId,
+      createdWorkstepApiId,
+      createdBpiSubjectAccountBuyerId,
+      buyerBpiSubjectEddsaPrivateKey,
+      createdBpiSubjectAccountSupplierId,
+      JSON.stringify({
+        method: 'GET',
+        apiKey: 'd2e7f81c-64c7-4c61-9b43-b6d215d9a2cf',
+        headers: {
+          accept: '*/*',
+        },
+        queryParams: {
+          invoiceId: '298142431',
+        },
+      }),
+    );
+  });
 });
 
 async function loginAsInternalBpiSubjectAndReturnAnAccessToken(): Promise<string> {
@@ -554,7 +613,7 @@ async function fetchWorkgroup(workgroupId: string): Promise<any> {
 async function createWorkstepAndReturnId(
   name: string,
   workgroupId: string,
-  verifierContractAddress: string,
+  workstepConfig: WorkstepConfig,
 ): Promise<string> {
   const createdWorkstepResponse = await request(server)
     .post('/worksteps')
@@ -566,12 +625,7 @@ async function createWorkstepAndReturnId(
       workgroupId: workgroupId,
       securityPolicy: 'Dummy security policy',
       privacyPolicy: 'Dummy privacy policy',
-      workstepConfig: {
-        type: 'BLOCKCHAIN',
-        executionParams: {
-          verifierContractAddress: verifierContractAddress,
-        },
-      },
+      workstepConfig: workstepConfig,
     })
     .expect(201);
 
