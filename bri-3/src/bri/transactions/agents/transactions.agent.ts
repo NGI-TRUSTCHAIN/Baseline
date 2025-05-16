@@ -376,18 +376,36 @@ export class TransactionAgent {
     return hashFn(`${merkelizedInvoiceRoot}${witnessHash}`).toString('hex');
   }
 
-  private async executeApiCall(url: string, payload: any): Promise<void> {
+  private async executeApiCall(url: string, payload: any): Promise<any> {
     try {
       const response = await fetch(url, {
-        method: 'GET',
+        method: payload.method || 'GET',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': payload.contentType || 'application/json',
+          ApiKey: payload.apiKey,
+          ...payload.headers,
         },
-        body: JSON.stringify(payload),
+        body: payload.body ? JSON.stringify(payload.body) : undefined,
       });
 
       if (!response.ok) {
         throw new Error(`API call failed with status ${response.status}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('application/xml')) {
+        const xmlText = await response.text();
+        return {
+          contentType: 'application/xml',
+          data: xmlText,
+          headers: Object.fromEntries(response.headers.entries()),
+        };
+      } else {
+        return {
+          contentType: contentType || 'application/json',
+          data: await response.json(),
+          headers: Object.fromEntries(response.headers.entries()),
+        };
       }
     } catch (error) {
       throw new Error(`Failed to execute API call: ${error.message}`);
