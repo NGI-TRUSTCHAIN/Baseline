@@ -222,10 +222,12 @@ export class TransactionAgent {
         break;
 
       case WorkstepType.API:
-        await this.executeApiCall(
+        console.log('CALLING API WORKSTEP');
+        const response = await this.executeApiCall(
           workstep.workstepConfig.executionParams.apiUrl!,
           JSON.parse(tx.payload),
         );
+        console.log('RESPONSE', response);
         break;
 
       default:
@@ -377,8 +379,17 @@ export class TransactionAgent {
   }
 
   private async executeApiCall(url: string, payload: any): Promise<any> {
+    console.log('TX PAYLOAD', payload);
     try {
-      const response = await fetch(url, {
+      // Construct URL with query parameters if they exist
+      let fullUrl = url;
+      if (payload.queryParams) {
+        const queryString = new URLSearchParams(payload.queryParams).toString();
+        fullUrl = `${url}?${queryString}`;
+      }
+      console.log('FULL URL', fullUrl);
+
+      const response = await fetch(fullUrl, {
         method: payload.method || 'GET',
         headers: {
           'Content-Type': payload.contentType || 'application/json',
@@ -388,6 +399,7 @@ export class TransactionAgent {
         body: payload.body ? JSON.stringify(payload.body) : undefined,
       });
 
+      console.log('RESPONSE', response);
       if (!response.ok) {
         throw new Error(`API call failed with status ${response.status}`);
       }

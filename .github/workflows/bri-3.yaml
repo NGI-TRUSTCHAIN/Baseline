@@ -35,6 +35,7 @@ jobs:
         image: nats:alpine
         ports:
           - 4222:4222
+
     env:
       DATABASE_URL: "postgresql://postgres:example@localhost:5432/postgres"
       DID_REGISTRY: "0x03d5003bf0e79c5f5223588f347eba39afbc3818"
@@ -53,6 +54,7 @@ jobs:
       VSM_CYCLE_PERIOD_IN_SECS: 15
       VSM_CYCLE_TX_BATCH_SIZE: 5
       MERKLE_TREE_HASH_ALGH: "sha256"
+      EFACTURA_MOCK_PORT: "3001"
 
     steps:
       - name: Checkout
@@ -132,6 +134,22 @@ jobs:
           npx hardhat node &
           npx hardhat run scripts/deploy.ts
 
+      - name: Start eFaktura mock server
+        working-directory: bri-3
+        run: |
+          # Start the mock server in the background
+          npm run mock:efaktura &
+          # Wait for the server to be ready
+          sleep 5
+          # Verify the server is running
+          curl -s http://localhost:${{ env.EFACTURA_MOCK_PORT }}/api/health || exit 1
+
       - name: Run e2e tests
         working-directory: bri-3
         run: npm run test:e2e
+
+      - name: Cleanup
+        if: always()
+        run: |
+          # Kill any remaining processes on port 3001
+          lsof -ti:3001 | xargs kill -9 || true 
