@@ -25,9 +25,8 @@ export class ArchiveWorkgroupCommandHandler
 
     this.workgroupAgent.archiveWorkgroup(workgroupToArchive);
 
-    const updatedWorkgroup = await this.workgroupStorageAgent.updateWorkgroup(
-      workgroupToArchive,
-    );
+    const updatedWorkgroup =
+      await this.workgroupStorageAgent.updateWorkgroup(workgroupToArchive);
 
     return this.mapper.map(updatedWorkgroup, Workgroup, WorkgroupDto);
   }

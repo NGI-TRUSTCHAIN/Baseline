@@ -29,9 +29,8 @@ export class UpdateBpiMessageCommandHandler
       command.signature,
     );
 
-    const updatedBpiMessage = await this.storageAgent.updateBpiMessage(
-      bpiMessageToUpdate,
-    );
+    const updatedBpiMessage =
+      await this.storageAgent.updateBpiMessage(bpiMessageToUpdate);
 
     return this.mapper.map(updatedBpiMessage, BpiMessage, BpiMessageDto);
   }

@@ -44,9 +44,8 @@ export class UpdateWorkgroupCommandHandler
       participantsToUpdate,
     );
 
-    const updatedWorkgroup = await this.workgroupStorageAgent.updateWorkgroup(
-      workgroupToUpdate,
-    );
+    const updatedWorkgroup =
+      await this.workgroupStorageAgent.updateWorkgroup(workgroupToUpdate);
 
     return this.mapper.map(updatedWorkgroup, Workgroup, WorkgroupDto);
   }

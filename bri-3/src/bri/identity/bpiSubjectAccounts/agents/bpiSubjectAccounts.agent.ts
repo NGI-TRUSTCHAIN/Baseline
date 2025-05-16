@@ -60,17 +60,15 @@ export class BpiSubjectAccountAgent {
     creatorBpiSubjectId: string,
     ownerBpiSubjectId: string,
   ) {
-    const creatorBpiSubject = await this.subjectStorageAgent.getBpiSubjectById(
-      creatorBpiSubjectId,
-    );
+    const creatorBpiSubject =
+      await this.subjectStorageAgent.getBpiSubjectById(creatorBpiSubjectId);
 
     if (!creatorBpiSubject) {
       throw new NotFoundException(SUBJECT_NOT_FOUND_ERR_MESSAGE);
     }
 
-    const ownerBpiSubject = await this.subjectStorageAgent.getBpiSubjectById(
-      ownerBpiSubjectId,
-    );
+    const ownerBpiSubject =
+      await this.subjectStorageAgent.getBpiSubjectById(ownerBpiSubjectId);
 
     if (!ownerBpiSubject) {
       throw new NotFoundException(SUBJECT_NOT_FOUND_ERR_MESSAGE);

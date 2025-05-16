@@ -23,7 +23,10 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 @Controller('workgroups')
 @ApiBearerAuth()
 export class WorkgroupController {
-  constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
+  constructor(
+    private commandBus: CommandBus,
+    private queryBus: QueryBus,
+  ) {}
 
   @Get('/:id')
   @CheckAuthz({ action: 'read', type: 'Workgroup' })

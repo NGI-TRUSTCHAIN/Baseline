@@ -30,9 +30,8 @@ export class UpdateBpiSubjectCommandHandler
       command.publicKeys,
     );
 
-    const bpiSubject = await this.storageAgent.updateBpiSubject(
-      bpiSubjectToUpdate,
-    );
+    const bpiSubject =
+      await this.storageAgent.updateBpiSubject(bpiSubjectToUpdate);
 
     return this.mapper.map(bpiSubject, BpiSubject, BpiSubjectDto);
   }

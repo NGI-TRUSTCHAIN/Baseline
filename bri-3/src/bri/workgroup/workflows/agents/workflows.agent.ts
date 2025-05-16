@@ -27,9 +27,8 @@ export class WorkflowAgent {
   public async fetchWorkstepCandidatesForWorkflowAndThrowIfExistenceValidationFails(
     workstepIds: string[],
   ): Promise<Workstep[]> {
-    const worksteps = await this.workstepStorageAgent.getMatchingWorkstepsById(
-      workstepIds,
-    );
+    const worksteps =
+      await this.workstepStorageAgent.getMatchingWorkstepsById(workstepIds);
 
     if (Array.isArray(worksteps) && !worksteps.length) {
       throw new NotFoundException(WORKSTEP_NOT_FOUND_ERR_MESSAGE);
@@ -79,9 +78,8 @@ export class WorkflowAgent {
   public async fetchUpdateCandidateAndThrowIfUpdateValidationFails(
     id: string,
   ): Promise<Workflow> {
-    const workflowToUpdate = await this.workflowStorageAgent.getWorkflowById(
-      id,
-    );
+    const workflowToUpdate =
+      await this.workflowStorageAgent.getWorkflowById(id);
 
     if (!workflowToUpdate) {
       throw new NotFoundException(WORKFLOW_NOT_FOUND_ERR_MESSAGE);
@@ -104,9 +102,8 @@ export class WorkflowAgent {
   public async fetchDeleteCandidateAndThrowIfDeleteValidationFails(
     id: string,
   ): Promise<Workflow> {
-    const workflowToDelete = await this.workflowStorageAgent.getWorkflowById(
-      id,
-    );
+    const workflowToDelete =
+      await this.workflowStorageAgent.getWorkflowById(id);
 
     if (!workflowToDelete) {
       throw new NotFoundException(WORKFLOW_NOT_FOUND_ERR_MESSAGE);

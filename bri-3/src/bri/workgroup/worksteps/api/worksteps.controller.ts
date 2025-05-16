@@ -24,7 +24,10 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 @Controller('worksteps')
 @ApiBearerAuth()
 export class WorkstepController {
-  constructor(private commandBus: CommandBus, private queryBus: QueryBus) {}
+  constructor(
+    private commandBus: CommandBus,
+    private queryBus: QueryBus,
+  ) {}
 
   // TODO: DTO validation
   // TODO: Response DTOs

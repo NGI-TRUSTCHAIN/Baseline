@@ -23,9 +23,8 @@ export class CreateWorkstepCommandHandler
       command.verifierContractAddress,
     );
 
-    const newWorkstep = await this.storageAgent.storeNewWorkstep(
-      newWorkstepCandidate,
-    );
+    const newWorkstep =
+      await this.storageAgent.storeNewWorkstep(newWorkstepCandidate);
 
     return newWorkstep.id;
   }
