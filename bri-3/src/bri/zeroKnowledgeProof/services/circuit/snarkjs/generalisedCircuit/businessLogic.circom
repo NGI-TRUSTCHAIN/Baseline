@@ -168,12 +168,14 @@ template BusinessLogic(
     var inB;
 
     for (var opIdx = 0; opIdx < nLogicGates; opIdx++) {
-        var baseIdx = 5 * opIdx;
-        var op = truthTable[baseIdx];
-        var idxA = truthTable[baseIdx + 1];
-        var srcA = truthTable[baseIdx + 2];
-        var idxB = truthTable[baseIdx + 3];
-        var srcB = truthTable[baseIdx + 4];
+        var packed = truthTable[opIdx];
+
+        // Unpack fields
+        var op   = (packed >> 10) & 3;     // bits 11-10 --> 2 bits
+        var srcB = (packed >> 9) & 1;      // bit 9 --> 1 bit
+        var idxB = (packed >> 5) & 15;     // bits 8-5 --> 4 bits
+        var srcA = (packed >> 4) & 1;      // bit 4 --> 1 bits
+        var idxA = packed & 15;            // bits 3-0 --> 4 bits
 
         inA = srcA == 0 ? outputs[idxA] : intermediates[idxA];
 
@@ -202,19 +204,10 @@ component main {public [isEqualA, rangeCheckValue, merkleProofLeaf, hashVerifica
     [0, 32, 2, 512, 256],   // Params: (0) for IsEqual, (32-bit) for RangeCheck, (4-member set) for MerkleProofVerification, (512-bit hash) for HashVerifier, (256-bit signature) for SignatureVerifier
     5,                     // Total logic gates = 5
     [
-        // Gate 0: I0 = (a == b) OR (c == d)
-        1, 0, 0, 1, 0,       // OR(outputs[0], outputs[1])
-
-        // Gate 1: I1 = I0 AND (e ≤ f ≤ g)
-        0, 0, 1, 2, 0,       // AND(intermediates[0], outputs[2])
-
-        // Gate 2: I2 = (h ∈ [i,j,k,l]) OR (hash of x matches expected)
-        1, 3, 0, 4, 0,       // OR(outputs[3], outputs[4])
-
-        // Gate 3: I3 = I1 AND I2
-        0, 1, 1, 2, 1,       // AND(intermediates[1], intermediates[2])
-
-        // Gate 4: I4 = I3 AND (signature is valid)
-        0, 3, 1, 5, 0        // AND(intermediates[3], outputs[5])
+        1056,   // Gate 0: OR(outputs[0], outputs[1]) = (1 << 10) | (0 << 9) | (1 << 5) | (0 << 4) | 0 = 1024 + 32 = 1056
+        80,     // Gate 1: AND(intermediates[0], outputs[2]) = (0 << 10) | (0 << 9) | (2 << 5) | (1 << 4) | 0 = 64 + 16 = 80
+        1155,   // Gate 2: OR(outputs[3], outputs[4]) = (1 << 10) | (0 << 9) | (4 << 5) | (0 << 4) | 3 = 1024 + 128 + 3 = 1155
+        593,    // Gate 3: AND(intermediates[1], intermediates[2])= (0 << 10) | (1 << 9) | (2 << 5) | (1 << 4) | 1 = 512 + 64 + 16 + 1 = 593
+        179     // Gate 4: AND(intermediates[3], outputs[5]) = (0 << 10) | (0 << 9) | (5 << 5) | (1 << 4) | 3 = 160 + 16 + 3 = 179
     ]
 );
