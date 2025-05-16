@@ -178,17 +178,20 @@ template BusinessLogic(
         var idxA = packed & 15;            // bits 3-0 --> 4 bits
 
         inA = srcA == 0 ? outputs[idxA] : intermediates[idxA];
+        inB = srcB == 0 ? outputs[idxB] : intermediates[idxB];
 
-        if (op == 2) { // NOT
-            intermediates[opIdx] <== 1 - inA;
+        var andOut = inA * inB;
+        var orOut = inA + inB - inA * inB;
+        var notOut = 1 - inA; 
+
+        if (op == 0) {
+            intermediates[opIdx] <== andOut;
+        } else if (op == 1) {
+            intermediates[opIdx] <== orOut;
+        } else if (op == 2) {
+            intermediates[opIdx] <== notOut;
         } else {
-            inB = srcB == 0 ? outputs[idxB] : intermediates[idxB];
-
-            if (op == 0) { // AND
-                intermediates[opIdx] <== inA * inB;
-            } else if (op == 1) { // OR
-                intermediates[opIdx] <== inA + inB - inA * inB;
-            }
+            intermediates[opIdx] <== 0;
         }
     }
 
