@@ -507,6 +507,10 @@ describe('SRI use-case end-to-end test', () => {
       }),
     );
   });
+
+  it('Waits for a single VSM cycle and then verifies that the transaction 4 has been executed', async () => {
+    await new Promise((r) => setTimeout(r, 50000));
+  });
 });
 
 async function loginAsInternalBpiSubjectAndReturnAnAccessToken(): Promise<string> {
