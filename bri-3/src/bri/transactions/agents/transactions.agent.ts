@@ -381,7 +381,7 @@ export class TransactionAgent {
   }
 
   private async executeApiCall(url: string, payload: any): Promise<any> {
-    this.logger.logInfo(`TX PAYLOAD ${payload}`);
+    this.logger.logInfo(`TX PAYLOAD ${JSON.stringify(payload)}`);
     try {
       // Construct URL with query parameters if they exist
       let fullUrl = url;
@@ -401,7 +401,7 @@ export class TransactionAgent {
         body: payload.body ? JSON.stringify(payload.body) : undefined,
       });
 
-      this.logger.logInfo(`RESPONSE ${response}`);
+      this.logger.logInfo(`RESPONSE ${JSON.stringify(response)}`);
       if (!response.ok) {
         throw new Error(`API call failed with status ${response.status}`);
       }
