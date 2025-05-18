@@ -230,7 +230,7 @@ export class TransactionAgent {
           workstep.workstepConfig.executionParams.apiUrl!,
           JSON.parse(tx.payload),
         );
-        this.logger.logInfo(`RESPONSE: ${response}`);
+        this.logger.logInfo(`RESPONSE: ${JSON.stringify(response)}`);
         const parsed = await parseStringPromise(response.data, {
           explicitArray: false,
           tagNameProcessors: [processors.stripPrefix],
@@ -282,15 +282,21 @@ export class TransactionAgent {
         this.logger.logInfo('\nTOTALS');
         const totals = invoice.LegalMonetaryTotal;
         this.logger.logInfo(
-          `LineExtensionAmount: ${totals.LineExtensionAmount}`,
+          `LineExtensionAmount: ${JSON.stringify(totals.LineExtensionAmount)}`,
         );
-        this.logger.logInfo(`TaxExclusiveAmount: ${totals.TaxExclusiveAmount}`);
-        this.logger.logInfo(`TaxInclusiveAmount: ${totals.TaxInclusiveAmount}`);
-        this.logger.logInfo(`PayableAmount: ${totals.PayableAmount}`);
+        this.logger.logInfo(
+          `TaxExclusiveAmount: ${JSON.stringify(totals.TaxExclusiveAmount)}`,
+        );
+        this.logger.logInfo(
+          `TaxInclusiveAmount: ${JSON.stringify(totals.TaxInclusiveAmount)}`,
+        );
+        this.logger.logInfo(
+          `PayableAmount: ${JSON.stringify(totals.PayableAmount)}`,
+        );
 
         this.logger.logInfo('\nTAX');
         const tax = invoice.TaxTotal;
-        this.logger.logInfo(`TaxAmount: ${tax.TaxAmount}`);
+        this.logger.logInfo(`TaxAmount: ${JSON.stringify(tax.TaxAmount)}`);
         const taxCategory = tax.TaxSubtotal?.TaxCategory;
         this.logger.logInfo(`TaxCategory ID: ${taxCategory?.ID}`);
         this.logger.logInfo(`Percent: ${taxCategory?.Percent}`);
@@ -306,14 +312,18 @@ export class TransactionAgent {
           this.logger.logInfo(
             `Quantity: ${line.InvoicedQuantity?._ || line.InvoicedQuantity}`,
           );
-          this.logger.logInfo(`Amount: ${line.LineExtensionAmount}`);
+          this.logger.logInfo(
+            `Amount: ${JSON.stringify(line.LineExtensionAmount)}`,
+          );
           const item = line.Item;
           this.logger.logInfo(`Product Description: ${item.Description}`);
           this.logger.logInfo(`Product Name: ${item.Name}`);
           this.logger.logInfo(
             `Product ID: ${item.SellersItemIdentification?.ID}`,
           );
-          this.logger.logInfo(`Price: ${line.Price?.PriceAmount}`);
+          this.logger.logInfo(
+            `Price: ${JSON.stringify(line.Price?.PriceAmount)}`,
+          );
         });
 
         break;
@@ -487,7 +497,6 @@ export class TransactionAgent {
         body: payload.body ? JSON.stringify(payload.body) : undefined,
       });
 
-      this.logger.logInfo(`RESPONSE ${JSON.stringify(response)}`);
       if (!response.ok) {
         throw new Error(`API call failed with status ${response.status}`);
       }
