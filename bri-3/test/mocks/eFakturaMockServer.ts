@@ -59,11 +59,8 @@ export class EFakturaMockServer {
 
       // Set response headers
       res.set({
-        'content-type': 'application/xml',
-        'content-disposition': `attachment; filename="2233/2025/13.xml"; filename*=UTF-8''2233%2F2025%2F13.xml`,
-        'content-encoding': 'br',
-        'transfer-encoding': 'chunked',
-        vary: 'Accept-Encoding',
+        'content-type': 'application/xml; charset=utf-8',
+        'content-disposition': 'attachment; filename="invoice.xml"',
       });
 
       // Return mock XML response
