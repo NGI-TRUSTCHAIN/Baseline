@@ -28,6 +28,7 @@ import { TransactionResult } from '../models/transactionResult';
 import { TransactionStorageAgent } from './transactionStorage.agent';
 import { ICcsmService } from '../../ccsm/services/ccsm.interface';
 import { WorkstepType } from '../../workgroup/worksteps/models/workstep';
+import { LoggingService } from '../../../shared/logging/logging.service';
 
 @Injectable()
 export class TransactionAgent {
@@ -42,6 +43,7 @@ export class TransactionAgent {
     private circuitInputsParserService: CircuitInputsParserService,
     @Inject('ICcsmService')
     private readonly ccsmService: ICcsmService,
+    private readonly logger: LoggingService,
   ) {}
 
   public throwIfCreateTransactionInputInvalid() {
@@ -222,12 +224,12 @@ export class TransactionAgent {
         break;
 
       case WorkstepType.API:
-        console.log('CALLING API WORKSTEP');
+        this.logger.logInfo('CALLING API WORKSTEP');
         const response = await this.executeApiCall(
           workstep.workstepConfig.executionParams.apiUrl!,
           JSON.parse(tx.payload),
         );
-        console.log('RESPONSE', response);
+        this.logger.logInfo(`RESPONSE: ${response}`);
         break;
 
       default:
@@ -379,7 +381,7 @@ export class TransactionAgent {
   }
 
   private async executeApiCall(url: string, payload: any): Promise<any> {
-    console.log('TX PAYLOAD', payload);
+    this.logger.logInfo(`TX PAYLOAD ${payload}`);
     try {
       // Construct URL with query parameters if they exist
       let fullUrl = url;
@@ -387,7 +389,7 @@ export class TransactionAgent {
         const queryString = new URLSearchParams(payload.queryParams).toString();
         fullUrl = `${url}?${queryString}`;
       }
-      console.log('FULL URL', fullUrl);
+      this.logger.logInfo(`FULL URL ${fullUrl}`);
 
       const response = await fetch(fullUrl, {
         method: payload.method || 'GET',
@@ -399,7 +401,7 @@ export class TransactionAgent {
         body: payload.body ? JSON.stringify(payload.body) : undefined,
       });
 
-      console.log('RESPONSE', response);
+      this.logger.logInfo(`RESPONSE ${response}`);
       if (!response.ok) {
         throw new Error(`API call failed with status ${response.status}`);
       }
