@@ -14,7 +14,7 @@ export class EFakturaMockServer {
 
   public start(): Promise<void> {
     return new Promise((resolve) => {
-      this.server = this.app.listen(this.port, () => {
+      this.server = this.app.listen(this.port, '0.0.0.0', () => {
         console.log(`Mock eFaktura server running on port ${this.port}`);
         resolve();
       });

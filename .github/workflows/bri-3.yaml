@@ -139,6 +139,7 @@ jobs:
         run: |
           npm run mock:efaktura &
           sleep 5
+          curl http://localhost:3001/api/health
           npm run test:e2e
 
       - name: Cleanup
