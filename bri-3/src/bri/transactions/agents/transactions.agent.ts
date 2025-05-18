@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Transaction } from '../models/transaction';
 import { TransactionStatus } from '../models/transactionStatus.enum';
+import { parseStringPromise, processors } from 'xml2js';
 
 import MerkleTree from 'merkletreejs';
 import { Witness } from 'src/bri/zeroKnowledgeProof/models/witness';
@@ -230,6 +231,91 @@ export class TransactionAgent {
           JSON.parse(tx.payload),
         );
         this.logger.logInfo(`RESPONSE: ${response}`);
+        const parsed = await parseStringPromise(response.data, {
+          explicitArray: false,
+          tagNameProcessors: [processors.stripPrefix],
+        });
+
+        const envelope = parsed.DocumentEnvelope;
+        const header = envelope.DocumentHeader;
+        const body = envelope.DocumentBody;
+        const invoice = body.Invoice;
+
+        this.logger.logInfo('DOCUMENT HEADER');
+        this.logger.logInfo(`SalesInvoiceId: ${header.SalesInvoiceId}`);
+        this.logger.logInfo(`PurchaseInvoiceId: ${header.PurchaseInvoiceId}`);
+        this.logger.logInfo(`DocumentId: ${header.DocumentId}`);
+        this.logger.logInfo(`CreationDate: ${header.CreationDate}`);
+        this.logger.logInfo(`SendingDate: ${header.SendingDate}`);
+
+        this.logger.logInfo('\nINVOICE');
+        this.logger.logInfo(`ID: ${invoice.ID}`);
+        this.logger.logInfo(`IssueDate: ${invoice.IssueDate}`);
+        this.logger.logInfo(`DueDate: ${invoice.DueDate}`);
+        this.logger.logInfo(`TypeCode: ${invoice.InvoiceTypeCode}`);
+        this.logger.logInfo(`Currency: ${invoice.DocumentCurrencyCode}`);
+
+        const supplier = invoice.AccountingSupplierParty.Party;
+        const customer = invoice.AccountingCustomerParty.Party;
+
+        this.logger.logInfo('\nSUPPLIER');
+        this.logger.logInfo(`Name: ${supplier.PartyName?.Name}`);
+        this.logger.logInfo(`EndpointID: ${supplier.EndpointID?._}`);
+        this.logger.logInfo(`Street: ${supplier.PostalAddress?.StreetName}`);
+        this.logger.logInfo(`City: ${supplier.PostalAddress?.CityName}`);
+        this.logger.logInfo(
+          `Country: ${supplier.PostalAddress?.Country?.IdentificationCode}`,
+        );
+
+        this.logger.logInfo('\nCUSTOMER');
+        this.logger.logInfo(`Name: ${customer.PartyName?.Name}`);
+        this.logger.logInfo(`EndpointID: ${customer.EndpointID?._}`);
+        this.logger.logInfo(`Street: ${customer.PostalAddress?.StreetName}`);
+        this.logger.logInfo(`City: ${customer.PostalAddress?.CityName}`);
+        this.logger.logInfo(
+          `PostalZone: ${customer.PostalAddress?.PostalZone}`,
+        );
+        this.logger.logInfo(
+          `Country: ${customer.PostalAddress?.Country?.IdentificationCode}`,
+        );
+
+        this.logger.logInfo('\nTOTALS');
+        const totals = invoice.LegalMonetaryTotal;
+        this.logger.logInfo(
+          `LineExtensionAmount: ${totals.LineExtensionAmount}`,
+        );
+        this.logger.logInfo(`TaxExclusiveAmount: ${totals.TaxExclusiveAmount}`);
+        this.logger.logInfo(`TaxInclusiveAmount: ${totals.TaxInclusiveAmount}`);
+        this.logger.logInfo(`PayableAmount: ${totals.PayableAmount}`);
+
+        this.logger.logInfo('\nTAX');
+        const tax = invoice.TaxTotal;
+        this.logger.logInfo(`TaxAmount: ${tax.TaxAmount}`);
+        const taxCategory = tax.TaxSubtotal?.TaxCategory;
+        this.logger.logInfo(`TaxCategory ID: ${taxCategory?.ID}`);
+        this.logger.logInfo(`Percent: ${taxCategory?.Percent}`);
+        this.logger.logInfo(`TaxScheme ID: ${taxCategory?.TaxScheme?.ID}`);
+
+        this.logger.logInfo('\nINVOICE LINES');
+        const lines = Array.isArray(invoice.InvoiceLine)
+          ? invoice.InvoiceLine
+          : [invoice.InvoiceLine];
+        lines.forEach((line, index) => {
+          this.logger.logInfo(`\nLine ${index + 1}`);
+          this.logger.logInfo(`ID: ${line.ID}`);
+          this.logger.logInfo(
+            `Quantity: ${line.InvoicedQuantity?._ || line.InvoicedQuantity}`,
+          );
+          this.logger.logInfo(`Amount: ${line.LineExtensionAmount}`);
+          const item = line.Item;
+          this.logger.logInfo(`Product Description: ${item.Description}`);
+          this.logger.logInfo(`Product Name: ${item.Name}`);
+          this.logger.logInfo(
+            `Product ID: ${item.SellersItemIdentification?.ID}`,
+          );
+          this.logger.logInfo(`Price: ${line.Price?.PriceAmount}`);
+        });
+
         break;
 
       default:
