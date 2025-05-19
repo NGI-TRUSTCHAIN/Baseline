@@ -500,7 +500,7 @@ describe('SRI use-case end-to-end test', () => {
         apiKey: process.env.EFAKTURA_API_KEY,
         headers: {},
         queryParams: {
-          invoiceId: '298142431',
+          invoiceId: process.env.EFAKTURA_INVOICE_ID,
         },
       }),
     );
