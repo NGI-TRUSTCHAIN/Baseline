@@ -497,7 +497,7 @@ describe('SRI use-case end-to-end test', () => {
       createdBpiSubjectAccountSupplierId,
       JSON.stringify({
         method: 'GET',
-        apiKey: 'd2e7f81c-64c7-4c61-9b43-b6d215d9a2cf',
+        apiKey: process.env.EFAKTURA_API_KEY,
         headers: {},
         queryParams: {
           invoiceId: '298142431',
