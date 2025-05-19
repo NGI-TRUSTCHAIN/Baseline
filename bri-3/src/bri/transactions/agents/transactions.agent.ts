@@ -326,6 +326,7 @@ export class TransactionAgent {
           );
         });
 
+        txResult.witness = {} as any; // TODO
         break;
 
       default:
