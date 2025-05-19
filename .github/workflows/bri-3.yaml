@@ -54,7 +54,7 @@ jobs:
       VSM_CYCLE_PERIOD_IN_SECS: 15
       VSM_CYCLE_TX_BATCH_SIZE: 5
       MERKLE_TREE_HASH_ALGH: "sha256"
-      EFACTURA_MOCK_PORT: "3001"
+      EFAKTURA_API_KEY: ${{ secrets.EFAKTURA_API_KEY }}
 
     steps:
       - name: Checkout
