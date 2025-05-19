@@ -180,7 +180,7 @@ describe('SRI use-case end-to-end test', () => {
       {
         type: WorkstepType.API,
         executionParams: {
-          apiUrl: 'http://localhost:3001/api/publicApi/sales-invoice/xml',
+          apiUrl: process.env.EFAKTURA_URL,
         },
       },
     );
