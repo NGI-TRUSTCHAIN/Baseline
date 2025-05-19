@@ -55,6 +55,7 @@ jobs:
       VSM_CYCLE_TX_BATCH_SIZE: 5
       MERKLE_TREE_HASH_ALGH: "sha256"
       EFAKTURA_API_KEY: ${{ secrets.EFAKTURA_API_KEY }}
+      EFAKTURA_INVOICE_ID: ${{ secrets.EFAKTURA_INVOICE_ID }}
 
     steps:
       - name: Checkout
