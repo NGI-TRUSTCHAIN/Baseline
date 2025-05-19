@@ -8,7 +8,6 @@ import { WorkstepStorageAgent } from '../../../workgroup/worksteps/agents/workst
 import { ExecuteVsmCycleCommand } from './executeVsmCycle.command';
 import { WorkstepExecutedEvent } from '../handleWorkstepEvents/workstepExecuted.event';
 import { CcsmStorageAgent } from '../../../ccsm/agents/ccsmStorage.agent';
-import { LoggingService } from '../../../../shared/logging/logging.service';
 
 @CommandHandler(ExecuteVsmCycleCommand)
 export class ExecuteVsmCycleCommandHandler
@@ -22,7 +21,6 @@ export class ExecuteVsmCycleCommandHandler
     private txStorageAgent: TransactionStorageAgent,
     private ccsmStorageAgent: CcsmStorageAgent,
     private eventBus: EventBus,
-    private readonly logger: LoggingService,
   ) {}
 
   async execute(command: ExecuteVsmCycleCommand) {
@@ -55,10 +53,7 @@ export class ExecuteVsmCycleCommandHandler
       );
 
       try {
-        this.logger.logInfo('TEST: process start');
         const txResult = await this.txAgent.executeTransaction(tx, workstep!);
-
-        this.logger.logInfo(`TEST: process 2 ${JSON.stringify(txResult)}`);
 
         const stateTreeRoot = await this.stateAgent.storeNewLeafInStateTree(
           workflow!.bpiAccount,
@@ -66,28 +61,19 @@ export class ExecuteVsmCycleCommandHandler
           txResult.merkelizedPayload,
           txResult.witness,
         );
-        this.logger.logInfo('TEST: process 3');
 
         await this.stateAgent.storeNewLeafInHistoryTree(
           workflow!.bpiAccount,
           stateTreeRoot,
         );
 
-        this.logger.logInfo('TEST: process 4');
-
         await this.ccsmStorageAgent.storeAnchorHashOnCcsm(
           tx.workstepInstanceId,
           txResult.hash,
         );
 
-        this.logger.logInfo('TEST: process 5');
-
         tx.updateStatusToExecuted();
-
-        this.logger.logInfo('TEST: process 6');
-
         this.txStorageAgent.updateTransaction(tx);
-        this.logger.logInfo('TEST: process 7');
       } catch (error) {
         this.eventBus.publish(new WorkstepExecutedEvent(tx, error));
         tx.updateStatusToAborted();
