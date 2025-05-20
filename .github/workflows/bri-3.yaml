@@ -136,13 +136,18 @@ jobs:
           npx hardhat node &
           npx hardhat run scripts/deploy.ts
 
-      - name: Run e2e tests
+      - name: Run e2e tests for SRI use-case
+        working-directory: bri-3
+        run: |
+          npm run test:e2e:sri
+      
+      - name: Run e2e tests for invoice origination use-case
         working-directory: bri-3
         run: |
           npm run mock:efaktura &
           sleep 5
           curl http://localhost:3001/api/health
-          npm run test:e2e
+          npm run test:e2e:origination
 
       - name: Cleanup
         if: always()

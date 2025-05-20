@@ -38,14 +38,12 @@ let createdWorkgroupId: string;
 let createdWorkstep1Id: string;
 let createdWorkstep2Id: string;
 let createdWorkstep3Id: string;
-let createdWorkstepApiId: string;
 let createdWorkflowId: string;
 let createdBpiSubjectAccountSupplierId: string;
 let createdBpiSubjectAccountBuyerId: string;
 let createdTransaction1Id: string;
 let createdTransaction2Id: string;
 let createdTransaction3Id: string;
-let createdTransactionApiId: string;
 
 describe('SRI use-case end-to-end test', () => {
   beforeAll(async () => {
@@ -174,16 +172,6 @@ describe('SRI use-case end-to-end test', () => {
       },
     );
 
-    createdWorkstepApiId = await createWorkstepAndReturnId(
-      'workstep4',
-      createdWorkgroupId,
-      {
-        type: WorkstepType.API,
-        executionParams: {
-          apiUrl: process.env.EFAKTURA_URL,
-        },
-      },
-    );
 
     createdWorkflowId = await createWorkflowAndReturnId(
       'worksflow1',
@@ -192,7 +180,6 @@ describe('SRI use-case end-to-end test', () => {
         createdWorkstep1Id,
         createdWorkstep2Id,
         createdWorkstep3Id,
-        createdWorkstepApiId,
       ],
       [createdBpiSubjectAccountSupplierId, createdBpiSubjectAccountBuyerId],
     );
@@ -486,31 +473,6 @@ describe('SRI use-case end-to-end test', () => {
     expect(stateTreeLeafValue.leafIndex).toBe(2);
   });
 
-  it('Submits transaction 4 for execution of the workstep 4 with api call', async () => {
-    createdTransactionApiId = await createTransactionAndReturnId(
-      v4(),
-      3,
-      createdWorkflowId,
-      createdWorkstepApiId,
-      createdBpiSubjectAccountBuyerId,
-      buyerBpiSubjectEddsaPrivateKey,
-      createdBpiSubjectAccountSupplierId,
-      JSON.stringify({
-        method: 'GET',
-        apiKey: process.env.EFAKTURA_API_KEY,
-        headers: {},
-        queryParams: {
-          invoiceId: process.env.EFAKTURA_INVOICE_ID,
-        },
-      }),
-    );
-  });
-
-  it('Waits for a single VSM cycle and then verifies that the transaction 4 has been executed', async () => {
-    await new Promise((r) => setTimeout(r, 50000));
-
-    // TODO add checks
-  });
 });
 
 async function loginAsInternalBpiSubjectAndReturnAnAccessToken(): Promise<string> {

@@ -47,9 +47,16 @@ run_command "cd .."
 log_message "Reset and reseed database"
 run_command "npx prisma migrate reset --force"
 
+# Firing up efakture mock server
+log_message "Firing up efakture mock server"
+run_command "npm run mock:efaktura &"
+
+# Wait for the mock server to start (adjust sleep time if needed)
+sleep 5
+
 # Run e2e tests
 log_message "Running e2e tests"
-run_command "npm run test:e2e"
+run_command "npm run test:e2e:origination"
 
 # Stop Hardhat node
 log_message "Stopping Hardhat node"
