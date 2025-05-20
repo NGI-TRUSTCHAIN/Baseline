@@ -9,6 +9,8 @@ import * as crypto from 'crypto';
 import { buildBabyjub, buildEddsa } from 'circomlibjs';
 import 'dotenv/config';
 import { PublicKeyType } from '../../../../../identity/bpiSubjects/models/publicKey';
+import { createHash } from 'crypto';
+import { ed25519 } from '@noble/curves/ed25519';
 
 export const computeEffectiveEcdsaSigPublicInputs = (
   signature: Signature,
@@ -125,10 +127,10 @@ export const computeEddsaSigPublicInputs = async (tx: Transaction) => {
 
   const packedSignature = eddsa.packSignature(unpackedSignature);
 
-  const messageBits = buffer2bits(hashedPayload);
-  const r8Bits = buffer2bits(Buffer.from(packedSignature.slice(0, 32)));
-  const sBits = buffer2bits(Buffer.from(packedSignature.slice(32, 64)));
-  const aBits = buffer2bits(Buffer.from(packedPublicKey));
+  const messageBits = buffer2bitsLSB(hashedPayload);
+  const r8Bits = buffer2bitsLSB(Buffer.from(packedSignature.slice(0, 32)));
+  const sBits = buffer2bitsLSB(Buffer.from(packedSignature.slice(32, 64)));
+  const aBits = buffer2bitsLSB(Buffer.from(packedPublicKey));
 
   const inputs = {
     message: messageBits,
@@ -140,7 +142,8 @@ export const computeEddsaSigPublicInputs = async (tx: Transaction) => {
   return inputs;
 };
 
-const buffer2bits = (buffer: Buffer) => {
+//This gives least-significant-bit (LSB) first order.
+const buffer2bitsLSB = (buffer: Buffer) => {
   const res: bigint[] = [];
   for (let i = 0; i < buffer.length; i++) {
     for (let j = 0; j < 8; j++) {
@@ -153,3 +156,139 @@ const buffer2bits = (buffer: Buffer) => {
   }
   return res;
 };
+
+//This gives most-significant-bit (MSB) first order.
+function buffer2bitsMSB(b: Buffer) {
+  const res: number[] = [];
+  for (let i = 0; i < b.length; i++) {
+    for (let j = 0; j < 8; j++) {
+      res.push((b[i] >> (7 - j)) & 1);
+    }
+  }
+  return res;
+}
+
+function is256BitBinaryString(str: string): boolean {
+  return str.length === 256 && /^[01]+$/.test(str);
+}
+function LeafToBits(leaf: string, bitPadding: number): number[] {
+  let leafStrBuffer = Buffer.from(leaf, 'utf8');
+  const paddedLength = bitPadding / 8;
+  if (leafStrBuffer.length < paddedLength) {
+    const padding = Buffer.alloc(paddedLength - leafStrBuffer.length, 0); // zero padding
+    leafStrBuffer = Buffer.concat([leafStrBuffer, padding]);
+  }
+
+  const leafBits = buffer2bitsMSB(leafStrBuffer);
+  return leafBits;
+}
+function bitsToBuffer(bits: number[]): Buffer {
+  const byteArray: number[] = []; // 👈 Fix here
+  for (let i = 0; i < bits.length; i += 8) {
+    let byte = 0;
+    for (let j = 0; j < 8; j++) {
+      byte = (byte << 1) | (bits[i + j] || 0); // MSB first
+    }
+    byteArray.push(byte);
+  }
+  return Buffer.from(byteArray);
+}
+
+const generateMerkleHash = (left: string, right: string) => {
+  //CONVERTING LEAF TO BIT
+  let leftBits;
+  let rightBits;
+
+  if (!is256BitBinaryString(left)) {
+    leftBits = LeafToBits(left, 256);
+  } else {
+    leftBits = left.split('').map(Number);
+  }
+  if (!is256BitBinaryString(right)) {
+    rightBits = LeafToBits(right, 256);
+  } else {
+    rightBits = right.split('').map(Number);
+  }
+
+  //Concatenate the two bit arrays
+  const totalBits = leftBits.concat(rightBits);
+
+  //Convert totalBits to Buffer
+  const totalBitsBuffer = bitsToBuffer(totalBits); //512
+
+  //Generate hash string
+  const hashStr = createHash('sha256').update(totalBitsBuffer).digest('hex');
+
+  //Convert hash string to bits array
+  const expectedHash = buffer2bitsMSB(Buffer.from(hashStr, 'hex'));
+
+  return expectedHash.join('');
+};
+
+//Generate hash inputs
+const generateHashInputs = async (message: string) => {
+  let testStrBuffer = Buffer.from(message, 'utf8');
+  //Check the length of the string and pad with 0s if less than 512 bits
+  // Pad with zeros to reach 64 bytes (512 bits)
+  const paddedLength = 64;
+  if (testStrBuffer.length < paddedLength) {
+    const padding = Buffer.alloc(paddedLength - testStrBuffer.length, 0); // zero padding
+    testStrBuffer = Buffer.concat([testStrBuffer, padding]);
+  }
+
+  const preimage = buffer2bitsMSB(testStrBuffer);
+
+  //Expected hash string
+  const hashStr = createHash('sha256').update(testStrBuffer).digest('hex');
+  const hashStrBuffer = Buffer.from(hashStr, 'hex');
+  const expectedHash = buffer2bitsMSB(hashStrBuffer);
+  return {
+    preimage,
+    expectedHash,
+  };
+};
+
+function flattenMerkleProofPathElement(
+  merkleProofPathElement: number[][][],
+): number[][] {
+  return merkleProofPathElement.map(
+    (proof) => proof.flat(), // Flatten [depth][256] into [depth * 256]
+  );
+}
+
+function generateMerkleProofInputs(leaf: string, tree: string[]) {
+  const height = calculateMerkleTreeHeight(tree);
+  const merkleTree = new FixedMerkleTree(height, tree, {
+    hashFunction: generateMerkleHash,
+    zeroElement: '0',
+  });
+  const path = merkleTree.proof(leaf);
+  const merkleProofLeaf = LeafToBits(leaf, 256);
+  const merkleProofRoot = String(merkleTree.root).split('').map(Number);
+  const merkleProofPathElement = flattenMerkleProofPathElement([
+    path.pathElements.map((node) => {
+      let nodeBits;
+      if (!is256BitBinaryString(String(node))) {
+        nodeBits = LeafToBits(String(node), 256);
+      } else {
+        nodeBits = String(node).split('').map(Number);
+      }
+      return nodeBits;
+    }),
+  ]);
+  const merkleProofPathIndex = [path.pathIndices];
+
+  return {
+    merkleProofLeaf,
+    merkleProofRoot,
+    merkleProofPathElement,
+    merkleProofPathIndex,
+  };
+}
+
+function calculateMerkleTreeHeight(tree: string[]) {
+  if (tree.length == 0) {
+    throw new Error('Number of leaves must be greater than 0');
+  }
+  return Math.ceil(Math.log2(tree.length));
+}
