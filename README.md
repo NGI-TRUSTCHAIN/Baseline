@@ -91,7 +91,8 @@ $ npm run test -- transactions.agent.spec.ts
 # also make sure that the .env file contains correct values for DID login to work (as explained in the .env.sample)
 
 $ cd test
-$ sh ./e2e-test.sh
+$ sh ./e2e-test-sri.sh
+$ sh ./e2e-test-origination.sh
 ```
 
 ## Architecture
