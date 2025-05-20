@@ -19,7 +19,7 @@ const Fr = new F1Field(p);
 const WITNESS_IS_OUTPUT_INDEX = 1;
 
 const loadBusinessLogicCircuit = async () => {
-  const fullPath = path.join(__dirname, 'businessLogic.circom');
+  const fullPath = path.join(__dirname, '../workstepCircuits/workstep.circom');
   console.log(`Loading circuit from: ${fullPath}`);
   try {
     const circuit = await wasm_tester(fullPath);

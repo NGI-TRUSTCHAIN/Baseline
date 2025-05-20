@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Transaction } from '../models/transaction';
 import { TransactionStatus } from '../models/transactionStatus.enum';
+import { parseStringPromise, processors } from 'xml2js';
 
 import MerkleTree from 'merkletreejs';
 import { Witness } from 'src/bri/zeroKnowledgeProof/models/witness';
@@ -27,6 +28,8 @@ import {
 import { TransactionResult } from '../models/transactionResult';
 import { TransactionStorageAgent } from './transactionStorage.agent';
 import { ICcsmService } from '../../ccsm/services/ccsm.interface';
+import { WorkstepType } from '../../workgroup/worksteps/models/workstep';
+import { LoggingService } from '../../../shared/logging/logging.service';
 
 @Injectable()
 export class TransactionAgent {
@@ -41,6 +44,7 @@ export class TransactionAgent {
     private circuitInputsParserService: CircuitInputsParserService,
     @Inject('ICcsmService')
     private readonly ccsmService: ICcsmService,
+    private readonly logger: LoggingService,
   ) {}
 
   public throwIfCreateTransactionInputInvalid() {
@@ -190,32 +194,146 @@ export class TransactionAgent {
       `${process.env.MERKLE_TREE_HASH_ALGH}`,
     );
 
-    const {
-      circuitProvingKeyPath,
-      circuitVerificatioKeyPath,
-      circuitPath,
-      circuitWitnessCalculatorPath,
-      circuitWitnessFilePath,
-      verifierContractAbiFilePath,
-    } = this.constructCircuitPathsFromWorkstepName(workstep.name);
+    switch (workstep.workstepConfig.type) {
+      case WorkstepType.BLOCKCHAIN:
+        const {
+          circuitProvingKeyPath,
+          circuitVerificatioKeyPath,
+          circuitPath,
+          circuitWitnessCalculatorPath,
+          circuitWitnessFilePath,
+          verifierContractAbiFilePath,
+        } = this.constructCircuitPathsFromWorkstepName(workstep.name);
 
-    txResult.witness = await this.circuitService.createWitness(
-      await this.prepareCircuitInputs(
-        tx,
-        workstep.circuitInputsTranslationSchema,
-      ),
-      circuitPath,
-      circuitProvingKeyPath,
-      circuitVerificatioKeyPath,
-      circuitWitnessCalculatorPath,
-      circuitWitnessFilePath,
-    );
+        txResult.witness = await this.circuitService.createWitness(
+          await this.prepareCircuitInputs(
+            tx,
+            workstep.circuitInputsTranslationSchema,
+          ),
+          circuitPath,
+          circuitProvingKeyPath,
+          circuitVerificatioKeyPath,
+          circuitWitnessCalculatorPath,
+          circuitWitnessFilePath,
+        );
 
-    txResult.verifiedOnChain = await this.ccsmService.verifyProof(
-      workstep.verifierContractAddress,
-      verifierContractAbiFilePath,
-      txResult.witness,
-    );
+        txResult.verifiedOnChain = await this.ccsmService.verifyProof(
+          workstep.workstepConfig.executionParams.verifierContractAddress!,
+          verifierContractAbiFilePath,
+          txResult.witness,
+        );
+        break;
+
+      case WorkstepType.API:
+        this.logger.logInfo('CALLING API WORKSTEP');
+        const response = await this.executeApiCall(
+          workstep.workstepConfig.executionParams.apiUrl!,
+          JSON.parse(tx.payload),
+        );
+        this.logger.logInfo(`RESPONSE: ${JSON.stringify(response)}`);
+        const parsed = await parseStringPromise(response.data, {
+          explicitArray: false,
+          tagNameProcessors: [processors.stripPrefix],
+        });
+
+        const envelope = parsed.DocumentEnvelope;
+        const header = envelope.DocumentHeader;
+        const body = envelope.DocumentBody;
+        const invoice = body.Invoice;
+
+        this.logger.logInfo('DOCUMENT HEADER');
+        this.logger.logInfo(`SalesInvoiceId: ${header.SalesInvoiceId}`);
+        this.logger.logInfo(`PurchaseInvoiceId: ${header.PurchaseInvoiceId}`);
+        this.logger.logInfo(`DocumentId: ${header.DocumentId}`);
+        this.logger.logInfo(`CreationDate: ${header.CreationDate}`);
+        this.logger.logInfo(`SendingDate: ${header.SendingDate}`);
+
+        this.logger.logInfo('\nINVOICE');
+        this.logger.logInfo(`ID: ${invoice.ID}`);
+        this.logger.logInfo(`IssueDate: ${invoice.IssueDate}`);
+        this.logger.logInfo(`DueDate: ${invoice.DueDate}`);
+        this.logger.logInfo(`TypeCode: ${invoice.InvoiceTypeCode}`);
+        this.logger.logInfo(`Currency: ${invoice.DocumentCurrencyCode}`);
+
+        const supplier = invoice.AccountingSupplierParty.Party;
+        const customer = invoice.AccountingCustomerParty.Party;
+
+        this.logger.logInfo('\nSUPPLIER');
+        this.logger.logInfo(`Name: ${supplier.PartyName?.Name}`);
+        this.logger.logInfo(`EndpointID: ${supplier.EndpointID?._}`);
+        this.logger.logInfo(`Street: ${supplier.PostalAddress?.StreetName}`);
+        this.logger.logInfo(`City: ${supplier.PostalAddress?.CityName}`);
+        this.logger.logInfo(
+          `Country: ${supplier.PostalAddress?.Country?.IdentificationCode}`,
+        );
+
+        this.logger.logInfo('\nCUSTOMER');
+        this.logger.logInfo(`Name: ${customer.PartyName?.Name}`);
+        this.logger.logInfo(`EndpointID: ${customer.EndpointID?._}`);
+        this.logger.logInfo(`Street: ${customer.PostalAddress?.StreetName}`);
+        this.logger.logInfo(`City: ${customer.PostalAddress?.CityName}`);
+        this.logger.logInfo(
+          `PostalZone: ${customer.PostalAddress?.PostalZone}`,
+        );
+        this.logger.logInfo(
+          `Country: ${customer.PostalAddress?.Country?.IdentificationCode}`,
+        );
+
+        this.logger.logInfo('\nTOTALS');
+        const totals = invoice.LegalMonetaryTotal;
+        this.logger.logInfo(
+          `LineExtensionAmount: ${JSON.stringify(totals.LineExtensionAmount)}`,
+        );
+        this.logger.logInfo(
+          `TaxExclusiveAmount: ${JSON.stringify(totals.TaxExclusiveAmount)}`,
+        );
+        this.logger.logInfo(
+          `TaxInclusiveAmount: ${JSON.stringify(totals.TaxInclusiveAmount)}`,
+        );
+        this.logger.logInfo(
+          `PayableAmount: ${JSON.stringify(totals.PayableAmount)}`,
+        );
+
+        this.logger.logInfo('\nTAX');
+        const tax = invoice.TaxTotal;
+        this.logger.logInfo(`TaxAmount: ${JSON.stringify(tax.TaxAmount)}`);
+        const taxCategory = tax.TaxSubtotal?.TaxCategory;
+        this.logger.logInfo(`TaxCategory ID: ${taxCategory?.ID}`);
+        this.logger.logInfo(`Percent: ${taxCategory?.Percent}`);
+        this.logger.logInfo(`TaxScheme ID: ${taxCategory?.TaxScheme?.ID}`);
+
+        this.logger.logInfo('\nINVOICE LINES');
+        const lines = Array.isArray(invoice.InvoiceLine)
+          ? invoice.InvoiceLine
+          : [invoice.InvoiceLine];
+        lines.forEach((line, index) => {
+          this.logger.logInfo(`\nLine ${index + 1}`);
+          this.logger.logInfo(`ID: ${line.ID}`);
+          this.logger.logInfo(
+            `Quantity: ${line.InvoicedQuantity?._ || line.InvoicedQuantity}`,
+          );
+          this.logger.logInfo(
+            `Amount: ${JSON.stringify(line.LineExtensionAmount)}`,
+          );
+          const item = line.Item;
+          this.logger.logInfo(`Product Description: ${item.Description}`);
+          this.logger.logInfo(`Product Name: ${item.Name}`);
+          this.logger.logInfo(
+            `Product ID: ${item.SellersItemIdentification?.ID}`,
+          );
+          this.logger.logInfo(
+            `Price: ${JSON.stringify(line.Price?.PriceAmount)}`,
+          );
+        });
+
+        txResult.witness = {} as any; // TODO
+        break;
+
+      default:
+        throw new Error(
+          `Unsupported workstep type: ${workstep.workstepConfig.type}`,
+        );
+    }
 
     txResult.hash = this.constructTxHash(
       txResult.merkelizedPayload,
@@ -357,5 +475,50 @@ export class TransactionAgent {
     const witnessHash = hashFn(JSON.stringify(witness)).toString('hex');
 
     return hashFn(`${merkelizedInvoiceRoot}${witnessHash}`).toString('hex');
+  }
+
+  private async executeApiCall(url: string, payload: any): Promise<any> {
+    this.logger.logInfo(`TX PAYLOAD ${JSON.stringify(payload)}`);
+    try {
+      // Construct URL with query parameters if they exist
+      let fullUrl = url;
+      if (payload.queryParams) {
+        const queryString = new URLSearchParams(payload.queryParams).toString();
+        fullUrl = `${url}?${queryString}`;
+      }
+      this.logger.logInfo(`FULL URL ${fullUrl}`);
+
+      const response = await fetch(fullUrl, {
+        method: payload.method || 'GET',
+        headers: {
+          'Content-Type': payload.contentType || 'application/json',
+          ApiKey: payload.apiKey,
+          ...payload.headers,
+        },
+        body: payload.body ? JSON.stringify(payload.body) : undefined,
+      });
+
+      if (!response.ok) {
+        throw new Error(`API call failed with status ${response.status}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('application/xml')) {
+        const xmlText = await response.text();
+        return {
+          contentType: 'application/xml',
+          data: xmlText,
+          headers: Object.fromEntries(response.headers.entries()),
+        };
+      } else {
+        return {
+          contentType: contentType || 'application/json',
+          data: await response.json(),
+          headers: Object.fromEntries(response.headers.entries()),
+        };
+      }
+    } catch (error) {
+      throw new Error(`Failed to execute API call: ${error.message}`);
+    }
   }
 }

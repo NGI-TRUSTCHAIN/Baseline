@@ -1,3 +1,5 @@
+import { WorkstepConfig } from '../../models/workstep';
+
 export class CreateWorkstepCommand {
   constructor(
     public readonly name: string,
@@ -6,6 +8,6 @@ export class CreateWorkstepCommand {
     public readonly workgroupId: string,
     public readonly securityPolicy: string,
     public readonly privacyPolicy: string,
-    public readonly verifierContractAddress: string,
+    public readonly workstepConfig: WorkstepConfig,
   ) {}
 }

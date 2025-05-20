@@ -73,7 +73,7 @@ model Workstep {
   circuitInputsTranslationSchema Json?
   workflow       Workflow[]
   workgroup      Workgroup  @relation(fields: [workgroupId], references: [id])
-  verifierContractAddress  String
+  workstepConfig Json       // Stores the WorkstepConfig object
 }
 
 model Workflow {

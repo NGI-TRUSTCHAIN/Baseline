@@ -1,4 +1,5 @@
 import { IsNotEmpty } from 'class-validator';
+import { WorkstepConfig } from '../../../models/workstep';
 
 export class CreateWorkstepDto {
   @IsNotEmpty()
@@ -15,5 +16,6 @@ export class CreateWorkstepDto {
 
   privacyPolicy: string;
 
-  verifierContractAddress: string;
+  @IsNotEmpty()
+  workstepConfig: WorkstepConfig;
 }
