@@ -254,7 +254,7 @@ describe('ASiC-E signature XML extraction and certificate validation', () => {
     const certificateTiming = String(getSigningTime(parsedXML)); //2025-05-07T09:31:10Z
     const documentType = 'Invoice'; //Invoice etc.
 
-    //MERKLE PROOF VERIFICATION
+    //1. MERKLE PROOF VERIFICATION
     const tree = new MerkleTree(
       3,
       [signingAuthority, issuingAuthority, certificateTiming, documentType],
@@ -267,7 +267,7 @@ describe('ASiC-E signature XML extraction and certificate validation', () => {
     //Generate Merkle proof for signingAuthority
     const path = tree.proof(signingAuthority);
 
-    //HASH VERIFICATION
+    //2. HASH VERIFICATION
     const { preimage, expectedHash } = await generateHashInputs(cert.rawData);
     const digestInfo = getCertDigestInfo(parsedXML);
     const certificateHashHex = Buffer.from(
@@ -276,7 +276,7 @@ describe('ASiC-E signature XML extraction and certificate validation', () => {
     );
     const certificateHashBuffer = buffer2bitsMSB(certificateHashHex);
 
-    //SIGNATURE VERIFICATION
+    //3. SIGNATURE VERIFICATION
     const signature =
       parsedXML?.['asic:XAdESSignatures']['ds:Signature']['ds:SignatureValue'][
         '#text'
