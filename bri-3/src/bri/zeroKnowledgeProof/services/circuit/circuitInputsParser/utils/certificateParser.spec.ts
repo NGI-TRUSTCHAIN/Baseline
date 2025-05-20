@@ -137,7 +137,6 @@ const generateHashInputs = async (message: ArrayBuffer) => {
   let testStrBuffer = Buffer.from(message);
   //Check the length of the string and pad with 0s if less than 512 bits
   // Pad with zeros to reach 64 bytes (512 bits)
-  console.log('testStrBuffer:', testStrBuffer.length);
   const paddedLength = 64;
   if (testStrBuffer.length < paddedLength) {
     const padding = Buffer.alloc(paddedLength - testStrBuffer.length, 0); // zero padding
