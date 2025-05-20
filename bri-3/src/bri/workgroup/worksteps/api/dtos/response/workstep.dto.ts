@@ -1,5 +1,21 @@
 import { AutoMap } from '@automapper/classes';
+import { WorkstepType } from '../../../models/workstep';
 
+export class WorkstepExecutionParamsDto {
+  @AutoMap()
+  verifierContractAddress?: string;
+
+  @AutoMap()
+  apiUrl?: string;
+}
+
+export class WorkstepConfigDto {
+  @AutoMap()
+  type: WorkstepType;
+
+  @AutoMap()
+  executionParams: WorkstepExecutionParamsDto;
+}
 export class WorkstepDto {
   @AutoMap()
   id: string;
@@ -26,5 +42,5 @@ export class WorkstepDto {
   circuitInputsTranslationSchema: string;
 
   @AutoMap()
-  verifierContractAddress: string;
+  workstepConfig: WorkstepConfigDto;
 }

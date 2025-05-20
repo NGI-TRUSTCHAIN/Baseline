@@ -15,7 +15,7 @@ import { DeleteWorkstepCommandHandler } from '../capabilities/deleteWorkstep/del
 import { GetAllWorkstepsQueryHandler } from '../capabilities/getAllWorksteps/getAllWorkstepsQuery.handler';
 import { GetWorkstepByIdQueryHandler } from '../capabilities/getWorkstepById/getWorkstepByIdQuery.handler';
 import { UpdateWorkstepCommandHandler } from '../capabilities/updateWorkstep/updateWorkstep.command.handler';
-import { Workstep } from '../models/workstep';
+import { Workstep, WorkstepConfig, WorkstepType } from '../models/workstep';
 import { WorkstepProfile } from '../workstep.profile';
 import { CreateWorkstepDto } from './dtos/request/createWorkstep.dto';
 import { UpdateWorkstepDto } from './dtos/request/updateWorkstep.dto';
@@ -27,6 +27,12 @@ describe('WorkstepController', () => {
   let workstepStorageAgentMock: DeepMockProxy<WorkstepStorageAgent>;
 
   const createTestWorkstep = () => {
+    const workstepConfig: WorkstepConfig = {
+      type: WorkstepType.BLOCKCHAIN,
+      executionParams: {
+        verifierContractAddress: 'verifierContractAddress',
+      },
+    };
     return new Workstep(
       uuid(),
       'name',
@@ -35,7 +41,7 @@ describe('WorkstepController', () => {
       'wgid',
       'secPolicy',
       'privPolicy',
-      'verifierContractAddress',
+      workstepConfig,
     );
   };
 

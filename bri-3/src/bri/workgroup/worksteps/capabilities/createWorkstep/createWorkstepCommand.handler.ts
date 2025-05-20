@@ -20,7 +20,7 @@ export class CreateWorkstepCommandHandler
       command.workgroupId,
       command.securityPolicy,
       command.privacyPolicy,
-      command.verifierContractAddress,
+      command.workstepConfig,
     );
 
     const newWorkstep =

@@ -17,6 +17,7 @@ import { GetTransactionByIdQueryHandler } from './capabilities/getTransactionByI
 import { UpdateTransactionCommandHandler } from './capabilities/updateTransaction/updateTransactionCommand.handler';
 import { TransactionsProfile } from './transactions.profile';
 import { CcsmModule } from '../ccsm/ccsm.module';
+import { LoggingModule } from '../../shared/logging/logging.module';
 
 export const CommandHandlers = [
   CreateTransactionCommandHandler,
@@ -40,6 +41,7 @@ export const QueryHandlers = [
     ZeroKnowledgeProofModule,
     CcsmModule,
     PrismaModule,
+    LoggingModule,
   ],
   controllers: [TransactionController],
   providers: [

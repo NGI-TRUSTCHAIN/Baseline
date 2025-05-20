@@ -1,13 +1,11 @@
 import * as x509 from '@peculiar/x509';
 import { XMLParser } from 'fast-xml-parser';
 import * as fs from 'fs';
-import * as path from 'path';
 import * as AdmZip from 'adm-zip';
 
 export const parseCertificate = (certificate: string): x509.X509Certificate => {
   const certBuffer = Buffer.from(certificate.replace(/\s+/g, ''), 'base64');
-
-  const cert = new x509.X509Certificate(certificate);
+  const cert = new x509.X509Certificate(certBuffer);
   return cert;
 };
 
