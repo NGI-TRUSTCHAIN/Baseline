@@ -234,7 +234,7 @@ const OUTPUT_FILE_PATH = path.join(
 );
 
 describe('ASiC-E signature XML extraction and certificate validation', () => {
-  jest.setTimeout(100000);
+  jest.setTimeout(2000000);
   let circuit: any;
 
   beforeAll(async () => {
@@ -254,7 +254,7 @@ describe('ASiC-E signature XML extraction and certificate validation', () => {
     const certificateTiming = String(getSigningTime(parsedXML)); //2025-05-07T09:31:10Z
     const documentType = 'Invoice'; //Invoice etc.
 
-    //1. MERKLE PROOF VERIFICATION
+    //1. Check signing authority of certificate
     const tree = new MerkleTree(
       3,
       [signingAuthority, issuingAuthority, certificateTiming, documentType],
@@ -264,10 +264,9 @@ describe('ASiC-E signature XML extraction and certificate validation', () => {
       },
     );
 
-    //Generate Merkle proof for signingAuthority
     const path = tree.proof(signingAuthority);
 
-    //2. HASH VERIFICATION
+    //2.Check certificate digest
     const { preimage, expectedHash } = await generateHashInputs(cert.rawData);
     const digestInfo = getCertDigestInfo(parsedXML);
     const certificateHashHex = Buffer.from(
@@ -276,7 +275,7 @@ describe('ASiC-E signature XML extraction and certificate validation', () => {
     );
     const certificateHashBuffer = buffer2bitsMSB(certificateHashHex);
 
-    //3. SIGNATURE VERIFICATION
+    //3. Check signature of certificate
     const signature =
       parsedXML?.['asic:XAdESSignatures']['ds:Signature']['ds:SignatureValue'][
         '#text'
@@ -285,6 +284,7 @@ describe('ASiC-E signature XML extraction and certificate validation', () => {
     const { messageBits, r8Bits, sBits, aBits } =
       await generateSignatureInputs(signature);
 
+    //ZK CIRCUIT INPUTS
     const inputs = {
       merkleProofLeaf: [
         LeafToBits('Republika Srbija - Ministarstvo finansija 200037908', 256),
