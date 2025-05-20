@@ -129,7 +129,6 @@ describe('Invoice origination use-case end-to-end test', () => {
   });
 
   it('Sets up a workflow with a single workstep for triggering efakture API in the previously created workgroup', async () => {
-
     createdWorkstep1Id = await createWorkstepAndReturnId(
       'workstep1',
       createdWorkgroupId,
@@ -144,9 +143,7 @@ describe('Invoice origination use-case end-to-end test', () => {
     createdWorkflowId = await createWorkflowAndReturnId(
       'worksflow1',
       createdWorkgroupId,
-      [
-        createdWorkstep1Id,
-      ],
+      [createdWorkstep1Id],
       [createdBpiSubjectAccountSupplierId, createdBpiSubjectAccountBuyerId],
     );
   });
@@ -156,30 +153,30 @@ describe('Invoice origination use-case end-to-end test', () => {
   //   const schema = `{
   //         "mapping": [
   //           {
-  //             "circuitInput": "invoiceStatus", 
-  //             "description": "Invoice status", 
-  //             "payloadJsonPath": "status", 
+  //             "circuitInput": "invoiceStatus",
+  //             "description": "Invoice status",
+  //             "payloadJsonPath": "status",
   //             "dataType": "string"
   //           },
   //           {
-  //             "circuitInput": "invoiceAmount", 
-  //             "description": "Total gross amount of the invoice", 
-  //             "payloadJsonPath": "amount", 
+  //             "circuitInput": "invoiceAmount",
+  //             "description": "Total gross amount of the invoice",
+  //             "payloadJsonPath": "amount",
   //             "dataType": "integer"
   //           },
   //           {
-  //             "circuitInput": "itemPrices", 
-  //             "description": "Invoice item prices", 
-  //             "payloadJsonPath": "items", 
+  //             "circuitInput": "itemPrices",
+  //             "description": "Invoice item prices",
+  //             "payloadJsonPath": "items",
   //             "dataType": "array",
   //             "arrayType": "object",
   //             "arrayItemFieldName": "price",
   //             "arrayItemFieldType": "integer"
   //           },
   //           {
-  //             "circuitInput": "itemAmount", 
-  //             "description": "Invoice item amounts", 
-  //             "payloadJsonPath": "items", 
+  //             "circuitInput": "itemAmount",
+  //             "description": "Invoice item amounts",
+  //             "payloadJsonPath": "items",
   //             "dataType": "array",
   //             "arrayType": "object",
   //             "arrayItemFieldName": "amount",
@@ -405,5 +402,3 @@ async function createTransactionAndReturnId(
 
   return createdTransactionResponse.text;
 }
-
-

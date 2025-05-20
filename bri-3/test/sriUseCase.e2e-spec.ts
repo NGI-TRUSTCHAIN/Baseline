@@ -172,15 +172,10 @@ describe('SRI use-case end-to-end test', () => {
       },
     );
 
-
     createdWorkflowId = await createWorkflowAndReturnId(
       'worksflow1',
       createdWorkgroupId,
-      [
-        createdWorkstep1Id,
-        createdWorkstep2Id,
-        createdWorkstep3Id,
-      ],
+      [createdWorkstep1Id, createdWorkstep2Id, createdWorkstep3Id],
       [createdBpiSubjectAccountSupplierId, createdBpiSubjectAccountBuyerId],
     );
   });
@@ -472,7 +467,6 @@ describe('SRI use-case end-to-end test', () => {
     expect(stateTreeLeafValue).toBeTruthy();
     expect(stateTreeLeafValue.leafIndex).toBe(2);
   });
-
 });
 
 async function loginAsInternalBpiSubjectAndReturnAnAccessToken(): Promise<string> {
