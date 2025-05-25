@@ -730,8 +730,8 @@ async function fetchTransaction(txId: string): Promise<any> {
 }
 
 function getContractFromLocalNode(): ethers.Contract {
-  const provider = new JsonRpcProvider('http://127.0.0.1:8545');
-  const contractAddress = `${process.env.CCSM_BPI_STATE_ANCHOR_CONTRACT_ADDRESS}`;
+  const provider = new JsonRpcProvider(process.env.LOCALHOST_RPC_URL);
+  const contractAddress = `${process.env.LOCALHOST_CCSM_CONTRACT_ADDRESS}`;
 
   const contractABI = [
     'function getAnchorHash(string calldata _workstepInstanceId) external view returns (string memory)',

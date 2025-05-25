@@ -12,7 +12,8 @@ import { MessagingAgent } from '../communication/agents/messaging.agent';
 import { WorkstepExecutedEventHandler } from './capabilites/handleWorkstepEvents/workstepExecutedEvent.handler';
 import { NatsMessagingClient } from '../communication/messagingClients/natsMessagingClient';
 import { CcsmStorageAgent } from '../ccsm/agents/ccsmStorage.agent';
-import { EthereumService } from '../ccsm/services/ethereum.service';
+import { EvmService } from '../ccsm/services/evm.service';
+import { ChainProviderFactory } from '../ccsm/services/chain.provider.factory';
 
 export const CommandHandlers = [
   ExecuteVsmCycleCommandHandler,
@@ -37,13 +38,14 @@ export const QueryHandlers = [];
     ...QueryHandlers,
     MessagingAgent,
     CcsmStorageAgent,
+    ChainProviderFactory,
     {
       provide: 'IMessagingClient',
       useClass: NatsMessagingClient,
     },
     {
       provide: 'ICcsmService',
-      useClass: EthereumService,
+      useClass: EvmService,
     },
   ],
 })
