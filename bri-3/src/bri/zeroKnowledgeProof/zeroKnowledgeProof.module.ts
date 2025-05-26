@@ -3,12 +3,14 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { LoggingModule } from '../../shared/logging/logging.module';
 import { CircuitInputsParserService } from './services/circuit/circuitInputsParser/circuitInputParser.service';
 import { SnarkjsCircuitService } from './services/circuit/snarkjs/snarkjs.service';
+import { GeneralCircuitInputsParserService } from './services/circuit/circuitInputsParser/generalCircuitInputParser.service copy';
 
 @Module({
   imports: [CqrsModule, LoggingModule],
 
   providers: [
     CircuitInputsParserService,
+    GeneralCircuitInputsParserService,
     {
       provide: 'ICircuitService',
       useClass: SnarkjsCircuitService,

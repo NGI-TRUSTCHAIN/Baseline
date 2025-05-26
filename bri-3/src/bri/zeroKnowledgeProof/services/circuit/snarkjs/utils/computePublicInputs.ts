@@ -11,6 +11,7 @@ import 'dotenv/config';
 import { PublicKeyType } from '../../../../../identity/bpiSubjects/models/publicKey';
 import { createHash } from 'crypto';
 import { ed25519 } from '@noble/curves/ed25519';
+import * as circomlib from 'circomlibjs';
 
 export const computeEffectiveEcdsaSigPublicInputs = (
   signature: Signature,
@@ -143,7 +144,7 @@ export const computeEddsaSigPublicInputs = async (tx: Transaction) => {
 };
 
 //This gives least-significant-bit (LSB) first order.
-const buffer2bitsLSB = (buffer: Buffer) => {
+export const buffer2bitsLSB = (buffer: Buffer) => {
   const res: bigint[] = [];
   for (let i = 0; i < buffer.length; i++) {
     for (let j = 0; j < 8; j++) {
@@ -158,7 +159,7 @@ const buffer2bitsLSB = (buffer: Buffer) => {
 };
 
 //This gives most-significant-bit (MSB) first order.
-function buffer2bitsMSB(b: Buffer) {
+export function buffer2bitsMSB(b: Buffer) {
   const res: number[] = [];
   for (let i = 0; i < b.length; i++) {
     for (let j = 0; j < 8; j++) {
@@ -168,10 +169,10 @@ function buffer2bitsMSB(b: Buffer) {
   return res;
 }
 
-function is256BitBinaryString(str: string): boolean {
+export function is256BitBinaryString(str: string): boolean {
   return str.length === 256 && /^[01]+$/.test(str);
 }
-function LeafToBits(leaf: string, bitPadding: number): number[] {
+export function LeafToBits(leaf: string, bitPadding: number): number[] {
   let leafStrBuffer = Buffer.from(leaf, 'utf8');
   const paddedLength = bitPadding / 8;
   if (leafStrBuffer.length < paddedLength) {
@@ -194,7 +195,7 @@ function bitsToBuffer(bits: number[]): Buffer {
   return Buffer.from(byteArray);
 }
 
-const generateMerkleHash = (left: string, right: string) => {
+export const generateMerkleHash = (left: string, right: string) => {
   //CONVERTING LEAF TO BIT
   let leftBits;
   let rightBits;
@@ -226,8 +227,11 @@ const generateMerkleHash = (left: string, right: string) => {
 };
 
 //Generate hash inputs
-const generateHashInputs = async (message: string) => {
-  let testStrBuffer = Buffer.from(message, 'utf8');
+export const generateHashInputs = async (message: string | ArrayBuffer) => {
+  let testStrBuffer =
+    typeof message === 'string'
+      ? Buffer.from(message, 'utf8')
+      : Buffer.from(message);
   //Check the length of the string and pad with 0s if less than 512 bits
   // Pad with zeros to reach 64 bytes (512 bits)
   const paddedLength = 64;
@@ -248,15 +252,14 @@ const generateHashInputs = async (message: string) => {
   };
 };
 
-function flattenMerkleProofPathElement(
-  merkleProofPathElement: number[][][],
-): number[][] {
-  return merkleProofPathElement.map(
-    (proof) => proof.flat(), // Flatten [depth][256] into [depth * 256]
-  );
+export function flattenMerkleProofPathElement(
+  merkleProofPathElement: number[][],
+): number[] {
+  return merkleProofPathElement.flat();
+  // Flatten [depth][256] into [depth * 256]
 }
 
-function generateMerkleProofInputs(leaf: string, tree: string[]) {
+export function generateMerkleProofInputs(leaf: string, tree: string[]) {
   const height = calculateMerkleTreeHeight(tree);
   const merkleTree = new FixedMerkleTree(height, tree, {
     hashFunction: generateMerkleHash,
@@ -265,7 +268,7 @@ function generateMerkleProofInputs(leaf: string, tree: string[]) {
   const path = merkleTree.proof(leaf);
   const merkleProofLeaf = LeafToBits(leaf, 256);
   const merkleProofRoot = String(merkleTree.root).split('').map(Number);
-  const merkleProofPathElement = flattenMerkleProofPathElement([
+  const merkleProofPathElement = flattenMerkleProofPathElement(
     path.pathElements.map((node) => {
       let nodeBits;
       if (!is256BitBinaryString(String(node))) {
@@ -275,7 +278,7 @@ function generateMerkleProofInputs(leaf: string, tree: string[]) {
       }
       return nodeBits;
     }),
-  ]);
+  );
   const merkleProofPathIndex = [path.pathIndices];
 
   return {
@@ -292,3 +295,31 @@ function calculateMerkleTreeHeight(tree: string[]) {
   }
   return Math.ceil(Math.log2(tree.length));
 }
+export const base64ToHash = (base64: string): string => {
+  const buffer = Buffer.from(base64, 'base64');
+  return buffer.toString('hex');
+};
+
+//Generate signature inputs
+export const generateSignatureInputs = async (message: string) => {
+  const msg = createHash('sha256').update(message).digest();
+  const eddsa = await circomlib.buildEddsa();
+  const babyJub = await circomlib.buildBabyjub();
+  const privateKey = ed25519.utils.randomPrivateKey(); // or hardcode a fixed one
+  const publicKey = eddsa.prv2pub(privateKey);
+  const publicKeyPoints = eddsa.prv2pub(privateKey);
+  const packedPublicKey = babyJub.packPoint(publicKeyPoints);
+  const signature = eddsa.signPedersen(privateKey, msg);
+  const packedSignature = eddsa.packSignature(signature);
+
+  const messageBits = buffer2bitsLSB(msg);
+  const r8Bits = buffer2bitsLSB(Buffer.from(packedSignature.slice(0, 32)));
+  const sBits = buffer2bitsLSB(Buffer.from(packedSignature.slice(32, 64)));
+  const aBits = buffer2bitsLSB(Buffer.from(packedPublicKey));
+  return {
+    messageBits,
+    r8Bits,
+    sBits,
+    aBits,
+  };
+};
