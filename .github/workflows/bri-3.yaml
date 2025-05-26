@@ -138,8 +138,11 @@ jobs:
 
       - name: Run e2e tests for SRI use-case
         working-directory: bri-3
-        run: |
-          npm run test:e2e:sri
+        run: npm run test:e2e:sri
+
+      - name: Reset db state
+        working-directory: bri-3
+        run: npx prisma migrate reset --force
       
       - name: Run e2e tests for invoice origination use-case
         working-directory: bri-3
