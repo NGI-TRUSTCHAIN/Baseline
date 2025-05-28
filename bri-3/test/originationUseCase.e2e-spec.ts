@@ -4,6 +4,8 @@ import { ethers, JsonRpcProvider } from 'ethers';
 import * as request from 'supertest';
 import { v4 } from 'uuid';
 import { AppModule } from '../src/app.module';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 import {
   buyerBpiSubjectEcdsaPrivateKey,
   buyerBpiSubjectEcdsaPublicKey,
@@ -25,7 +27,9 @@ import {
 jest.setTimeout(240000);
 let accessToken: string;
 let app: INestApplication;
+let app2: INestApplication;
 let server: any;
+let server2: any;
 
 let supplierBpiSubjectEddsaPublicKey: string;
 let supplierBpiSubjectEddsaPrivateKey: string;
@@ -37,6 +41,8 @@ let createdWorkflowId: string;
 let createdBpiSubjectAccountSupplierId: string;
 let createdBpiSubjectAccountBuyerId: string;
 let createdTransactionApiId: string;
+let createdBpiSubjectBuyerId: string;
+let createdBpiSubjectSupplierId: string;
 
 describe('Invoice origination use-case end-to-end test', () => {
   beforeAll(async () => {
@@ -47,6 +53,25 @@ describe('Invoice origination use-case end-to-end test', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
     server = app.getHttpServer();
+
+    await app.listen(30000);
+
+    // dotenv.config({ path: path.resolve(__dirname, '../.env2') , override: true});
+    dotenv.config({
+      path: path.resolve(__dirname, './.env.override'),
+      override: true,
+    });
+
+    // Second app (use separate module)
+    const moduleFixture2: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    app2 = moduleFixture2.createNestApplication();
+    await app2.init();
+    server2 = app2.getHttpServer();
+    await app2.listen(30001);
+
+    // dotenv.config({ path: path.resolve(__dirname, '../.env') , override: true});
 
     const supplierWallet = new ethers.Wallet(supplierBpiSubjectEcdsaPrivateKey);
     supplierBpiSubjectEddsaPrivateKey = await createEddsaPrivateKey(
@@ -75,20 +100,22 @@ describe('Invoice origination use-case end-to-end test', () => {
   afterAll(async () => {
     await app.close();
     server.close();
+
+    await app2.close();
+    server2.close();
   });
 
   // TODO: Add detailed explanation of the SRI use-case setup and necessary seed data
   it('Logs in an internal Bpi Subject, creates two external Bpi Subjects (Supplier and Buyer) and a Workgroup and adds the created Bpi Subjects as participants to the Workgroup', async () => {
     accessToken = await loginAsInternalBpiSubjectAndReturnAnAccessToken();
 
-    const createdBpiSubjectSupplierId =
-      await createExternalBpiSubjectAndReturnId(
-        'External Bpi Subject - Supplier',
-        [
-          { type: 'ecdsa', value: supplierBpiSubjectEcdsaPublicKey },
-          { type: 'eddsa', value: supplierBpiSubjectEddsaPublicKey },
-        ],
-      );
+    createdBpiSubjectSupplierId = await createExternalBpiSubjectAndReturnId(
+      'External Bpi Subject - Supplier',
+      [
+        { type: 'ecdsa', value: supplierBpiSubjectEcdsaPublicKey },
+        { type: 'eddsa', value: supplierBpiSubjectEddsaPublicKey },
+      ],
+    );
 
     createdBpiSubjectAccountSupplierId =
       await createBpiSubjectAccountAndReturnId(
@@ -96,7 +123,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         createdBpiSubjectSupplierId,
       );
 
-    const createdBpiSubjectBuyerId = await createExternalBpiSubjectAndReturnId(
+    createdBpiSubjectBuyerId = await createExternalBpiSubjectAndReturnId(
       'External Bpi Subject 2 - Buyer',
       [
         { type: 'ecdsa', value: buyerBpiSubjectEcdsaPublicKey },
@@ -203,6 +230,76 @@ describe('Invoice origination use-case end-to-end test', () => {
         queryParams: {
           invoiceId: process.env.EFAKTURA_INVOICE_ID,
         },
+      }),
+    );
+  });
+
+  it('Creates BPI_TRIGGER on App1 and BPI_WAIT on App2', async () => {
+    const bpiWaitId = await request(server2)
+      .post('/worksteps')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        name: 'wait-step',
+        version: '1',
+        status: 'NEW',
+        workgroupId: createdWorkgroupId,
+        securityPolicy: 'Dummy security policy',
+        privacyPolicy: 'Dummy privacy policy',
+        workstepConfig: {
+          type: WorkstepType.BPI_WAIT,
+          executionParams: {},
+        },
+      })
+      .expect(201);
+
+    const bpiTriggerId = await request(server)
+      .post('/worksteps')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        name: 'trigger-step',
+        version: '1',
+        status: 'NEW',
+        workgroupId: createdWorkgroupId,
+        securityPolicy: 'Dummy security policy',
+        privacyPolicy: 'Dummy privacy policy',
+        workstepConfig: {
+          type: WorkstepType.BPI_TRIGGER,
+          executionParams: {
+            targetWorkflowId: createdWorkflowId, // or a separate one if needed
+            appName: 'bpi2',
+            // targetWorkstepId: ""
+          },
+        },
+      })
+      .expect(201);
+
+    const content = { test: 'test content' };
+    const signature = await createEddsaSignature(
+      JSON.stringify(content),
+      buyerBpiSubjectEddsaPrivateKey,
+    );
+
+    const triggerTransactionId = await createTransactionAndReturnId(
+      v4(),
+      4,
+      createdWorkflowId,
+      bpiTriggerId.text,
+      createdBpiSubjectAccountBuyerId,
+      buyerBpiSubjectEddsaPrivateKey,
+      createdBpiSubjectAccountSupplierId,
+      JSON.stringify({
+        appName: 'bpi2',
+        id: v4(),
+        nonce: 5,
+        fromBpiSubjectId: createdBpiSubjectBuyerId,
+        toBpiSubjectId: createdBpiSubjectAccountSupplierId,
+        content,
+        signature,
+        type: 1,
+        fromBpiSubjectAccountId: createdBpiSubjectAccountBuyerId,
+        toBpiSubjectAccountId: createdBpiSubjectAccountSupplierId,
+        workflowId: createdWorkflowId,
+        workstepId: bpiWaitId.text,
       }),
     );
   });

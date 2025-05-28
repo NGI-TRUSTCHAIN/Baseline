@@ -30,6 +30,7 @@ import { TransactionStorageAgent } from './transactionStorage.agent';
 import { ICcsmService } from '../../ccsm/services/ccsm.interface';
 import { WorkstepType } from '../../workgroup/worksteps/models/workstep';
 import { LoggingService } from '../../../shared/logging/logging.service';
+import { IMessagingClient } from '../../communication/messagingClients/messagingClient.interface';
 
 @Injectable()
 export class TransactionAgent {
@@ -45,6 +46,8 @@ export class TransactionAgent {
     @Inject('ICcsmService')
     private readonly ccsmService: ICcsmService,
     private readonly logger: LoggingService,
+    @Inject('IMessagingClient')
+    private readonly natsMessagingClient: IMessagingClient,
   ) {}
 
   public throwIfCreateTransactionInputInvalid() {
@@ -54,7 +57,7 @@ export class TransactionAgent {
 
   public isCreateTransactionInputInvalid(): boolean {
     // TODO: This is a placeholder, we will add validation rules as we move forward with business logic implementation
-    return true;
+    return false;
   }
 
   public createNewTransaction(
@@ -195,6 +198,14 @@ export class TransactionAgent {
     );
 
     switch (workstep.workstepConfig.type) {
+      case WorkstepType.BPI_WAIT:
+        this.logger.logInfo(
+          `called from another bpi with payload ${tx.payload}`,
+        );
+      case WorkstepType.BPI_TRIGGER:
+        this.logger.logInfo(`triggering bpi with payload ${tx.payload}`);
+        const parsedPayload = JSON.parse(tx.payload);
+        this.natsMessagingClient.publish(parsedPayload.appName, tx.payload);
       case WorkstepType.BLOCKCHAIN:
         const {
           circuitProvingKeyPath,

@@ -25,6 +25,12 @@ export class MessagingAgent implements OnApplicationBootstrap {
       'general',
       this.onNewMessageReceived.bind(this),
     );
+
+    // channel specific to this app instance
+    this.messagingClient.subscribe(
+      process.env.APP_NAME as any,
+      this.onNewMessageReceived.bind(this),
+    );
   }
 
   public async publishMessage(
@@ -67,7 +73,7 @@ export class MessagingAgent implements OnApplicationBootstrap {
     }
 
     if (newBpiMessageCandidate.isTransactionMessage()) {
-      return await this.commandBus.execute(
+      await this.commandBus.execute(
         new ProcessInboundBpiTransactionCommand(
           newBpiMessageCandidate.id,
           newBpiMessageCandidate.nonce,
@@ -79,6 +85,7 @@ export class MessagingAgent implements OnApplicationBootstrap {
           newBpiMessageCandidate.signature,
         ),
       );
+      return true;
     }
 
     return false;
@@ -110,6 +117,7 @@ export class MessagingAgent implements OnApplicationBootstrap {
       );
       newBpiMessageCandidate.updateWorkflowId(newBpiMessageProps.workflowId);
       newBpiMessageCandidate.updateWorkstepId(newBpiMessageProps.workstepId);
+      newBpiMessageCandidate.updateNonce(newBpiMessageProps.nonce);
     } catch (e) {
       errors.push(`${rawMessage} is not valid JSON. Error: ${e}`);
       return [newBpiMessageCandidate, errors];

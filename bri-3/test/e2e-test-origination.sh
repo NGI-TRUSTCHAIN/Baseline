@@ -46,6 +46,8 @@ run_command "cd .."
 # Prep database
 log_message "Reset and reseed database"
 run_command "npx prisma migrate reset --force"
+# run_command "DATABASE_URL=postgresql://postgres:example@localhost:5432/postgres npx prisma migrate reset --force"
+# run_command "DATABASE_URL=postgresql://postgres:example@localhost:5433/postgres npx prisma migrate reset --force"
 
 # Firing up efakture mock server
 log_message "Firing up efakture mock server"
