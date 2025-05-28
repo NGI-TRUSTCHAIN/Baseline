@@ -6,11 +6,6 @@ include "../utils/rangeCheck.circom";
 include "../utils/merkleProofVerifier.circom";
 include "../utils/hashVerifier.circom";
 
-//TODO: Issue #30
-//TODO: Issue #31
-//TODO: Issue #33
-//TODO: Issue #34
-
 /**
  * This circuit runs business logic by combining multiple operations 
  * (equality, range check, membership check, 
@@ -168,53 +163,33 @@ template BusinessLogic(
     var inB;
 
     for (var opIdx = 0; opIdx < nLogicGates; opIdx++) {
-        var baseIdx = 5 * opIdx;
-        var op = truthTable[baseIdx];
-        var idxA = truthTable[baseIdx + 1];
-        var srcA = truthTable[baseIdx + 2];
-        var idxB = truthTable[baseIdx + 3];
-        var srcB = truthTable[baseIdx + 4];
+        var packed = truthTable[opIdx];
+
+        // Unpack fields
+        var op   = (packed >> 10) & 3;     // bits 11-10 --> 2 bits
+        var srcB = (packed >> 9) & 1;      // bit 9 --> 1 bit
+        var idxB = (packed >> 5) & 15;     // bits 8-5 --> 4 bits
+        var srcA = (packed >> 4) & 1;      // bit 4 --> 1 bits
+        var idxA = packed & 15;            // bits 3-0 --> 4 bits
 
         inA = srcA == 0 ? outputs[idxA] : intermediates[idxA];
+        inB = srcB == 0 ? outputs[idxB] : intermediates[idxB];
 
-        if (op == 2) { // NOT
-            intermediates[opIdx] <== 1 - inA;
+        var andOut = inA * inB;
+        var orOut = inA + inB - inA * inB;
+        var notOut = 1 - inA; 
+
+        if (op == 0) {
+            intermediates[opIdx] <== andOut;
+        } else if (op == 1) {
+            intermediates[opIdx] <== orOut;
+        } else if (op == 2) {
+            intermediates[opIdx] <== notOut;
         } else {
-            inB = srcB == 0 ? outputs[idxB] : intermediates[idxB];
-
-            if (op == 0) { // AND
-                intermediates[opIdx] <== inA * inB;
-            } else if (op == 1) { // OR
-                intermediates[opIdx] <== inA + inB - inA * inB;
-            }
+            intermediates[opIdx] <== 0;
         }
     }
 
     // Step 3: Final output
     resultOut <== nLogicGates == 0 ? outputs[0] : intermediates[nLogicGates - 1];
 }
-
-// Declare your main component
-//((a==b) OR (c==d)) AND (e≤f≤g) AND ((h ∈ [i,j,k,l]) OR (hash of x matches expected)) AND (signature is valid)
-//CAUTION: Signature validation must always be ANDed with the other logic gates (due to assert in EDdsa circom).
-component main {public [isEqualA, rangeCheckValue, merkleProofLeaf, hashVerificationPreimage, signatureVerificationMessage ]} = BusinessLogic(
-    [2, 1, 1, 1, 1],        // Operations: 2 IsEqual, 1 RangeCheck, 1 MerkleProofVerification, 1 HashVerifier, 1 SignatureVerifier
-    [0, 32, 2, 512, 256],   // Params: (0) for IsEqual, (32-bit) for RangeCheck, (4-member set) for MerkleProofVerification, (512-bit hash) for HashVerifier, (256-bit signature) for SignatureVerifier
-    5,                     // Total logic gates = 5
-    [
-        // Gate 0: I0 = (a == b) OR (c == d)
-        1, 0, 0, 1, 0,       // OR(outputs[0], outputs[1])
-
-        // Gate 1: I1 = I0 AND (e ≤ f ≤ g)
-        0, 0, 1, 2, 0,       // AND(intermediates[0], outputs[2])
-
-        // Gate 2: I2 = (h ∈ [i,j,k,l]) OR (hash of x matches expected)
-        1, 3, 0, 4, 0,       // OR(outputs[3], outputs[4])
-
-        // Gate 3: I3 = I1 AND I2
-        0, 1, 1, 2, 1,       // AND(intermediates[1], intermediates[2])
-
-        // Gate 4: I4 = I3 AND (signature is valid)
-        0, 3, 1, 5, 0        // AND(intermediates[3], outputs[5])
-    ]
-);
