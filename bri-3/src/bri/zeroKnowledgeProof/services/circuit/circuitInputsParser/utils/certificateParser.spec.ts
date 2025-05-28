@@ -256,7 +256,7 @@ describe('ASiC-E signature XML extraction and certificate validation', () => {
 
     //1. Check signing authority of certificate
     const tree = new MerkleTree(
-      3,
+      2,
       [signingAuthority, issuingAuthority, certificateTiming, documentType],
       {
         hashFunction: generateMerkleHash,
@@ -301,7 +301,7 @@ describe('ASiC-E signature XML extraction and certificate validation', () => {
           return nodeBits;
         }),
       ]),
-      merkleProofPathIndex: [[path.pathIndices]],
+      merkleProofPathIndex: [path.pathIndices],
 
       hashVerificationPreimage: [preimage], // [ [512 bits] ]
       hashVerificationExpectedHash: [certificateHashBuffer], // [ [256 bits] ]
