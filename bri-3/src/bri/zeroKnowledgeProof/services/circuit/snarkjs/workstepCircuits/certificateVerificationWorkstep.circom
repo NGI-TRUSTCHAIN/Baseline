@@ -9,7 +9,7 @@ include "../generalisedCircuit/businessLogic.circom";
 
 component main {public [isEqualA, rangeCheckValue, merkleProofLeaf, hashVerificationPreimage, signatureVerificationMessage ]} = BusinessLogic(
     [0, 0, 1, 1, 1],       // businessOperations counts
-    [0, 0, 3, 18464, 256],       //  0,0, Merkle Tree Height-2, (512-bit hash) for HashVerifier, (256-bit signature) for SignatureVerifier
+    [0, 0, 2, 18464, 256],       //  0,0, Merkle Tree Height-2, (512-bit hash) for HashVerifier, (256-bit signature) for SignatureVerifier
     2,                     // nLogicGates
     [32, 80]               // truthTable: AND(outputs[0], outputs[1]), then AND(intermediate[0], outputs[2])
 );
