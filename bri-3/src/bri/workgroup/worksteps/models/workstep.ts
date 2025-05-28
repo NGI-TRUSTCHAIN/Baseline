@@ -5,6 +5,11 @@ export enum WorkstepType {
   API = 'API',
 }
 
+export enum PayloadFormatType {
+  JSON = 'JSON',
+  XML = 'XML',
+}
+
 export class WorkstepExecutionParams {
   @AutoMap()
   verifierContractAddress?: string;
@@ -19,6 +24,9 @@ export class WorkstepConfig {
 
   @AutoMap()
   executionParams: WorkstepExecutionParams;
+
+  @AutoMap()
+  payloadFormatType: PayloadFormatType;
 }
 
 export class Workstep {

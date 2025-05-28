@@ -15,7 +15,7 @@ import { DeleteWorkstepCommandHandler } from '../capabilities/deleteWorkstep/del
 import { GetAllWorkstepsQueryHandler } from '../capabilities/getAllWorksteps/getAllWorkstepsQuery.handler';
 import { GetWorkstepByIdQueryHandler } from '../capabilities/getWorkstepById/getWorkstepByIdQuery.handler';
 import { UpdateWorkstepCommandHandler } from '../capabilities/updateWorkstep/updateWorkstep.command.handler';
-import { Workstep, WorkstepConfig, WorkstepType } from '../models/workstep';
+import { PayloadFormatType, Workstep, WorkstepConfig, WorkstepType } from '../models/workstep';
 import { WorkstepProfile } from '../workstep.profile';
 import { CreateWorkstepDto } from './dtos/request/createWorkstep.dto';
 import { UpdateWorkstepDto } from './dtos/request/updateWorkstep.dto';
@@ -32,6 +32,7 @@ describe('WorkstepController', () => {
       executionParams: {
         verifierContractAddress: 'verifierContractAddress',
       },
+      payloadFormatType: PayloadFormatType.JSON
     };
     return new Workstep(
       uuid(),

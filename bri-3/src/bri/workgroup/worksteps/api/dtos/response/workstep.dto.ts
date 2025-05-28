@@ -1,5 +1,5 @@
 import { AutoMap } from '@automapper/classes';
-import { WorkstepType } from '../../../models/workstep';
+import { PayloadFormatType, WorkstepType } from '../../../models/workstep';
 
 export class WorkstepExecutionParamsDto {
   @AutoMap()
@@ -15,6 +15,9 @@ export class WorkstepConfigDto {
 
   @AutoMap()
   executionParams: WorkstepExecutionParamsDto;
+
+  @AutoMap()
+  payloadFormatType: PayloadFormatType;
 }
 export class WorkstepDto {
   @AutoMap()
