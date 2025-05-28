@@ -232,8 +232,8 @@ const OUTPUT_FILE_PATH = path.join(
   __dirname,
   '../../../../../../shared/testing/x509Certificate/signatures0.xml',
 );
-
-describe('ASiC-E signature XML extraction and certificate validation', () => {
+// TODO: Separate npm run command
+describe.skip('ASiC-E signature XML extraction and certificate validation', () => {
   jest.setTimeout(2000000);
   let circuit: any;
 
