@@ -26,11 +26,13 @@ export class MessagingAgent implements OnApplicationBootstrap {
       this.onNewMessageReceived.bind(this),
     );
 
-    // channel specific to this app instance
-    this.messagingClient.subscribe(
-      process.env.APP_NAME as any,
-      this.onNewMessageReceived.bind(this),
-    );
+    if (!!process.env.APP_NAME) {
+      // channel specific to this app instance
+      this.messagingClient.subscribe(
+        process.env.APP_NAME as any,
+        this.onNewMessageReceived.bind(this),
+      );
+    }
   }
 
   public async publishMessage(
