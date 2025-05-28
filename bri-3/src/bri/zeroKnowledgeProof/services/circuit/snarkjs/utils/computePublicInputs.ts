@@ -178,6 +178,9 @@ export function LeafToBits(leaf: string, bitPadding: number): number[] {
   if (leafStrBuffer.length < paddedLength) {
     const padding = Buffer.alloc(paddedLength - leafStrBuffer.length, 0); // zero padding
     leafStrBuffer = Buffer.concat([leafStrBuffer, padding]);
+  } else if (leafStrBuffer.length > paddedLength) {
+    // If the leaf is longer than 32 bytes, truncate it
+    leafStrBuffer = leafStrBuffer.slice(0, paddedLength);
   }
 
   const leafBits = buffer2bitsMSB(leafStrBuffer);
@@ -227,11 +230,8 @@ export const generateMerkleHash = (left: string, right: string) => {
 };
 
 //Generate hash inputs
-export const generateHashInputs = async (message: string | ArrayBuffer) => {
-  let testStrBuffer =
-    typeof message === 'string'
-      ? Buffer.from(message, 'utf8')
-      : Buffer.from(message);
+export const generateHashInputs = async (message: ArrayBuffer) => {
+  let testStrBuffer = Buffer.from(message);
   //Check the length of the string and pad with 0s if less than 512 bits
   // Pad with zeros to reach 64 bytes (512 bits)
   const paddedLength = 64;
@@ -279,7 +279,7 @@ export function generateMerkleProofInputs(leaf: string, tree: string[]) {
       return nodeBits;
     }),
   );
-  const merkleProofPathIndex = [path.pathIndices];
+  const merkleProofPathIndex = path.pathIndices;
 
   return {
     merkleProofLeaf,

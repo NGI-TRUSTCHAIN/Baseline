@@ -11,13 +11,13 @@ type CheckType =
   | 'signatureCheck';
 
 type GeneralCircuitInputMapping = {
-  circuitInput: string;
+  circuitInput?: string; //Can be optional in case part of an circuit array. Need not define it as separate circuit input
   description: string;
   payloadJsonPath: string;
   dataType: 'string' | 'integer' | 'array' | 'object';
   defaultValue?: any;
 
-  checkType: CheckType;
+  checkType?: CheckType;
 
   // for isEqual
   expectedValue?: any;
@@ -27,6 +27,7 @@ type GeneralCircuitInputMapping = {
   maxValue?: number;
 
   // for merkleProof --> payloadJSonPath of all leaves
+  isMerkleLeaf?: boolean;
   merkleTreeInputsPath?: string[];
 
   // for hashCheck
@@ -46,8 +47,9 @@ type GeneralCircuitInputExtraction = {
       | 'signedHash'
       | 'signedCertificate'
       | 'signature'
-      | 'signer'
-      | 'issuer'
+      | 'signerName'
+      | 'signerID'
+      | 'issuerName'
       | 'certPreimage';
     destinationPath: string;
     circuitInput?: string;

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { LoggingService } from '../../../../../shared/logging/logging.service';
+import { LoggingService } from '../../../../../../shared/logging/logging.service';
 import * as fs from 'fs';
 import {
   extractXML,
@@ -8,15 +8,19 @@ import {
   getSigningTime,
   getCertDigestInfo,
   parseName,
-} from './utils/certificateParser';
+  parseSignature,
+} from './certificateParser';
 import {
   base64ToHash,
   buffer2bitsMSB,
   generateMerkleProofInputs,
   generateHashInputs,
   generateSignatureInputs,
-} from '../snarkjs/utils/computePublicInputs';
+} from '../../snarkjs/utils/computePublicInputs';
 import { X509Certificate } from '@peculiar/x509';
+import * as path from 'path';
+import { map } from 'rxjs';
+import e from 'express';
 
 @Injectable()
 export class GeneralCircuitInputsParserService {
@@ -81,17 +85,28 @@ export class GeneralCircuitInputsParserService {
           jsonPayload,
           extraction.payloadJsonPath,
         );
+
         switch (extraction.inputType) {
           case 'asice':
+            const ASICE_PATH = path.resolve(__dirname, value);
             const SIGNATURE_XML_PATH = 'META-INF/signatures0.xml';
-            extractXML(
-              value,
-              SIGNATURE_XML_PATH,
+            const OUTPUT_FILE_PATH = path.join(
+              __dirname,
               extraction.dataToExtract[0].destinationPath,
             );
+            extractXML(ASICE_PATH, SIGNATURE_XML_PATH, OUTPUT_FILE_PATH);
+
+            this.setJsonValueByPath(
+              jsonPayload,
+              extraction.dataToExtract[0].field,
+              extraction.dataToExtract[0].destinationPath,
+            );
+            break;
           case 'xml':
-            const xmlContent = fs.readFileSync(value, 'utf8');
+            const XML_FILE_PATH = path.join(__dirname, value);
+            const xmlContent = fs.readFileSync(XML_FILE_PATH, 'utf8');
             const parsedXML = parseXML(xmlContent);
+
             let extractedXMLField;
             extraction.dataToExtract.forEach((data) => {
               switch (data.field) {
@@ -110,10 +125,7 @@ export class GeneralCircuitInputsParserService {
                   extractedXMLField = parseCertificate(parsedXML);
                   break;
                 case 'signature':
-                  extractedXMLField =
-                    parsedXML?.['asic:XAdESSignatures']['ds:Signature'][
-                      'ds:SignatureValue'
-                    ]['#text'];
+                  extractedXMLField = parseSignature(parsedXML);
                 default:
                   '';
                   break;
@@ -133,18 +145,24 @@ export class GeneralCircuitInputsParserService {
             });
             break;
           case 'x509':
-            const cert = new X509Certificate(value);
+            const cert = value;
             let extractedCertField;
-            extraction.dataToExtract.forEach(async (data) => {
+            for (const data of extraction.dataToExtract) {
               switch (data.field) {
-                case 'signer':
+                case 'signerName':
                   extractedCertField = parseName(cert.subject)['CN'][0];
                   break;
-                case 'issuer':
+                case 'signerID':
+                  extractedCertField = parseName(cert.subject)[
+                    'serialNumber'
+                  ][0];
+                  console.log('Signer ID:', extractedCertField);
+                  break;
+                case 'issuerName':
                   extractedCertField = parseName(cert.issuer)['CN'][0];
                   break;
                 case 'certPreimage':
-                  extractedCertField = await generateHashInputs(cert.rawData);
+                  extractedCertField = cert.rawData;
                   break;
                 default:
                   '';
@@ -161,13 +179,17 @@ export class GeneralCircuitInputsParserService {
                   this.createCircuitInputMapping(data);
                 cim.mapping.push(newCircuitMapping);
               }
-            });
+            }
+            break;
         }
       }
-      for (const mapping of cim.mapping) {
-        const value =
-          this.getJsonValueByPath(jsonPayload, mapping.payloadJsonPath) ??
-          mapping.defaultValue;
+    }
+
+    for (const mapping of cim.mapping) {
+      const value =
+        this.getJsonValueByPath(jsonPayload, mapping.payloadJsonPath) ??
+        mapping.defaultValue;
+      if (mapping.circuitInput) {
         switch (mapping.checkType) {
           case 'isEqual':
             result[`${mapping.circuitInput}Value`] = value;
@@ -187,22 +209,24 @@ export class GeneralCircuitInputsParserService {
             const allLeaves = mapping.merkleTreeInputsPath?.map((path) =>
               String(this.getJsonValueByPath(jsonPayload, path)),
             );
-            const {
-              merkleProofLeaf,
-              merkleProofRoot,
-              merkleProofPathElement,
-              merkleProofPathIndex,
-            } = generateMerkleProofInputs(value, allLeaves ? allLeaves : []);
-            result[`${mapping.circuitInput}Leaf`] = merkleProofLeaf;
-            result[`${mapping.circuitInput}Root`] = merkleProofRoot;
-            result[`${mapping.circuitInput}PathElement`] =
-              merkleProofPathElement;
-            result[`${mapping.circuitInput}PathIndex`] = merkleProofPathIndex;
+            console.log(allLeaves);
+            console.log(value);
+            if ((allLeaves?.length ?? 0) > 0) {
+              const {
+                merkleProofLeaf,
+                merkleProofRoot,
+                merkleProofPathElement,
+                merkleProofPathIndex,
+              } = generateMerkleProofInputs(value, allLeaves!);
+              result[`${mapping.circuitInput}Leaf`] = merkleProofLeaf;
+              result[`${mapping.circuitInput}Root`] = merkleProofRoot;
+              result[`${mapping.circuitInput}PathElement`] =
+                merkleProofPathElement;
+              result[`${mapping.circuitInput}PathIndex`] = merkleProofPathIndex;
+            }
             break;
           case 'hashCheck':
-            const { preimage, expectedHash } = await generateHashInputs(
-              value['preimage'],
-            );
+            const { preimage, expectedHash } = await generateHashInputs(value);
             result[`${mapping.circuitInput}Preimage`] = preimage;
             result[`${mapping.circuitInput}ExpectedHash`] =
               mapping.expectedHashPath !== undefined
