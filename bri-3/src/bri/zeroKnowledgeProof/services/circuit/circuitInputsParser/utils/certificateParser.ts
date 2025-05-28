@@ -3,12 +3,10 @@ import { XMLParser } from 'fast-xml-parser';
 import * as fs from 'fs';
 import * as AdmZip from 'adm-zip';
 import * as crypto from 'crypto';
+import { parse } from 'path';
 
 export const parseCertificate = (certificate: object): x509.X509Certificate => {
-  const certBase64 =
-    certificate?.['asic:XAdESSignatures']?.['ds:Signature']?.['ds:KeyInfo']?.[
-      'ds:X509Data'
-    ]?.['ds:X509Certificate'];
+  const certBase64 = findAllKeyMatches(certificate, 'ds:X509Certificate')[0];
 
   const certBuffer = Buffer.from(certBase64.replace(/\s+/g, ''), 'base64');
   const cert = new x509.X509Certificate(certBuffer);
@@ -51,11 +49,7 @@ export const extractXML = (
 
 export const getSigningTime = (parsedXML: object): string | null => {
   try {
-    return parsedXML['asic:XAdESSignatures']['ds:Signature']['ds:Object'][
-      'xades:QualifyingProperties'
-    ]['xades:SignedProperties']['xades:SignedSignatureProperties'][
-      'xades:SigningTime'
-    ];
+    return findAllKeyMatches(parsedXML, 'xades:SigningTime')[0] || null;
   } catch (err) {
     console.warn('Signing time not found in expected location.');
     return null;
@@ -65,12 +59,7 @@ export const getSigningTime = (parsedXML: object): string | null => {
 export const getCertDigestInfo = (
   parsedXML: object,
 ): { algorithm: string; value: string } => {
-  const certDigest =
-    parsedXML['asic:XAdESSignatures']['ds:Signature']['ds:Object'][
-      'xades:QualifyingProperties'
-    ]['xades:SignedProperties']['xades:SignedSignatureProperties'][
-      'xades:SigningCertificate'
-    ]['xades:Cert']['xades:CertDigest'];
+  const certDigest = findAllKeyMatches(parsedXML, 'xades:CertDigest')[0];
   const digestMethod = certDigest['ds:DigestMethod']['@_Algorithm'];
   const digestValue = certDigest['ds:DigestValue'];
   return { algorithm: digestMethod, value: digestValue };
@@ -98,12 +87,7 @@ export const verifyCertDigest = (
 export const getIssuerSerialInfo = (
   parsedXML: object,
 ): { issuerName: string; serialNumber: string } => {
-  const issuerSerial =
-    parsedXML['asic:XAdESSignatures']['ds:Signature']['ds:Object'][
-      'xades:QualifyingProperties'
-    ]['xades:SignedProperties']['xades:SignedSignatureProperties'][
-      'xades:SigningCertificate'
-    ]['xades:Cert']['xades:IssuerSerial'];
+  const issuerSerial = findAllKeyMatches(parsedXML, 'xades:IssuerSerial')[0];
 
   return {
     issuerName: issuerSerial['ds:X509IssuerName'],
@@ -128,3 +112,32 @@ export const parseName = (dn: string): Record<string, string[]> => {
 
   return result;
 };
+
+export const parseSignature = (parsedXML: object): string | null => {
+  try {
+    return (
+      findAllKeyMatches(parsedXML, 'ds:SignatureValue')[0]['#text'] || null
+    );
+  } catch (err) {
+    console.warn('Signature value not found in expected location.');
+    return null;
+  }
+};
+
+function findAllKeyMatches(
+  obj: any,
+  targetKey: string,
+  matches: any[] = [],
+): any[] {
+  if (typeof obj !== 'object' || obj === null) return matches;
+
+  if (obj.hasOwnProperty(targetKey)) {
+    matches.push(obj[targetKey]);
+  }
+
+  for (const key in obj) {
+    findAllKeyMatches(obj[key], targetKey, matches);
+  }
+
+  return matches;
+}
