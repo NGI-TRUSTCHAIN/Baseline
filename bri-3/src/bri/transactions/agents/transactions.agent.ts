@@ -28,7 +28,10 @@ import {
 import { TransactionResult } from '../models/transactionResult';
 import { TransactionStorageAgent } from './transactionStorage.agent';
 import { ICcsmService } from '../../ccsm/services/ccsm.interface';
-import { WorkstepType, PayloadFormatType } from '../../workgroup/worksteps/models/workstep';
+import {
+  WorkstepType,
+  PayloadFormatType,
+} from '../../workgroup/worksteps/models/workstep';
 import { LoggingService } from '../../../shared/logging/logging.service';
 
 @Injectable()
@@ -190,10 +193,13 @@ export class TransactionAgent {
     const txResult = new TransactionResult();
 
     // For now defaulting to JSON in case undefined for backward compatibility
-    const payloadFormatType = workstep.workstepConfig.payloadFormatType || PayloadFormatType.JSON;
+    const payloadFormatType =
+      workstep.workstepConfig.payloadFormatType || PayloadFormatType.JSON;
 
     if (workstep.workstepConfig.payloadFormatType === PayloadFormatType.XML) {
-      const xmlPayload = await this.circuitInputsParserService.parseXMLToFlat(tx.payload);
+      const xmlPayload = await this.circuitInputsParserService.parseXMLToFlat(
+        tx.payload,
+      );
       txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
         xmlPayload,
         `${process.env.MERKLE_TREE_HASH_ALGH}`,
@@ -466,11 +472,12 @@ export class TransactionAgent {
       throw new Error(`Broken mapping`);
     }
 
-    const parsedInputs = await this.circuitInputsParserService.applyMappingToTxPayload(
-      txPayload,
-      payloadFormatType,
-      mapping
-    );
+    const parsedInputs =
+      await this.circuitInputsParserService.applyMappingToTxPayload(
+        txPayload,
+        payloadFormatType,
+        mapping,
+      );
 
     if (!parsedInputs) {
       throw new Error(`Failed to parse inputs`);

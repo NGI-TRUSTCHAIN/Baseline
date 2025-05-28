@@ -52,11 +52,18 @@ export class CircuitInputsParserService {
     }
   }
 
-  public async applyMappingToTxPayload(payload: string, payloadType: PayloadFormatType, cim: CircuitInputsMapping) {
+  public async applyMappingToTxPayload(
+    payload: string,
+    payloadType: PayloadFormatType,
+    cim: CircuitInputsMapping,
+  ) {
     const result: any = {};
 
     try {
-      const parsedPayload = payloadType === PayloadFormatType.JSON ? JSON.parse(payload) : await this.parseXMLToFlat(payload);
+      const parsedPayload =
+        payloadType === PayloadFormatType.JSON
+          ? JSON.parse(payload)
+          : await this.parseXMLToFlat(payload);
 
       for (const mapping of cim.mapping) {
         const value = this.getPayloadValueByPath(
@@ -79,7 +86,10 @@ export class CircuitInputsParserService {
             break;
 
           case 'integer':
-            result[mapping.circuitInput] = value !== undefined ? parseInt(value.toString(), 10) : mapping.defaultValue;
+            result[mapping.circuitInput] =
+              value !== undefined
+                ? parseInt(value.toString(), 10)
+                : mapping.defaultValue;
             break;
             break;
 
@@ -143,7 +153,7 @@ export class CircuitInputsParserService {
       });
 
       const parsed = await parser.parseStringPromise(xmlPayload);
-      
+
       // Convert the nested XML structure to a flat structure
       return this.flattenXMLObject(parsed.root || parsed);
     } catch (error) {
@@ -160,7 +170,11 @@ export class CircuitInputsParserService {
         const value = obj[key];
         const newKey = prefix ? `${prefix}.${key}` : key;
 
-        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
           // Recursively flatten nested objects
           Object.assign(flattened, this.flattenXMLObject(value, newKey));
         } else {

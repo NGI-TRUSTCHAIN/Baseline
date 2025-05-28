@@ -150,7 +150,11 @@ describe('CircuitInputsParserService', () => {
     const schema = {} as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.JSON, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toBeNull();
@@ -174,7 +178,11 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.JSON, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: 387 });
@@ -201,7 +209,11 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.JSON, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: 312 });
@@ -225,7 +237,11 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.JSON, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toBeNull();
@@ -251,7 +267,11 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.JSON, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: 387 });
@@ -275,7 +295,11 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.JSON, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: 123 });
@@ -302,7 +326,11 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.JSON, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: defaultValue });
@@ -326,7 +354,11 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.JSON, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toBeNull();
@@ -355,7 +387,11 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.JSON, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: [123, 321, 454] });
@@ -384,7 +420,11 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.JSON, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: [387, 388, 389] });
@@ -415,7 +455,11 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.JSON, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: [387, 388, 389] });
@@ -446,7 +490,11 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.JSON, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: [222, 223, 224] });
@@ -454,8 +502,7 @@ describe('CircuitInputsParserService', () => {
 
   it('Should generate a single circuit input param based on a single integer param at root level. for payload in XML format', async () => {
     // Arrange
-    const payload = 
-       `<?xml version="1.0" encoding="UTF-8"?>
+    const payload = `<?xml version="1.0" encoding="UTF-8"?>
         <root>
           <supplierInvoiceID>123</supplierInvoiceID>
         </root>`;
@@ -472,7 +519,11 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyMappingToTxPayload(payload, PayloadFormatType.XML, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.XML,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: 123 });

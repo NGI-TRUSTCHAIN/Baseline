@@ -31,7 +31,10 @@ import { Transaction } from '../models/transaction';
 import { TransactionStatus } from '../models/transactionStatus.enum';
 import { TransactionAgent } from './transactions.agent';
 import { TransactionStorageAgent } from './transactionStorage.agent';
-import { PayloadFormatType, WorkstepType } from '../../workgroup/worksteps/models/workstep';
+import {
+  PayloadFormatType,
+  WorkstepType,
+} from '../../workgroup/worksteps/models/workstep';
 
 let agent: TransactionAgent;
 let authAgent: AuthAgent;
@@ -198,7 +201,7 @@ beforeEach(async () => {
         config: {
           verifierContractAddress: '',
         },
-        payloadFormatType: PayloadFormatType.JSON
+        payloadFormatType: PayloadFormatType.JSON,
       },
     },
   });
