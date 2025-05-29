@@ -138,7 +138,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         executionParams: {
           apiUrl: process.env.EFAKTURA_URL,
         },
-        payloadFormatType: PayloadFormatType.XML
+        payloadFormatType: PayloadFormatType.XML,
       },
     );
 
