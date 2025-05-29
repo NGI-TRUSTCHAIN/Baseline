@@ -57,6 +57,7 @@ jobs:
       EFAKTURA_API_KEY: ${{ secrets.EFAKTURA_API_KEY }}
       EFAKTURA_INVOICE_ID: ${{ secrets.EFAKTURA_INVOICE_ID }}
       EFAKTURA_URL: ${{ secrets.EFAKTURA_URL }}
+      APP_NAME: "bpi"
 
     steps:
       - name: Checkout
