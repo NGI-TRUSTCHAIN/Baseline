@@ -66,7 +66,7 @@ declare global {
 }
 
 describe('XML extraction and certificate validation', () => {
-  jest.setTimeout(2000000);
+  jest.setTimeout(100000);
   let circuit: any;
   let gcips: GeneralCircuitInputsParserService;
   const loggingServiceMock: DeepMockProxy<LoggingService> =
