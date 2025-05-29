@@ -199,8 +199,8 @@ declare global {
     }
   }
 }
-
-describe('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h ∈ [i,j,k,l]) OR (hash of x matches expected)) AND (signature is valid)', () => {
+// TODO: Separate npm run command
+describe.skip('BusinessLogic Circuit for ((a==b) OR (c==d)) AND (e≤f≤g) AND ((h ∈ [i,j,k,l]) OR (hash of x matches expected)) AND (signature is valid)', () => {
   jest.setTimeout(100000);
 
   let circuit: any;

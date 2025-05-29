@@ -1,5 +1,6 @@
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { LoggingService } from '../../../../../shared/logging/logging.service';
+import { PayloadFormatType } from '../../../../workgroup/worksteps/models/workstep';
 import { CircuitInputsParserService } from './circuitInputParser.service';
 
 let cips: CircuitInputsParserService;
@@ -11,7 +12,7 @@ beforeAll(async () => {
 });
 
 describe('validateCircuitInputTranslationSchema', () => {
-  it('Should return "Missing mapping array" if mapping array is missing', () => {
+  it('Should return "Missing mapping array" if mapping array is missing', async () => {
     // Arrange
     const schema = '{}';
 
@@ -143,19 +144,23 @@ describe('validateCircuitInputTranslationSchema', () => {
 });
 
 describe('CircuitInputsParserService', () => {
-  it('Should return null if empty CircuitInputsMapping passed in', () => {
+  it('Should return null if empty CircuitInputsMapping passed in', async () => {
     // Arrange
     const payload = 'test';
     const schema = {} as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = cips.applyMappingToJSONPayload(payload, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toBeNull();
   });
 
-  it('Should generate a single circuit input param with charcode sum based on a single string param at root level', () => {
+  it('Should generate a single circuit input param with charcode sum based on a single string param at root level', async () => {
     // Arrange
     const payload = `{
         "supplierInvoiceID": "INV123"
@@ -173,13 +178,17 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = cips.applyMappingToJSONPayload(payload, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: 387 });
   });
 
-  it('Should generate a single circuit input param with charcode sum based on a default value for a missing string param at root level', () => {
+  it('Should generate a single circuit input param with charcode sum based on a default value for a missing string param at root level', async () => {
     // Arrange
     const payload = `{
         "somethingElse": ""
@@ -200,13 +209,17 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = cips.applyMappingToJSONPayload(payload, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: 312 });
   });
 
-  it('Should return null based on a missing default value for a missing string param at root level', () => {
+  it('Should return null based on a missing default value for a missing string param at root level', async () => {
     // Arrange
     const payload = `{
         "somethingElse": ""
@@ -224,13 +237,17 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = cips.applyMappingToJSONPayload(payload, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toBeNull();
   });
 
-  it('Should generate a single circuit input param with charcode sum based on a single string param at root + 1 level', () => {
+  it('Should generate a single circuit input param with charcode sum based on a single string param at root + 1 level', async () => {
     // Arrange
     const payload = `{
         "supplierInvoice": {
@@ -250,13 +267,17 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = cips.applyMappingToJSONPayload(payload, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: 387 });
   });
 
-  it('Should generate a single circuit input param based on a single integer param at root level', () => {
+  it('Should generate a single circuit input param based on a single integer param at root level', async () => {
     // Arrange
     const payload = `{
         "supplierInvoiceID": 123
@@ -274,13 +295,17 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = cips.applyMappingToJSONPayload(payload, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: 123 });
   });
 
-  it('Should generate a single circuit input param based on a default value for a missing integer param at root level', () => {
+  it('Should generate a single circuit input param based on a default value for a missing integer param at root level', async () => {
     // Arrange
     const payload = `{
         "somethingElse": ""
@@ -301,13 +326,17 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = cips.applyMappingToJSONPayload(payload, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: defaultValue });
   });
 
-  it('Should return null based on a missing default value for a missing integer param at root level', () => {
+  it('Should return null based on a missing default value for a missing integer param at root level', async () => {
     // Arrange
     const payload = `{
         "somethingElse": ""
@@ -325,13 +354,17 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = cips.applyMappingToJSONPayload(payload, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toBeNull();
   });
 
-  it('Should generate a single circuit input param based on a single integer array param at root level', () => {
+  it('Should generate a single circuit input param based on a single integer array param at root level', async () => {
     // Arrange
     const payload = `{
         "supplierInvoiceIDs": [
@@ -354,13 +387,17 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = cips.applyMappingToJSONPayload(payload, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: [123, 321, 454] });
   });
 
-  it('Should generate a single circuit input param with charcode sums based on a single string array param at root level', () => {
+  it('Should generate a single circuit input param with charcode sums based on a single string array param at root level', async () => {
     // Arrange
     const payload = `{
         "supplierInvoiceIDs": [
@@ -383,13 +420,17 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = cips.applyMappingToJSONPayload(payload, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: [387, 388, 389] });
   });
 
-  it('Should generate a single circuit input param based on a object string property of an object array at root level', () => {
+  it('Should generate a single circuit input param based on a object string property of an object array at root level', async () => {
     // Arrange
     const payload = `{
         "supplierInvoiceIDs": [
@@ -414,13 +455,17 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = cips.applyMappingToJSONPayload(payload, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: [387, 388, 389] });
   });
 
-  it('Should generate a single circuit input param based on a object integer property of an object array at root level', () => {
+  it('Should generate a single circuit input param based on a object integer property of an object array at root level', async () => {
     // Arrange
     const payload = `{
         "supplierInvoiceIDs": [
@@ -445,9 +490,42 @@ describe('CircuitInputsParserService', () => {
     } as CircuitInputsMapping;
 
     // Act
-    const circuitInputs = cips.applyMappingToJSONPayload(payload, schema);
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.JSON,
+      schema,
+    );
 
     // Assert
     expect(circuitInputs).toStrictEqual({ dascircuitinput: [222, 223, 224] });
+  });
+
+  it('Should generate a single circuit input param based on a single integer param at root level. for payload in XML format', async () => {
+    // Arrange
+    const payload = `<?xml version="1.0" encoding="UTF-8"?>
+        <root>
+          <supplierInvoiceID>123</supplierInvoiceID>
+        </root>`;
+
+    const schema = {
+      mapping: [
+        {
+          circuitInput: 'dascircuitinput',
+          description: 'desc',
+          payloadJsonPath: 'supplierInvoiceID',
+          dataType: 'integer',
+        } as CircuitInputMapping,
+      ],
+    } as CircuitInputsMapping;
+
+    // Act
+    const circuitInputs = await cips.applyMappingToTxPayload(
+      payload,
+      PayloadFormatType.XML,
+      schema,
+    );
+
+    // Assert
+    expect(circuitInputs).toStrictEqual({ dascircuitinput: 123 });
   });
 });

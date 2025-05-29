@@ -28,7 +28,10 @@ import {
 import { TransactionResult } from '../models/transactionResult';
 import { TransactionStorageAgent } from './transactionStorage.agent';
 import { ICcsmService } from '../../ccsm/services/ccsm.interface';
-import { WorkstepType } from '../../workgroup/worksteps/models/workstep';
+import {
+  WorkstepType,
+  PayloadFormatType,
+} from '../../workgroup/worksteps/models/workstep';
 import { LoggingService } from '../../../shared/logging/logging.service';
 
 @Injectable()
@@ -189,10 +192,24 @@ export class TransactionAgent {
   ): Promise<TransactionResult> {
     const txResult = new TransactionResult();
 
-    txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
-      JSON.parse(tx.payload),
-      `${process.env.MERKLE_TREE_HASH_ALGH}`,
-    );
+    // For now defaulting to JSON in case undefined for backward compatibility
+    const payloadFormatType =
+      workstep.workstepConfig.payloadFormatType || PayloadFormatType.JSON;
+
+    if (workstep.workstepConfig.payloadFormatType === PayloadFormatType.XML) {
+      const xmlPayload = await this.circuitInputsParserService.parseXMLToFlat(
+        tx.payload,
+      );
+      txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
+        xmlPayload,
+        `${process.env.MERKLE_TREE_HASH_ALGH}`,
+      );
+    } else {
+      txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
+        JSON.parse(tx.payload),
+        `${process.env.MERKLE_TREE_HASH_ALGH}`,
+      );
+    }
 
     switch (workstep.workstepConfig.type) {
       case WorkstepType.BLOCKCHAIN:
@@ -209,6 +226,7 @@ export class TransactionAgent {
           await this.prepareCircuitInputs(
             tx,
             workstep.circuitInputsTranslationSchema,
+            payloadFormatType,
           ),
           circuitPath,
           circuitProvingKeyPath,
@@ -429,10 +447,12 @@ export class TransactionAgent {
   private async prepareCircuitInputs(
     tx: Transaction,
     circuitInputsTranslationSchema: string,
+    payloadFormatType: PayloadFormatType,
   ): Promise<object> {
     const payloadAsCircuitInputs = await this.preparePayloadAsCircuitInputs(
       tx.payload,
       circuitInputsTranslationSchema,
+      payloadFormatType,
     );
 
     return Object.assign(
@@ -444,6 +464,7 @@ export class TransactionAgent {
   private async preparePayloadAsCircuitInputs(
     txPayload: string,
     workstepTranslationSchema: string,
+    payloadFormatType: PayloadFormatType,
   ): Promise<object> {
     const mapping: CircuitInputsMapping = JSON.parse(workstepTranslationSchema);
 
@@ -452,10 +473,12 @@ export class TransactionAgent {
     }
 
     const parsedInputs =
-      this.circuitInputsParserService.applyMappingToJSONPayload(
+      await this.circuitInputsParserService.applyMappingToTxPayload(
         txPayload,
+        payloadFormatType,
         mapping,
       );
+
     if (!parsedInputs) {
       throw new Error(`Failed to parse inputs`);
     }

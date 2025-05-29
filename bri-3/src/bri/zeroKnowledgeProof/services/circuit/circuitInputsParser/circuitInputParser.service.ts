@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { PayloadFormatType } from '../../../../workgroup/worksteps/models/workstep';
+import * as xml2js from 'xml2js';
 import { LoggingService } from '../../../../../shared/logging/logging.service';
 
 @Injectable()
@@ -50,15 +52,22 @@ export class CircuitInputsParserService {
     }
   }
 
-  public applyMappingToJSONPayload(payload: string, cim: CircuitInputsMapping) {
+  public async applyMappingToTxPayload(
+    payload: string,
+    payloadType: PayloadFormatType,
+    cim: CircuitInputsMapping,
+  ) {
     const result: any = {};
 
     try {
-      const jsonPayload = JSON.parse(payload);
+      const parsedPayload =
+        payloadType === PayloadFormatType.JSON
+          ? JSON.parse(payload)
+          : await this.parseXMLToFlat(payload);
 
       for (const mapping of cim.mapping) {
-        const value = this.getJsonValueByPath(
-          jsonPayload,
+        const value = this.getPayloadValueByPath(
+          parsedPayload,
           mapping.payloadJsonPath,
         );
 
@@ -77,7 +86,11 @@ export class CircuitInputsParserService {
             break;
 
           case 'integer':
-            result[mapping.circuitInput] = value ?? mapping.defaultValue;
+            result[mapping.circuitInput] =
+              value !== undefined
+                ? parseInt(value.toString(), 10)
+                : mapping.defaultValue;
+            break;
             break;
 
           case 'array':
@@ -131,7 +144,50 @@ export class CircuitInputsParserService {
     return result;
   }
 
-  private getJsonValueByPath(json: any, path: string) {
+  public async parseXMLToFlat(xmlPayload: string): Promise<any> {
+    try {
+      const parser = new xml2js.Parser({
+        explicitArray: false,
+        mergeAttrs: true,
+        ignoreAttrs: false,
+      });
+
+      const parsed = await parser.parseStringPromise(xmlPayload);
+
+      // Convert the nested XML structure to a flat structure
+      return this.flattenXMLObject(parsed.root || parsed);
+    } catch (error) {
+      this.logger.logError(`Error parsing XML: ${error.message}`);
+      throw error;
+    }
+  }
+
+  private flattenXMLObject(obj: any, prefix: string = ''): any {
+    const flattened: any = {};
+
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const value = obj[key];
+        const newKey = prefix ? `${prefix}.${key}` : key;
+
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          // Recursively flatten nested objects
+          Object.assign(flattened, this.flattenXMLObject(value, newKey));
+        } else {
+          // Store primitive values and arrays directly
+          flattened[newKey] = value;
+        }
+      }
+    }
+
+    return flattened;
+  }
+
+  private getPayloadValueByPath(json: any, path: string) {
     const parts = path.split('.');
     let currentValue = json;
 
