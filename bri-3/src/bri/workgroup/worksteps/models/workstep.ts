@@ -7,6 +7,11 @@ export enum WorkstepType {
   BPI_WAIT = 'BPI_WAIT',
 }
 
+export enum PayloadFormatType {
+  JSON = 'JSON',
+  XML = 'XML',
+}
+
 export class WorkstepExecutionParams {
   @AutoMap()
   verifierContractAddress?: string;
@@ -21,6 +26,9 @@ export class WorkstepConfig {
 
   @AutoMap()
   executionParams: WorkstepExecutionParams;
+
+  @AutoMap()
+  payloadFormatType: PayloadFormatType;
 }
 
 export class Workstep {

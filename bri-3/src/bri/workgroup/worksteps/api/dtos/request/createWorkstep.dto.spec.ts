@@ -2,7 +2,11 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { SHOULD_NOT_BE_EMPTY_VALIDATION_MESSAGE } from '../../../../../shared/constants';
 import { CreateWorkstepDto } from './createWorkstep.dto';
-import { WorkstepConfig, WorkstepType } from '../../../models/workstep';
+import {
+  PayloadFormatType,
+  WorkstepConfig,
+  WorkstepType,
+} from '../../../models/workstep';
 
 describe('CreateWorkstepDto', () => {
   const workstepConfig: WorkstepConfig = {
@@ -10,6 +14,7 @@ describe('CreateWorkstepDto', () => {
     executionParams: {
       verifierContractAddress: 'verifierContractAddress',
     },
+    payloadFormatType: PayloadFormatType.JSON,
   };
   it('should return error in case name not provided.', async () => {
     // Arrange
