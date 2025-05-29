@@ -9,6 +9,7 @@ import {
   getCertDigestInfo,
   parseName,
   parseSignature,
+  findAllKeyMatches,
 } from './certificateParser';
 import {
   base64ToHash,
@@ -19,7 +20,7 @@ import {
 } from '../../snarkjs/utils/computePublicInputs';
 import { X509Certificate } from '@peculiar/x509';
 import * as path from 'path';
-import { map } from 'rxjs';
+import { find, map } from 'rxjs';
 import e from 'express';
 
 @Injectable()
@@ -88,13 +89,26 @@ export class GeneralCircuitInputsParserService {
 
         switch (extraction.inputType) {
           case 'asice':
-            const ASICE_PATH = path.resolve(__dirname, value);
-            const SIGNATURE_XML_PATH = 'META-INF/signatures0.xml';
-            const OUTPUT_FILE_PATH = path.join(
-              __dirname,
-              extraction.dataToExtract[0].destinationPath,
-            );
-            extractXML(ASICE_PATH, SIGNATURE_XML_PATH, OUTPUT_FILE_PATH);
+            let ASICE_FILE_PATH;
+            if (value.startsWith('../')) {
+              ASICE_FILE_PATH = path.resolve(__dirname, value);
+            } else {
+              ASICE_FILE_PATH = value;
+            }
+
+            const EXTRACTION_XML_PATH =
+              extraction.dataToExtract[0].extractionParam;
+
+            let OUTPUT_FILE_PATH;
+            if (extraction.dataToExtract[0].destinationPath.startsWith('../')) {
+              OUTPUT_FILE_PATH = path.join(
+                __dirname,
+                extraction.dataToExtract[0].destinationPath,
+              );
+            } else {
+              OUTPUT_FILE_PATH = extraction.dataToExtract[0].destinationPath;
+            }
+            extractXML(ASICE_FILE_PATH, EXTRACTION_XML_PATH!, OUTPUT_FILE_PATH);
 
             this.setJsonValueByPath(
               jsonPayload,
@@ -103,44 +117,62 @@ export class GeneralCircuitInputsParserService {
             );
             break;
           case 'xml':
-            const XML_FILE_PATH = path.join(__dirname, value);
-            const xmlContent = fs.readFileSync(XML_FILE_PATH, 'utf8');
+            let xmlContent: string;
+            //if value is a xml tag
+            if (!value.startsWith('<?xml')) {
+              let XML_FILE_PATH;
+              //if value starts with ../
+              if (value.startsWith('../')) {
+                XML_FILE_PATH = path.join(__dirname, value);
+              } else {
+                XML_FILE_PATH = value;
+              }
+              xmlContent = fs.readFileSync(XML_FILE_PATH, 'utf8');
+            } else {
+              xmlContent = value;
+            }
             const parsedXML = parseXML(xmlContent);
 
             let extractedXMLField;
             extraction.dataToExtract.forEach((data) => {
-              switch (data.field) {
-                case 'signingTime':
-                  extractedXMLField = String(getSigningTime(parsedXML));
-                  break;
-                case 'signedHash':
-                  const digestInfo = getCertDigestInfo(parsedXML); //Destination path of signedHash == ExpectedHashPath of preimage
-                  const certificateHashHex = Buffer.from(
-                    base64ToHash(digestInfo.value),
-                    'hex',
-                  );
-                  extractedXMLField = buffer2bitsMSB(certificateHashHex);
-                  break;
-                case 'signedCertificate':
-                  extractedXMLField = parseCertificate(parsedXML);
-                  break;
-                case 'signature':
-                  extractedXMLField = parseSignature(parsedXML);
-                default:
-                  '';
-                  break;
-              }
+              if (data.field !== undefined && data.field !== null) {
+                switch (data.field) {
+                  case 'signingTime':
+                    extractedXMLField = String(getSigningTime(parsedXML));
+                    break;
+                  case 'signedHash':
+                    const digestInfo = getCertDigestInfo(parsedXML); //Destination path of signedHash == ExpectedHashPath of preimage
+                    const certificateHashHex = Buffer.from(
+                      base64ToHash(digestInfo.value),
+                      'hex',
+                    );
+                    extractedXMLField = buffer2bitsMSB(certificateHashHex);
+                    break;
+                  case 'signedCertificate':
+                    extractedXMLField = parseCertificate(parsedXML);
+                    break;
+                  case 'signature':
+                    extractedXMLField = parseSignature(parsedXML);
+                    break;
+                  default:
+                    extractedXMLField = findAllKeyMatches(
+                      parsedXML,
+                      data.field,
+                    )[0];
+                    break;
+                }
 
-              this.setJsonValueByPath(
-                jsonPayload,
-                data.destinationPath,
-                extractedXMLField,
-              );
+                this.setJsonValueByPath(
+                  jsonPayload,
+                  data.destinationPath,
+                  extractedXMLField,
+                );
 
-              if (data.circuitInput) {
-                const newCircuitMapping: GeneralCircuitInputMapping =
-                  this.createCircuitInputMapping(data);
-                cim.mapping.push(newCircuitMapping);
+                if (data.circuitInput) {
+                  const newCircuitMapping: GeneralCircuitInputMapping =
+                    this.createCircuitInputMapping(data);
+                  cim.mapping.push(newCircuitMapping);
+                }
               }
             });
             break;
@@ -148,36 +180,38 @@ export class GeneralCircuitInputsParserService {
             const cert = value;
             let extractedCertField;
             for (const data of extraction.dataToExtract) {
-              switch (data.field) {
-                case 'signerName':
-                  extractedCertField = parseName(cert.subject)['CN'][0];
-                  break;
-                case 'signerID':
-                  extractedCertField = parseName(cert.subject)[
-                    'serialNumber'
-                  ][0];
-                  console.log('Signer ID:', extractedCertField);
-                  break;
-                case 'issuerName':
-                  extractedCertField = parseName(cert.issuer)['CN'][0];
-                  break;
-                case 'certPreimage':
-                  extractedCertField = cert.rawData;
-                  break;
-                default:
-                  '';
-                  break;
-              }
+              if (data.field !== undefined && data.field !== null) {
+                switch (data.field) {
+                  case 'signerName':
+                    extractedCertField = parseName(cert.subject)['CN'][0];
+                    break;
+                  case 'signerID':
+                    extractedCertField = parseName(cert.subject)[
+                      'serialNumber'
+                    ];
+                    console.log('Signer ID:', extractedCertField);
+                    break;
+                  case 'issuerName':
+                    extractedCertField = parseName(cert.issuer)['CN'][0];
+                    break;
+                  case 'certPreimage':
+                    extractedCertField = cert.rawData;
+                    break;
+                  default:
+                    extractedCertField = findAllKeyMatches(cert, data.field)[0];
+                    break;
+                }
 
-              this.setJsonValueByPath(
-                jsonPayload,
-                data.destinationPath,
-                extractedCertField,
-              );
-              if (data.circuitInput) {
-                const newCircuitMapping: GeneralCircuitInputMapping =
-                  this.createCircuitInputMapping(data);
-                cim.mapping.push(newCircuitMapping);
+                this.setJsonValueByPath(
+                  jsonPayload,
+                  data.destinationPath,
+                  extractedCertField,
+                );
+                if (data.circuitInput) {
+                  const newCircuitMapping: GeneralCircuitInputMapping =
+                    this.createCircuitInputMapping(data);
+                  cim.mapping.push(newCircuitMapping);
+                }
               }
             }
             break;
@@ -209,8 +243,7 @@ export class GeneralCircuitInputsParserService {
             const allLeaves = mapping.merkleTreeInputsPath?.map((path) =>
               String(this.getJsonValueByPath(jsonPayload, path)),
             );
-            console.log(allLeaves);
-            console.log(value);
+
             if ((allLeaves?.length ?? 0) > 0) {
               const {
                 merkleProofLeaf,

@@ -41,17 +41,9 @@ type GeneralCircuitInputExtraction = {
   inputType: 'asice' | 'xml' | 'x509';
   payloadJsonPath: string;
   dataToExtract: {
-    field:
-      | 'xmlFilePath'
-      | 'signingTime'
-      | 'signedHash'
-      | 'signedCertificate'
-      | 'signature'
-      | 'signerName'
-      | 'signerID'
-      | 'issuerName'
-      | 'certPreimage';
+    field: string;
     destinationPath: string;
+    extractionParam?: string | RegExp;
     circuitInput?: string;
     description?: string;
     checkType?: CheckType;

@@ -16,6 +16,10 @@ import { GeneralCircuitInputsParserService } from './services/circuit/circuitInp
       useClass: SnarkjsCircuitService,
     },
   ],
-  exports: ['ICircuitService', CircuitInputsParserService],
+  exports: [
+    'ICircuitService',
+    CircuitInputsParserService,
+    GeneralCircuitInputsParserService,
+  ],
 })
 export class ZeroKnowledgeProofModule {}

@@ -3,7 +3,7 @@ import { XMLParser } from 'fast-xml-parser';
 import * as fs from 'fs';
 import * as AdmZip from 'adm-zip';
 import * as crypto from 'crypto';
-import { parse } from 'path';
+import * as path from 'path';
 
 export const parseCertificate = (certificate: object): x509.X509Certificate => {
   const certBase64 = findAllKeyMatches(certificate, 'ds:X509Certificate')[0];
@@ -28,22 +28,27 @@ export const validateCertificate = (certificate: x509.X509Certificate) => {
 
 export const extractXML = (
   asiceFilePath: string,
-  targetFilePath: string,
+  matchPattern: RegExp | string,
   outputFilePath: string,
 ) => {
-  // Load the ASiC-E container (ZIP archive)
   const zip = new AdmZip(asiceFilePath);
 
-  // Extract the XML content
-  const entry = zip.getEntry(targetFilePath);
+  const entries = zip.getEntries();
 
-  if (entry) {
-    const xmlContent = entry.getData().toString('utf8');
+  const pattern =
+    matchPattern instanceof RegExp ? matchPattern : new RegExp(matchPattern);
 
-    // Optionally write to disk
+  const matchedEntry = entries.find((entry) =>
+    typeof matchPattern === 'string'
+      ? entry.entryName === matchPattern
+      : matchPattern.test(entry.entryName),
+  );
+
+  if (matchedEntry) {
+    const xmlContent = matchedEntry.getData().toString('utf8');
     fs.writeFileSync(outputFilePath, xmlContent);
   } else {
-    console.error(`File ${targetFilePath} not found in archive.`);
+    console.error(`No .xml file matching ${pattern} found in archive.`);
   }
 };
 
@@ -124,7 +129,7 @@ export const parseSignature = (parsedXML: object): string | null => {
   }
 };
 
-function findAllKeyMatches(
+export function findAllKeyMatches(
   obj: any,
   targetKey: string,
   matches: any[] = [],
