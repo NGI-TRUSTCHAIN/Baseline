@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { BpiSubjectAccountAgent } from 'src/bri/identity/bpiSubjectAccounts/agents/bpiSubjectAccounts.agent';
+import { BpiSubjectAccountAgent } from '../../../../bri/identity/bpiSubjectAccounts/agents/bpiSubjectAccounts.agent';
 import { AuthAgent } from '../../../auth/agent/auth.agent';
 import { TransactionAgent } from '../../agents/transactions.agent';
 import { TransactionStorageAgent } from '../../agents/transactionStorage.agent';
