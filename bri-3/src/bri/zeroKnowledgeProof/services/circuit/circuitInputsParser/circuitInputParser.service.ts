@@ -151,7 +151,6 @@ export class CircuitInputsParserService {
         mergeAttrs: true,
         ignoreAttrs: false,
       });
-
       const parsed = await parser.parseStringPromise(xmlPayload);
 
       // Convert the nested XML structure to a flat structure
@@ -162,7 +161,7 @@ export class CircuitInputsParserService {
     }
   }
 
-  private flattenXMLObject(obj: any, prefix: string = ''): any {
+  protected flattenXMLObject(obj: any, prefix = ''): any {
     const flattened: any = {};
 
     for (const key in obj) {
@@ -187,7 +186,7 @@ export class CircuitInputsParserService {
     return flattened;
   }
 
-  private getPayloadValueByPath(json: any, path: string) {
+  protected getPayloadValueByPath(json: any, path: string) {
     const parts = path.split('.');
     let currentValue = json;
 

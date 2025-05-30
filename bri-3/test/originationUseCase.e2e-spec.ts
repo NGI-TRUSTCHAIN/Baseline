@@ -18,6 +18,7 @@ import {
   createEddsaSignature,
 } from '../src/shared/testing/utils';
 import {
+  PayloadFormatType,
   WorkstepConfig,
   WorkstepType,
 } from '../src/bri/workgroup/worksteps/models/workstep';
@@ -137,6 +138,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         executionParams: {
           apiUrl: process.env.EFAKTURA_URL,
         },
+        payloadFormatType: PayloadFormatType.XML,
       },
     );
 
