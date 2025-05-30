@@ -4,6 +4,8 @@
 src/bri/zeroKnowledgeProof/services/circuit/snarkjs/*.sol
 /typechain-types
 /cache
+/zeroKnowledgeArtifacts/ptau
+/zeroKnowledgeArtifacts/circuits/workstepCircuits/InteropUseCase/Serbia
 
 # Logs
 logs
