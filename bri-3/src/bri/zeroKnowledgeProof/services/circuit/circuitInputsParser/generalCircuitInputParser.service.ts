@@ -144,7 +144,7 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
       return matches;
     } else {
       // Regular object traversal
-      matches.push(this.searchRecursively(obj, targetKey)[0]);
+      matches.push(this.searchRecursively(obj, targetKey, payloadType)[0]);
     }
 
     return matches;
@@ -256,31 +256,51 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
     };
   }
 
-  private searchRecursively(obj: any, targetKey: string): any[] {
+  private searchRecursively(
+    obj: any,
+    targetKey: string,
+    payloadType: PayloadFormatType,
+  ): any[] {
     const matches: any[] = [];
 
-    function recursiveSearch(current: any) {
+    function recursiveSearch(current: any, keyPath: string[]) {
       if (typeof current !== 'object' || current === null) return;
 
-      if (current.hasOwnProperty(targetKey)) {
-        matches.push(current[targetKey]);
+      // If using key path (for JSON) and it's a match
+      if (keyPath.length === 1 && current.hasOwnProperty(keyPath[0])) {
+        matches.push(current[keyPath[0]]);
       }
 
       for (const key in current) {
         if (Object.prototype.hasOwnProperty.call(current, key)) {
-          recursiveSearch(current[key]);
-        }
-      }
+          const child = current[key];
 
-      // If it's an array, iterate through items too
-      if (Array.isArray(current)) {
-        for (const item of current) {
-          recursiveSearch(item);
+          if (Array.isArray(child)) {
+            for (const item of child) {
+              recursiveSearch(item, keyPath);
+            }
+          } else if (typeof child === 'object') {
+            // If JSON and path length > 1, follow the path
+            if (
+              payloadType === PayloadFormatType.JSON &&
+              key === keyPath[0] &&
+              keyPath.length > 1
+            ) {
+              recursiveSearch(child, keyPath.slice(1));
+            } else {
+              recursiveSearch(child, keyPath);
+            }
+          }
         }
       }
     }
 
-    recursiveSearch(obj);
+    const keyPath =
+      payloadType === 'JSON' && targetKey.includes('.')
+        ? targetKey.split('.')
+        : [targetKey];
+
+    recursiveSearch(obj, keyPath);
     return matches;
   }
 }
