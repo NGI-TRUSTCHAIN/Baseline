@@ -191,5 +191,9 @@ template BusinessLogic(
     }
 
     // Step 3: Final output
-    resultOut <== nLogicGates == 0 ? outputs[0] : intermediates[nLogicGates - 1];
+    if (nLogicGates == 0) {
+    resultOut <== outputs[0];
+    } else {
+        resultOut <== intermediates[nLogicGates - 1];
+    }
 }
