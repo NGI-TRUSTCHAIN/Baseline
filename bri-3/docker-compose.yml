@@ -35,7 +35,7 @@ services:
       - postgres_data_2:/var/lib/postgresql/data
 
   nestjs-app:
-    build: .
+    image: bri-3-nestjs-app
     container_name: nestjs-app
     depends_on:
       - postgres
@@ -60,10 +60,10 @@ services:
       "
 
   nestjs-app-2:
-    build: .
+    image: bri-3-nestjs-app
     container_name: nestjs-app-2
     depends_on:
-      - postgres
+      - postgres-2
       - nats
       - hardhat
     volumes:
@@ -91,11 +91,9 @@ services:
 
   efaktura-mock:
     build:
-      context: .
+      context: ./test/mocks
       dockerfile: Dockerfile.efaktura
     container_name: efaktura-mock
-    ports:
-      - "3002:3001"
 
 volumes:
   postgres_data:
