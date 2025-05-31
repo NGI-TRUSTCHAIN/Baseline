@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
 import { CcsmStorageAgent } from './agents/ccsmStorage.agent';
-import { EthereumService } from './services/ethereum.service';
+import { EvmService } from './services/evm.service';
+import { ChainProviderFactory } from './services/chain.provider.factory';
 
 @Module({
   providers: [
     CcsmStorageAgent,
+    ChainProviderFactory,
     {
       provide: 'ICcsmService',
-      useClass: EthereumService,
+      useClass: EvmService,
     },
   ],
   exports: [CcsmStorageAgent, 'ICcsmService'],

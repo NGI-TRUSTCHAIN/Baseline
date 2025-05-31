@@ -1,36 +1,24 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import 'dotenv/config';
-import {
-  BaseWallet,
-  Contract,
-  ethers,
-  InfuraProvider,
-  JsonRpcProvider,
-  Provider,
-  SigningKey,
-} from 'ethers';
+import { BaseWallet, Contract, ethers, Provider, SigningKey } from 'ethers';
 import * as CcsmBpiStateAnchor from '../../../../ccsmArtifacts/contracts/CcsmBpiStateAnchor.sol/CcsmBpiStateAnchor.json';
 import { internalBpiSubjectEcdsaPrivateKey } from '../../../shared/testing/constants';
 import { Witness } from '../../zeroKnowledgeProof/models/witness';
 import { ICcsmService } from './ccsm.interface';
 import * as fs from 'fs';
+import { ChainProviderFactory } from './chain.provider.factory';
+import { ChainConfig } from '../models/chain.config';
 
 @Injectable()
-export class EthereumService implements ICcsmService {
+export class EvmService implements ICcsmService {
   private provider: Provider;
   private wallet: BaseWallet;
+  private chainConfig: ChainConfig;
 
-  constructor() {
-    const network = process.env.CCSM_NETWORK;
-
-    if (network === 'localhost') {
-      this.provider = new JsonRpcProvider('http://127.0.0.1:8545');
-    } else {
-      this.provider = new InfuraProvider(
-        network,
-        process.env.INFURA_PROVIDER_API_KEY,
-      );
-    }
+  constructor(private readonly chainProviderFactory: ChainProviderFactory) {
+    const chainProvider = this.chainProviderFactory.createProvider();
+    this.provider = chainProvider.getProvider();
+    this.chainConfig = chainProvider.getChainConfig();
 
     const signingKey = new SigningKey(internalBpiSubjectEcdsaPrivateKey);
     this.wallet = new BaseWallet(signingKey, this.provider);
@@ -118,11 +106,8 @@ export class EthereumService implements ICcsmService {
   }
 
   private async connectToCcsmBpiStateAnchorContract(): Promise<Contract> {
-    const ccsmContractAddress =
-      process.env.CCSM_BPI_STATE_ANCHOR_CONTRACT_ADDRESS!;
-
     const ccsmBpiStateAnchorContract = new ethers.Contract(
-      ccsmContractAddress,
+      this.chainConfig.ccsmContractAddress,
       CcsmBpiStateAnchor.abi,
       this.wallet,
     );
