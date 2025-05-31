@@ -1,0 +1,21 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install system deps
+RUN apk add --no-cache git bash
+
+# Copy and install deps
+COPY package*.json ./
+RUN npm install
+
+# Copy rest of the project
+COPY . .
+
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 8545
+
+CMD ["/entrypoint.sh"]
