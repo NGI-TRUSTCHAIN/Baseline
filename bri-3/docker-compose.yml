@@ -1,7 +1,15 @@
 version: '3.8'
 
 services:
-  # First Postgres (for nestjs-app)
+  hardhat:
+    build:
+      context: ./ccsm
+      dockerfile: Dockerfile.hardhat
+    container_name: hardhat
+    hostname: hardhat
+    ports:
+      - "8545:8545"
+
   postgres:
     image: postgres:15
     container_name: postgres
@@ -13,13 +21,7 @@ services:
       POSTGRES_DB: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
-  # Second Postgres (for nestjs-app-2)
   postgres-2:
     image: postgres:15
     container_name: postgres-2
@@ -31,21 +33,14 @@ services:
       POSTGRES_DB: postgres
     volumes:
       - postgres_data_2:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
-  # First NestJS app
   nestjs-app:
     build: .
     container_name: nestjs-app
     depends_on:
-      postgres:
-        condition: service_healthy
-      nats:
-        condition: service_started
+      - postgres
+      - nats
+      - hardhat
     volumes:
       - .:/app
       - /app/node_modules
@@ -57,22 +52,20 @@ services:
       DATABASE_URL: "postgresql://postgres:example@postgres:5432/postgres"
       BPI_NATS_SERVER_URL: "nats://nats:4222"
       EFAKTURA_URL: "http://efaktura-mock:3001/api/publicApi/sales-invoice/xml"
+      LOCALHOST_RPC_URL: "http://hardhat:8545"
     command: >
       sh -c "
-        npm install &&
         npx prisma migrate reset --force &&
         npm run start:dev
       "
 
-  # Second NestJS app
   nestjs-app-2:
     build: .
     container_name: nestjs-app-2
     depends_on:
-      postgres-2:
-        condition: service_healthy
-      nats:
-        condition: service_started
+      - postgres
+      - nats
+      - hardhat
     volumes:
       - .:/app
       - /app/node_modules
@@ -84,14 +77,12 @@ services:
       DATABASE_URL: "postgresql://postgres:example@postgres-2:5432/postgres"
       BPI_NATS_SERVER_URL: "nats://nats:4222"
       EFAKTURA_URL: "http://efaktura-mock:3001/api/publicApi/sales-invoice/xml"
+      LOCALHOST_RPC_URL: "http://hardhat:8545"
     command: >
       sh -c "
-        npm install &&
         npx prisma migrate reset --force &&
         npm run start:dev
       "
-
-  # NATS messaging server
   nats:
     image: nats:alpine
     container_name: nats
@@ -105,11 +96,6 @@ services:
     container_name: efaktura-mock
     ports:
       - "3002:3001"
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/api/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
 
 volumes:
   postgres_data:
