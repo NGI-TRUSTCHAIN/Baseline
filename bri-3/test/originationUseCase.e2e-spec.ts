@@ -1,9 +1,6 @@
-import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { ethers, JsonRpcProvider } from 'ethers';
+import { ethers } from 'ethers';
 import * as request from 'supertest';
 import { v4 } from 'uuid';
-import { AppModule } from '../src/app.module';
 import {
   buyerBpiSubjectEcdsaPrivateKey,
   buyerBpiSubjectEcdsaPublicKey,
@@ -24,9 +21,10 @@ import {
 } from '../src/bri/workgroup/worksteps/models/workstep';
 
 jest.setTimeout(240000);
+
 let accessToken: string;
-let app: INestApplication;
-let server: any;
+const server = 'http://localhost:3000';
+const server2 = 'http://localhost:3001';
 
 let supplierBpiSubjectEddsaPublicKey: string;
 let supplierBpiSubjectEddsaPrivateKey: string;
@@ -39,46 +37,27 @@ let createdBpiSubjectAccountSupplierId: string;
 let createdBpiSubjectAccountBuyerId: string;
 let createdTransactionApiId: string;
 
-describe('Invoice origination use-case end-to-end test', () => {
+describe('Invoice origination use-case end-to-end test (docker)', () => {
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-    server = app.getHttpServer();
-
     const supplierWallet = new ethers.Wallet(supplierBpiSubjectEcdsaPrivateKey);
     supplierBpiSubjectEddsaPrivateKey = await createEddsaPrivateKey(
       supplierBpiSubjectEcdsaPublicKey,
       supplierWallet,
     );
-
     supplierBpiSubjectEddsaPublicKey = await createEddsaPublicKey(
       supplierBpiSubjectEddsaPrivateKey,
     );
 
-    const buyerWallet = new ethers.Wallet(
-      buyerBpiSubjectEcdsaPrivateKey,
-      undefined,
-    );
+    const buyerWallet = new ethers.Wallet(buyerBpiSubjectEcdsaPrivateKey);
     buyerBpiSubjectEddsaPrivateKey = await createEddsaPrivateKey(
       buyerBpiSubjectEcdsaPublicKey,
       buyerWallet,
     );
-
     buyerBpiSubjectEddsaPublicKey = await createEddsaPublicKey(
       buyerBpiSubjectEddsaPrivateKey,
     );
   });
 
-  afterAll(async () => {
-    await app.close();
-    server.close();
-  });
-
-  // TODO: Add detailed explanation of the SRI use-case setup and necessary seed data
   it('Logs in an internal Bpi Subject, creates two external Bpi Subjects (Supplier and Buyer) and a Workgroup and adds the created Bpi Subjects as participants to the Workgroup', async () => {
     accessToken = await loginAsInternalBpiSubjectAndReturnAnAccessToken();
 
@@ -119,7 +98,6 @@ describe('Invoice origination use-case end-to-end test', () => {
     );
 
     const resultWorkgroup = await fetchWorkgroup(createdWorkgroupId);
-
     expect(resultWorkgroup.participants.length).toBe(2);
     expect(resultWorkgroup.participants[0].id).toEqual(
       createdBpiSubjectSupplierId,
@@ -143,7 +121,7 @@ describe('Invoice origination use-case end-to-end test', () => {
     );
 
     createdWorkflowId = await createWorkflowAndReturnId(
-      'worksflow1',
+      'workflow1',
       createdWorkgroupId,
       [createdWorkstep1Id],
       [createdBpiSubjectAccountSupplierId, createdBpiSubjectAccountBuyerId],
@@ -208,7 +186,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       }),
     );
   });
-
+  
   it('Waits for a single VSM cycle and then verifies that the transaction 4 has been executed', async () => {
     await new Promise((r) => setTimeout(r, 50000));
 
@@ -217,25 +195,19 @@ describe('Invoice origination use-case end-to-end test', () => {
 });
 
 async function loginAsInternalBpiSubjectAndReturnAnAccessToken(): Promise<string> {
-  // internalBpiSubjectEcdsaPublicKey & internalBpiSubjectEcdsaPrivateKey must be inline with the value for the bpiAdmin from seed.ts
-  // These values are used for testing purposes only
-
   const nonceResponse = await request(server)
     .post('/auth/nonce')
     .send({ publicKey: internalBpiSubjectEcdsaPublicKey })
     .expect(201);
 
-  const signer = new ethers.Wallet(
-    internalBpiSubjectEcdsaPrivateKey,
-    undefined,
-  );
+  const signer = new ethers.Wallet(internalBpiSubjectEcdsaPrivateKey);
   const signature = await signer.signMessage(nonceResponse.text);
 
   const loginResponse = await request(server)
     .post('/auth/login')
     .send({
       message: nonceResponse.text,
-      signature: signature,
+      signature,
       publicKey: internalBpiSubjectEcdsaPublicKey,
     })
     .expect(201);

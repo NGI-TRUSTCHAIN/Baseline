@@ -1,0 +1,36 @@
+# Node modules and dependency artifacts
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Git files
+.git
+.gitignore
+
+# Docker artifacts
+Dockerfile
+.dockerignore
+
+# Logs and temp
+*.log
+logs/
+temp/
+tmp/
+
+# IDEs and editor config
+.vscode
+.idea
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test output or coverage
+coverage/
+test-results/
+jest-cache/
+jest-coverage/
+
+# Env files you don't want in the image (unless you copy them explicitly)
+.env*
