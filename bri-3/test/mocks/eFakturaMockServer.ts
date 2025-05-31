@@ -1,10 +1,10 @@
-import * as express from 'express';
+import express from 'express';
 import { Request, Response, RequestHandler } from 'express';
 import { Server } from 'http';
 
 export class EFakturaMockServer {
   private app: express.Application;
-  private server: Server;
+  private server!: Server; // Use definite assignment assertion
   private port: number;
 
   constructor(port = 3001) {
@@ -25,11 +25,8 @@ export class EFakturaMockServer {
     return new Promise((resolve, reject) => {
       if (this.server) {
         this.server.close((err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
+          if (err) reject(err);
+          else resolve();
         });
       } else {
         resolve();
@@ -41,23 +38,20 @@ export class EFakturaMockServer {
     const handleInvoiceRequest: RequestHandler = (
       req: Request,
       res: Response,
-    ): void => {
+    ) => {
       const apiKey = req.headers.apikey;
       const invoiceId = req.query.invoiceId;
 
-      // Validate API key
       if (apiKey !== 'd2e7f81c-64c7-4c61-9b43-b6d215d9a2cf') {
         res.status(401).json({ error: 'Invalid API key' });
         return;
       }
 
-      // Validate invoice ID
       if (!invoiceId) {
         res.status(400).json({ error: 'Missing invoiceId parameter' });
         return;
       }
 
-      // Set response headers
       res.set({
         'content-type': 'application/xml; charset=utf-8',
         'content-disposition': 'attachment; filename="invoice.xml"',
@@ -229,9 +223,7 @@ export class EFakturaMockServer {
     };
 
     this.app.get('/api/publicApi/sales-invoice/xml', handleInvoiceRequest);
-
-    // Add health check endpoint
-    this.app.get('/api/health', (req: Request, res: Response) => {
+    this.app.get('/api/health', (_req: Request, res: Response) => {
       res.status(200).json({ status: 'ok' });
     });
   }

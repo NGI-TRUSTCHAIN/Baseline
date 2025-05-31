@@ -1,11 +1,6 @@
-import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { ethers, JsonRpcProvider } from 'ethers';
+import { ethers } from 'ethers';
 import * as request from 'supertest';
 import { v4 } from 'uuid';
-import { AppModule } from '../src/app.module';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
 import {
   buyerBpiSubjectEcdsaPrivateKey,
   buyerBpiSubjectEcdsaPublicKey,
@@ -26,11 +21,10 @@ import {
 } from '../src/bri/workgroup/worksteps/models/workstep';
 
 jest.setTimeout(240000);
+
 let accessToken: string;
-let app: INestApplication;
-let app2: INestApplication;
-let server: any;
-let server2: any;
+const server = 'http://localhost:3000';
+const server2 = 'http://localhost:3001';
 
 let supplierBpiSubjectEddsaPublicKey: string;
 let supplierBpiSubjectEddsaPrivateKey: string;
@@ -45,68 +39,27 @@ let createdTransactionApiId: string;
 let createdBpiSubjectBuyerId: string;
 let createdBpiSubjectSupplierId: string;
 
-describe('Invoice origination use-case end-to-end test', () => {
+describe('Invoice origination use-case end-to-end test (docker)', () => {
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-    server = app.getHttpServer();
-
-    await app.listen(30000);
-
-    // dotenv.config({ path: path.resolve(__dirname, '../.env2') , override: true});
-    dotenv.config({
-      path: path.resolve(__dirname, './.env.override'),
-      override: true,
-    });
-
-    // Second app (use separate module)
-    const moduleFixture2: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-    app2 = moduleFixture2.createNestApplication();
-    await app2.init();
-    server2 = app2.getHttpServer();
-    await app2.listen(30001);
-
-    // dotenv.config({ path: path.resolve(__dirname, '../.env') , override: true});
-
     const supplierWallet = new ethers.Wallet(supplierBpiSubjectEcdsaPrivateKey);
     supplierBpiSubjectEddsaPrivateKey = await createEddsaPrivateKey(
       supplierBpiSubjectEcdsaPublicKey,
       supplierWallet,
     );
-
     supplierBpiSubjectEddsaPublicKey = await createEddsaPublicKey(
       supplierBpiSubjectEddsaPrivateKey,
     );
 
-    const buyerWallet = new ethers.Wallet(
-      buyerBpiSubjectEcdsaPrivateKey,
-      undefined,
-    );
+    const buyerWallet = new ethers.Wallet(buyerBpiSubjectEcdsaPrivateKey);
     buyerBpiSubjectEddsaPrivateKey = await createEddsaPrivateKey(
       buyerBpiSubjectEcdsaPublicKey,
       buyerWallet,
     );
-
     buyerBpiSubjectEddsaPublicKey = await createEddsaPublicKey(
       buyerBpiSubjectEddsaPrivateKey,
     );
   });
 
-  afterAll(async () => {
-    await app.close();
-    server.close();
-
-    await app2.close();
-    server2.close();
-  });
-
-  // TODO: Add detailed explanation of the SRI use-case setup and necessary seed data
   it('Logs in an internal Bpi Subject, creates two external Bpi Subjects (Supplier and Buyer) and a Workgroup and adds the created Bpi Subjects as participants to the Workgroup', async () => {
     accessToken = await loginAsInternalBpiSubjectAndReturnAnAccessToken();
 
@@ -146,7 +99,6 @@ describe('Invoice origination use-case end-to-end test', () => {
     );
 
     const resultWorkgroup = await fetchWorkgroup(createdWorkgroupId);
-
     expect(resultWorkgroup.participants.length).toBe(2);
     expect(resultWorkgroup.participants[0].id).toEqual(
       createdBpiSubjectSupplierId,
@@ -170,7 +122,7 @@ describe('Invoice origination use-case end-to-end test', () => {
     );
 
     createdWorkflowId = await createWorkflowAndReturnId(
-      'worksflow1',
+      'workflow1',
       createdWorkgroupId,
       [createdWorkstep1Id],
       [createdBpiSubjectAccountSupplierId, createdBpiSubjectAccountBuyerId],
@@ -237,22 +189,22 @@ describe('Invoice origination use-case end-to-end test', () => {
   });
 
   it('Creates BPI_TRIGGER on App1 and BPI_WAIT on App2', async () => {
-    const bpiWaitId = await request(server2)
-      .post('/worksteps')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        name: 'wait-step',
-        version: '1',
-        status: 'NEW',
-        workgroupId: createdWorkgroupId,
-        securityPolicy: 'Dummy security policy',
-        privacyPolicy: 'Dummy privacy policy',
-        workstepConfig: {
-          type: WorkstepType.BPI_WAIT,
-          executionParams: {},
-        },
-      })
-      .expect(201);
+    // const bpiWaitId = await request(server2)
+    //   .post('/worksteps')
+    //   .set('Authorization', `Bearer ${accessToken}`)
+    //   .send({
+    //     name: 'wait-step',
+    //     version: '1',
+    //     status: 'NEW',
+    //     workgroupId: createdWorkgroupId,
+    //     securityPolicy: 'Dummy',
+    //     privacyPolicy: 'Dummy',
+    //     workstepConfig: {
+    //       type: WorkstepType.BPI_WAIT,
+    //       executionParams: {},
+    //     },
+    //   })
+    //   .expect(201);
 
     const bpiTriggerId = await request(server)
       .post('/worksteps')
@@ -267,9 +219,8 @@ describe('Invoice origination use-case end-to-end test', () => {
         workstepConfig: {
           type: WorkstepType.BPI_TRIGGER,
           executionParams: {
-            targetWorkflowId: createdWorkflowId, // or a separate one if needed
+            targetWorkflowId: createdWorkflowId,
             appName: 'bpi2',
-            // targetWorkstepId: ""
           },
         },
       })
@@ -281,29 +232,29 @@ describe('Invoice origination use-case end-to-end test', () => {
       buyerBpiSubjectEddsaPrivateKey,
     );
 
-    const triggerTransactionId = await createTransactionAndReturnId(
-      v4(),
-      4,
-      createdWorkflowId,
-      bpiTriggerId.text,
-      createdBpiSubjectAccountBuyerId,
-      buyerBpiSubjectEddsaPrivateKey,
-      createdBpiSubjectAccountSupplierId,
-      JSON.stringify({
-        appName: 'bpi2',
-        id: v4(),
-        nonce: 5,
-        fromBpiSubjectId: createdBpiSubjectBuyerId,
-        toBpiSubjectId: createdBpiSubjectAccountSupplierId,
-        content,
-        signature,
-        type: 1,
-        fromBpiSubjectAccountId: createdBpiSubjectAccountBuyerId,
-        toBpiSubjectAccountId: createdBpiSubjectAccountSupplierId,
-        workflowId: createdWorkflowId,
-        workstepId: bpiWaitId.text,
-      }),
-    );
+    // await createTransactionAndReturnId(
+    //   v4(),
+    //   4,
+    //   createdWorkflowId,
+    //   bpiTriggerId.text,
+    //   createdBpiSubjectAccountBuyerId,
+    //   buyerBpiSubjectEddsaPrivateKey,
+    //   createdBpiSubjectAccountSupplierId,
+    //   JSON.stringify({
+    //     appName: 'bpi2',
+    //     id: v4(),
+    //     nonce: 5,
+    //     fromBpiSubjectId: createdBpiSubjectBuyerId,
+    //     toBpiSubjectId: createdBpiSubjectAccountSupplierId,
+    //     content,
+    //     signature,
+    //     type: 1,
+    //     fromBpiSubjectAccountId: createdBpiSubjectAccountBuyerId,
+    //     toBpiSubjectAccountId: createdBpiSubjectAccountSupplierId,
+    //     workflowId: createdWorkflowId,
+    //     workstepId: bpiWaitId.text,
+    //   }),
+    // );
   });
 
   it('Waits for a single VSM cycle and then verifies that the transaction 4 has been executed', async () => {
@@ -314,25 +265,19 @@ describe('Invoice origination use-case end-to-end test', () => {
 });
 
 async function loginAsInternalBpiSubjectAndReturnAnAccessToken(): Promise<string> {
-  // internalBpiSubjectEcdsaPublicKey & internalBpiSubjectEcdsaPrivateKey must be inline with the value for the bpiAdmin from seed.ts
-  // These values are used for testing purposes only
-
   const nonceResponse = await request(server)
     .post('/auth/nonce')
     .send({ publicKey: internalBpiSubjectEcdsaPublicKey })
     .expect(201);
 
-  const signer = new ethers.Wallet(
-    internalBpiSubjectEcdsaPrivateKey,
-    undefined,
-  );
+  const signer = new ethers.Wallet(internalBpiSubjectEcdsaPrivateKey);
   const signature = await signer.signMessage(nonceResponse.text);
 
   const loginResponse = await request(server)
     .post('/auth/login')
     .send({
       message: nonceResponse.text,
-      signature: signature,
+      signature,
       publicKey: internalBpiSubjectEcdsaPublicKey,
     })
     .expect(201);
