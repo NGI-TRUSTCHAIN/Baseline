@@ -2,13 +2,34 @@ name: bri-3
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   ci:
     runs-on: ubuntu-latest
+
+    # services:
+    #   postgres:
+    #     image: postgres
+    #     env:
+    #       POSTGRES_USER: postgres
+    #       POSTGRES_PASSWORD: example
+    #     options: >-
+    #       --health-cmd pg_isready
+    #       --health-interval 10s
+    #       --health-timeout 5s
+    #       --health-retries 5
+    #     ports:
+    #       - 5432:5432
+
+    #   nats:
+    #     image: nats:alpine
+    #     ports:
+    #       - 4222:4222
 
     env:
       DATABASE_URL: "postgresql://postgres:example@localhost:5432/postgres"
@@ -34,18 +55,15 @@ jobs:
       EFAKTURA_URL: ${{ secrets.EFAKTURA_URL }}
 
     steps:
-      - name: Check out repository
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      - name: Setup node env
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+         node-version: 20
 
-      - name: Verify Docker Compose availability
-        run: docker compose version
-
-      - name: Cache npm dependencies
+      - name: Cache node_modules
         uses: actions/cache@v3
         with:
           path: ~/.npm
@@ -53,12 +71,73 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Install project dependencies
-        run: npm install
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libssl-dev zlib1g-dev
 
+      # - name: Install prebuilt circom binary
+      #   run: |
+      #     wget https://github.com/iden3/circom/releases/download/v2.1.6/circom-linux-amd64 -O circom
+      #     chmod +x circom
+      #     sudo mv circom /usr/local/bin/
+      #     circom --version
+
+      - name: Install project dependencies
+        working-directory: bri-3
+        run: npm ci
+
+      # - name: Run build
+      #   working-directory: bri-3
+      #   run: npm run build
+
+      # - name: Run prettier
+      #   working-directory: bri-3
+      #   run: npm run format:check
+
+      # - name: Run linter
+      #   working-directory: bri-3
+      #   run: npm run lint:check
+
+      # - name: Run prisma generate
+      #   working-directory: bri-3
+      #   run: npm run prisma:generate
+
+      # - name: Run tests
+      #   working-directory: bri-3
+      #   run: npm run test
+
+      # - name: Run prisma migrate
+      #   working-directory: bri-3
+      #   run: npm run prisma:migrate:dev
+
+      # - name: Run prisma db seed
+      #   working-directory: bri-3
+      #   run: npx prisma db seed
+
+      # - name: Install hardhat dependencies
+      #   working-directory: bri-3/ccsm
+      #   run: npm ci
+
+      # - name: Run hardhat and deploy contracts
+      #   working-directory: bri-3/ccsm
+      #   run: |
+      #     npx hardhat node &
+      #     npx hardhat run scripts/deploy.ts
+
+      # - name: Run e2e tests for SRI use-case
+      #   working-directory: bri-3
+      #   run: npm run test:e2e:sri
+
+      # - name: Reset db state
+      #   working-directory: bri-3
+      #   run: npx prisma migrate reset --force
+      
       - name: Run test:origination flow with Docker Compose
+        working-directory: bri-3
         run: make test-origination
 
-      - name: Cleanup containers (in case test script failed before teardown)
+      - name: Cleanup
         if: always()
-        run: make down
+        run: |
+          make down
