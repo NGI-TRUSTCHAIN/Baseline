@@ -68,7 +68,11 @@ jobs:
         working-directory: bri-3
         run: npm ci
 
-      - name: Run origination tests via Makefile
+      - name: Run sri tests
+        working-directory: bri-3
+        run: make test-sri
+
+      - name: Run origination tests
         working-directory: bri-3
         run: make test-origination
 

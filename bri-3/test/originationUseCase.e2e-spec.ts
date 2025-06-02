@@ -37,7 +37,7 @@ let createdBpiSubjectAccountSupplierId: string;
 let createdBpiSubjectAccountBuyerId: string;
 let createdTransactionApiId: string;
 
-describe('Invoice origination use-case end-to-end test (docker)', () => {
+describe('Invoice origination use-case end-to-end test', () => {
   beforeAll(async () => {
     const supplierWallet = new ethers.Wallet(supplierBpiSubjectEcdsaPrivateKey);
     supplierBpiSubjectEddsaPrivateKey = await createEddsaPrivateKey(
@@ -186,7 +186,7 @@ describe('Invoice origination use-case end-to-end test (docker)', () => {
       }),
     );
   });
-  
+
   it('Waits for a single VSM cycle and then verifies that the transaction 4 has been executed', async () => {
     await new Promise((r) => setTimeout(r, 50000));
 
