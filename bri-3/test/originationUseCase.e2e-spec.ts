@@ -39,7 +39,7 @@ let createdTransactionApiId: string;
 let createdBpiSubjectBuyerId: string;
 let createdBpiSubjectSupplierId: string;
 
-describe('Invoice origination use-case end-to-end test (docker)', () => {
+describe('Invoice origination use-case end-to-end test', () => {
   beforeAll(async () => {
     const supplierWallet = new ethers.Wallet(supplierBpiSubjectEcdsaPrivateKey);
     supplierBpiSubjectEddsaPrivateKey = await createEddsaPrivateKey(
