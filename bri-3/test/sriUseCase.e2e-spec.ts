@@ -25,11 +25,12 @@ import {
   WorkstepConfig,
   WorkstepType,
 } from '../src/bri/workgroup/worksteps/models/workstep';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 jest.setTimeout(240000);
 let accessToken: string;
-let app: INestApplication;
-let server: any;
+const server = 'http://localhost:3000';
 
 let supplierBpiSubjectEddsaPublicKey: string;
 let supplierBpiSubjectEddsaPrivateKey: string;
@@ -48,14 +49,6 @@ let createdTransaction3Id: string;
 
 describe('SRI use-case end-to-end test', () => {
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-    server = app.getHttpServer();
-
     const supplierWallet = new ethers.Wallet(supplierBpiSubjectEcdsaPrivateKey);
     supplierBpiSubjectEddsaPrivateKey = await createEddsaPrivateKey(
       supplierBpiSubjectEcdsaPublicKey,
@@ -78,11 +71,6 @@ describe('SRI use-case end-to-end test', () => {
     buyerBpiSubjectEddsaPublicKey = await createEddsaPublicKey(
       buyerBpiSubjectEddsaPrivateKey,
     );
-  });
-
-  afterAll(async () => {
-    await app.close();
-    server.close();
   });
 
   // TODO: Add detailed explanation of the SRI use-case setup and necessary seed data
