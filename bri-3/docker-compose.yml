@@ -21,6 +21,11 @@ services:
       POSTGRES_DB: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   postgres-2:
     image: postgres:15
@@ -33,14 +38,22 @@ services:
       POSTGRES_DB: postgres
     volumes:
       - postgres_data_2:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   nestjs-app:
     image: bri-3-nestjs-app
     container_name: nestjs-app
     depends_on:
-      - postgres
-      - nats
-      - hardhat
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_started
+      hardhat:
+        condition: service_started
     volumes:
       - .:/app
       - /app/node_modules
@@ -63,9 +76,12 @@ services:
     image: bri-3-nestjs-app
     container_name: nestjs-app-2
     depends_on:
-      - postgres-2
-      - nats
-      - hardhat
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_started
+      hardhat:
+        condition: service_started
     volumes:
       - .:/app
       - /app/node_modules
