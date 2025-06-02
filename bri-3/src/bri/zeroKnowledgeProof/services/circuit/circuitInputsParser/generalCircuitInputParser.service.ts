@@ -29,6 +29,7 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
     let extractedMappings: GeneralCircuitInputMapping[] = [];
     if (cim.extractions && cim.extractions.length > 0) {
       ({ parsedPayload, extractedMappings } = this.executeExtractions(
+        payloadType,
         fullParsedPayload,
         cim.extractions,
         parsedPayload,
@@ -114,6 +115,7 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
   }
 
   private extractMappings(
+    payloadType: PayloadFormatType,
     obj: any,
     targetKey: string,
     matches: any[] = [],
@@ -121,7 +123,7 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
   ): any[] {
     if (typeof obj !== 'object' || obj === null) return matches;
 
-    if (extractionParam === 'x509') {
+    if (payloadType === PayloadFormatType.XML && extractionParam === 'x509') {
       const certKeyPrefix = 'ds:X509Certificate';
       const splitIndex =
         targetKey.indexOf(certKeyPrefix) + certKeyPrefix.length;
@@ -142,9 +144,7 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
       return matches;
     } else {
       // Regular object traversal
-      if (obj.hasOwnProperty(targetKey)) {
-        matches.push(obj[targetKey]);
-      }
+      matches.push(this.searchRecursively(obj, targetKey, payloadType)[0]);
     }
 
     return matches;
@@ -166,6 +166,7 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
   }
 
   private executeExtractions(
+    payloadType: PayloadFormatType,
     fullParsedPayload: any,
     extractions: GeneralCircuitInputExtraction[],
     cleanParsedPayload: any,
@@ -174,6 +175,7 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
 
     for (const extraction of extractions!) {
       const extractedField = this.extractMappings(
+        payloadType,
         fullParsedPayload,
         extraction.field,
         [],
@@ -252,5 +254,53 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
         messagePath: dataToExtract.messagePath,
       }),
     };
+  }
+
+  private searchRecursively(
+    obj: any,
+    targetKey: string,
+    payloadType: PayloadFormatType,
+  ): any[] {
+    const matches: any[] = [];
+
+    function recursiveSearch(current: any, keyPath: string[]) {
+      if (typeof current !== 'object' || current === null) return;
+
+      // If using key path (for JSON) and it's a match
+      if (keyPath.length === 1 && current.hasOwnProperty(keyPath[0])) {
+        matches.push(current[keyPath[0]]);
+      }
+
+      for (const key in current) {
+        if (Object.prototype.hasOwnProperty.call(current, key)) {
+          const child = current[key];
+
+          if (Array.isArray(child)) {
+            for (const item of child) {
+              recursiveSearch(item, keyPath);
+            }
+          } else if (typeof child === 'object') {
+            // If JSON and path length > 1, follow the path
+            if (
+              payloadType === PayloadFormatType.JSON &&
+              key === keyPath[0] &&
+              keyPath.length > 1
+            ) {
+              recursiveSearch(child, keyPath.slice(1));
+            } else {
+              recursiveSearch(child, keyPath);
+            }
+          }
+        }
+      }
+    }
+
+    const keyPath =
+      payloadType === 'JSON' && targetKey.includes('.')
+        ? targetKey.split('.')
+        : [targetKey];
+
+    recursiveSearch(obj, keyPath);
+    return matches;
   }
 }

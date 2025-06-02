@@ -84,7 +84,6 @@ $ npm run test
 $ npm run test -- transactions.agent.spec.ts
 ```
 
-
 ```bash
 # e2e testing - .e2e.spec files and the bash script used for running located in ./test folder
 # before running the tests, make sure that postgres and nats are running
@@ -93,6 +92,16 @@ $ npm run test -- transactions.agent.spec.ts
 $ cd test
 $ sh ./e2e-test-sri.sh
 $ sh ./e2e-test-origination.sh
+```
+
+To run e2e tests with docker:
+
+```bash
+$ make test-sri
+```
+
+```bash
+$ make test-origination
 ```
 
 ## Architecture
