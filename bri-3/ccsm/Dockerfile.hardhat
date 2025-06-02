@@ -2,9 +2,6 @@ FROM node:23-slim
 
 WORKDIR /app
 
-# Install system deps
-RUN apk add --no-cache git bash
-
 # Copy and install deps
 COPY package*.json ./
 RUN npm install
