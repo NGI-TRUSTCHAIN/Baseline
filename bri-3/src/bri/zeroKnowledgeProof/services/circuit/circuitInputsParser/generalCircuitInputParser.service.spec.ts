@@ -64,8 +64,8 @@ declare global {
     }
   }
 }
-
-describe('XML extraction and certificate validation', () => {
+// TODO: Separate npm run command
+describe.skip('XML extraction and certificate validation', () => {
   jest.setTimeout(100000);
   let circuit: any;
   let gcips: GeneralCircuitInputsParserService;

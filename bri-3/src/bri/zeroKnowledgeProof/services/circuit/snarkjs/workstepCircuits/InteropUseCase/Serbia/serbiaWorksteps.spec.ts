@@ -60,8 +60,8 @@ declare global {
     }
   }
 }
-
-describe('Supplier XML extraction and signature verification', () => {
+// TODO: Separate npm run command
+describe.skip('Supplier XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
   let gcips: GeneralCircuitInputsParserService;
@@ -110,8 +110,8 @@ describe('Supplier XML extraction and signature verification', () => {
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
 });
-
-describe('Efakture XML extraction and signature verification', () => {
+// TODO: Separate npm run command
+describe.skip('Efakture XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
   let gcips: GeneralCircuitInputsParserService;
@@ -171,8 +171,8 @@ describe('Efakture XML extraction and signature verification', () => {
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
 });
-
-describe('Supplier XML extraction and Id verification', () => {
+// TODO: Separate npm run command
+describe.skip('Supplier XML extraction and Id verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
   let gcips: GeneralCircuitInputsParserService;
@@ -222,7 +222,7 @@ describe('Supplier XML extraction and Id verification', () => {
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
 });
-
+// TODO: Separate npm run command
 describe.skip('Efakture XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;

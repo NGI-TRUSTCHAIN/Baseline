@@ -68,6 +68,22 @@ jobs:
         working-directory: bri-3
         run: npm ci
 
+      - name: Run build
+        working-directory: bri-3
+        run: npm run build
+
+      - name: Run prettier
+        working-directory: bri-3
+        run: npm run format:check
+
+      - name: Run linter
+        working-directory: bri-3
+        run: npm run lint:check
+
+      - name: Run tests
+        working-directory: bri-3
+        run: npm run test
+
       - name: Run sri tests
         working-directory: bri-3
         run: make test-sri
