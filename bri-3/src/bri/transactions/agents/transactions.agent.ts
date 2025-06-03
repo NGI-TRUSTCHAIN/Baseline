@@ -19,7 +19,11 @@ import { MerkleTreeService } from '../../merkleTree/services/merkleTree.service'
 import { WorkflowStorageAgent } from '../../workgroup/workflows/agents/workflowsStorage.agent';
 import { Workgroup } from '../../workgroup/workgroups/models/workgroup';
 import { WorkstepStorageAgent } from '../../workgroup/worksteps/agents/workstepsStorage.agent';
-import { PayloadFormatType, Workstep, WorkstepType } from '../../workgroup/worksteps/models/workstep';
+import {
+  PayloadFormatType,
+  Workstep,
+  WorkstepType,
+} from '../../workgroup/worksteps/models/workstep';
 import { CircuitInputsParserService } from '../../zeroKnowledgeProof/services/circuit/circuitInputsParser/circuitInputParser.service';
 import { ICircuitService } from '../../zeroKnowledgeProof/services/circuit/circuitService.interface';
 import { computeEddsaSigPublicInputs } from '../../zeroKnowledgeProof/services/circuit/snarkjs/utils/computePublicInputs';
@@ -218,7 +222,10 @@ export class TransactionAgent {
           circuitWitnessCalculatorPath,
           circuitWitnessFilePath,
           verifierContractAbiFilePath,
-        } = this.constructCircuitPathsFromWorkgroupAndWorkstepName(workgroup.name, workstep.name);
+        } = this.constructCircuitPathsFromWorkgroupAndWorkstepName(
+          workgroup.name,
+          workstep.name,
+        );
 
         txResult.witness = await this.circuitService.createWitness(
           await this.prepareCircuitInputs(
@@ -359,7 +366,10 @@ export class TransactionAgent {
     return txResult;
   }
 
-  private constructCircuitPathsFromWorkgroupAndWorkstepName(workgroupName: string, workstepName: string): {
+  private constructCircuitPathsFromWorkgroupAndWorkstepName(
+    workgroupName: string,
+    workstepName: string,
+  ): {
     circuitProvingKeyPath: string;
     circuitVerificatioKeyPath: string;
     circuitPath: string;
@@ -369,17 +379,16 @@ export class TransactionAgent {
   } {
     const snakeCaseWorkstepName = this.convertStringToSnakeCase(workstepName);
 
-    const workstepZKArtifactsFolder = 
+    const workstepZKArtifactsFolder =
       process.env.SNARKJS_CIRCUITS_PATH +
-      workgroupName + "Workgroup" +
+      workgroupName +
+      'Workgroup' +
       '/' +
       snakeCaseWorkstepName +
       '/';
 
     const circuitProvingKeyPath =
-      workstepZKArtifactsFolder +
-      snakeCaseWorkstepName +
-      '_final.zkey';
+      workstepZKArtifactsFolder + snakeCaseWorkstepName + '_final.zkey';
 
     const circuitVerificatioKeyPath =
       workstepZKArtifactsFolder +
@@ -399,9 +408,7 @@ export class TransactionAgent {
       snakeCaseWorkstepName +
       '_js/witness_calculator.js';
 
-    const circuitWitnessFilePath =
-      workstepZKArtifactsFolder +
-      '/witness.txt';
+    const circuitWitnessFilePath = workstepZKArtifactsFolder + '/witness.txt';
 
     const verifierContractAbiFilePath =
       workstepZKArtifactsFolder +

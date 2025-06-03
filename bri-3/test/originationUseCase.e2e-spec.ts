@@ -93,7 +93,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       createdBpiSubjectBuyerId,
     );
 
-    createdWorkgroupId = await createAWorkgroupAndReturnId("origination");
+    createdWorkgroupId = await createAWorkgroupAndReturnId('origination');
 
     await updateWorkgroupAdminsAndParticipants(
       createdWorkgroupId,

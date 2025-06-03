@@ -105,7 +105,7 @@ describe('SRI use-case end-to-end test', () => {
       createdBpiSubjectBuyerId,
     );
 
-    createdWorkgroupId = await createAWorkgroupAndReturnId("sri");
+    createdWorkgroupId = await createAWorkgroupAndReturnId('sri');
 
     await updateWorkgroupAdminsAndParticipants(
       createdWorkgroupId,
