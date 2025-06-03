@@ -16,7 +16,7 @@ circom src/bri/zeroKnowledgeProof/services/circuit/snarkjs/$1.circom -o zeroKnow
 # Run setup using the basename for file names inside the nested folder
 snarkjs plonk setup \
   zeroKnowledgeArtifacts/circuits/$1/$basename.r1cs \
-  zeroKnowledgeArtifacts/ptau/pot20_final.ptau \
+  zeroKnowledgeArtifacts/ptau/pot15_final.ptau \
   zeroKnowledgeArtifacts/circuits/$1/${basename}_final.zkey
 
 # Export verification key
