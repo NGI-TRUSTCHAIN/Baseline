@@ -3,15 +3,21 @@ import * as x509 from '@peculiar/x509';
 import {
   base64ToHash,
   buffer2bitsMSB,
-  generateMerkleProofInputs,
+  stringToBigInt,
   generateHashInputs,
   generateSignatureInputs,
+  calculateMerkleTreeHeight,
 } from '../snarkjs/utils/computePublicInputs';
+import { buildMimcSponge } from 'circomlibjs';
 import { CircuitInputsParserService } from './circuitInputParser.service';
 import { PayloadFormatType } from '../../../../workgroup/worksteps/models/workstep';
+import { MerkleTree } from 'fixed-merkle-tree';
 
 @Injectable()
 export class GeneralCircuitInputsParserService extends CircuitInputsParserService {
+  private mimcSponge;
+  private F;
+
   public async applyGeneralMappingToTxPayload(
     payload: string,
     payloadType: PayloadFormatType,
@@ -70,7 +76,7 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
                 merkleProofRoot,
                 merkleProofPathElement,
                 merkleProofPathIndex,
-              } = generateMerkleProofInputs(value, allLeaves!);
+              } = await this.generateMerkleProofInputs(value, allLeaves!);
               result[`${mapping.circuitInput}Leaf`] = merkleProofLeaf;
               result[`${mapping.circuitInput}Root`] = merkleProofRoot;
               result[`${mapping.circuitInput}PathElement`] =
@@ -302,5 +308,32 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
 
     recursiveSearch(obj, keyPath);
     return matches;
+  }
+
+  public async generateMerkleProofInputs(leaf: string, tree: string[]) {
+    const allLeaves = tree.map((leaf) => String(stringToBigInt(leaf)));
+    const height = calculateMerkleTreeHeight(tree);
+    this.mimcSponge = await buildMimcSponge();
+    this.F = this.mimcSponge.F;
+    const merkleTree = new MerkleTree(height, allLeaves, {
+      hashFunction: this.generateMimcMerkleHash.bind(this),
+    });
+    const path = merkleTree.proof(String(stringToBigInt(leaf)));
+    const merkleProofLeaf = String(stringToBigInt(leaf));
+    const merkleProofRoot = merkleTree.root;
+    const merkleProofPathElement = path.pathElements;
+    const merkleProofPathIndex = path.pathIndices;
+
+    return {
+      merkleProofLeaf,
+      merkleProofRoot,
+      merkleProofPathElement,
+      merkleProofPathIndex,
+    };
+  }
+
+  private generateMimcMerkleHash(left: string, right: string) {
+    const hash = this.mimcSponge.multiHash([left, right], 0, 1);
+    return String(this.F.toObject(hash));
   }
 }
