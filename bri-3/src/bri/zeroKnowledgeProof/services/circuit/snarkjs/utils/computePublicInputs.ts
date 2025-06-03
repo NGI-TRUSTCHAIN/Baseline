@@ -289,7 +289,7 @@ export function generateMerkleProofInputs(leaf: string, tree: string[]) {
   };
 }
 
-function calculateMerkleTreeHeight(tree: string[]) {
+export function calculateMerkleTreeHeight(tree: string[]) {
   if (tree.length == 0) {
     throw new Error('Number of leaves must be greater than 0');
   }
@@ -323,3 +323,13 @@ export const generateSignatureInputs = async (message: string) => {
     aBits,
   };
 };
+
+export function stringToBigInt(str) {
+  const encoder = new TextEncoder(); // UTF-8 encoder
+  const bytes = encoder.encode(str); // Uint8Array
+  let result = 0n;
+  for (const byte of bytes) {
+    result = (result << 8n) | BigInt(byte);
+  }
+  return result;
+}
