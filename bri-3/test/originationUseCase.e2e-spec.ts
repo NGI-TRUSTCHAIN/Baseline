@@ -93,7 +93,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       createdBpiSubjectBuyerId,
     );
 
-    createdWorkgroupId = await createAWorkgroupAndReturnId();
+    createdWorkgroupId = await createAWorkgroupAndReturnId("origination");
 
     await updateWorkgroupAdminsAndParticipants(
       createdWorkgroupId,
@@ -146,18 +146,18 @@ describe('Invoice origination use-case end-to-end test', () => {
 
   it('Add a circuit input translation schema to workstep 1', async () => {
     const schema = `{
-          "mapping": [],
-          "extractions": [
-            {
-              "field": "ds:Signature.ds:SignatureValue._",
-              "destinationPath": "supplierSignature",
-              "circuitInput": "supplierSignature",
-              "description": "Signature on the document",
-              "dataType": "string",
-              "checkType": "signatureCheck",
-            },
-          ],
-        }`;
+                        "mapping": [],
+                        "extractions": [
+                            {
+                                "field": "ds:Signature.ds:SignatureValue._",
+                                "destinationPath": "supplierSignature",
+                                "circuitInput": "supplierSignature",
+                                "description": "Signature on the document",
+                                "dataType": "string",
+                                "checkType": "signatureCheck"
+                            }
+                        ]
+                    }`;
     await addCircuitInputsSchema(createdWorkstep1Id, schema);
   });
 
@@ -263,12 +263,12 @@ async function createBpiSubjectAccountAndReturnId(
   return createdBpiSubjectAccountResponse.text;
 }
 
-async function createAWorkgroupAndReturnId(): Promise<string> {
+async function createAWorkgroupAndReturnId(name: string): Promise<string> {
   const createdWorkgroupResponse = await request(server)
     .post('/workgroups')
     .set('Authorization', `Bearer ${accessToken}`)
     .send({
-      name: 'Test workgroup',
+      name: name,
       securityPolicy: 'Dummy security policy',
       privacyPolicy: 'Dummy privacy policy',
     })
@@ -286,7 +286,7 @@ async function updateWorkgroupAdminsAndParticipants(
     .put(`/workgroups/${workgroupId}`)
     .set('Authorization', `Bearer ${accessToken}`)
     .send({
-      name: 'Test workgroup',
+      name: 'origination',
       administratorIds: administratorIds,
       securityPolicy: 'Dummy security policy',
       privacyPolicy: 'Dummy privacy policy',

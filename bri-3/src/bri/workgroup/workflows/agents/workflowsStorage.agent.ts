@@ -18,6 +18,7 @@ export class WorkflowStorageAgent {
       include: {
         worksteps: true,
         bpiAccount: true,
+        workgroup: true
       },
     });
 

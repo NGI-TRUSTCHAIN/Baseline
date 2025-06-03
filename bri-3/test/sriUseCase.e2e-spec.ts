@@ -105,7 +105,7 @@ describe('SRI use-case end-to-end test', () => {
       createdBpiSubjectBuyerId,
     );
 
-    createdWorkgroupId = await createAWorkgroupAndReturnId();
+    createdWorkgroupId = await createAWorkgroupAndReturnId("sri");
 
     await updateWorkgroupAdminsAndParticipants(
       createdWorkgroupId,
@@ -521,12 +521,12 @@ async function createBpiSubjectAccountAndReturnId(
   return createdBpiSubjectAccountResponse.text;
 }
 
-async function createAWorkgroupAndReturnId(): Promise<string> {
+async function createAWorkgroupAndReturnId(name: string): Promise<string> {
   const createdWorkgroupResponse = await request(server)
     .post('/workgroups')
     .set('Authorization', `Bearer ${accessToken}`)
     .send({
-      name: 'Test workgroup',
+      name: name,
       securityPolicy: 'Dummy security policy',
       privacyPolicy: 'Dummy privacy policy',
     })
@@ -544,7 +544,7 @@ async function updateWorkgroupAdminsAndParticipants(
     .put(`/workgroups/${workgroupId}`)
     .set('Authorization', `Bearer ${accessToken}`)
     .send({
-      name: 'Test workgroup',
+      name: 'sri',
       administratorIds: administratorIds,
       securityPolicy: 'Dummy security policy',
       privacyPolicy: 'Dummy privacy policy',

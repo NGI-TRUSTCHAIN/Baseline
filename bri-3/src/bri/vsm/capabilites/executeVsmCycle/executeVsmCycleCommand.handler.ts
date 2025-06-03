@@ -53,7 +53,7 @@ export class ExecuteVsmCycleCommandHandler
       );
 
       try {
-        const txResult = await this.txAgent.executeTransaction(tx, workstep!);
+        const txResult = await this.txAgent.executeTransaction(tx, workflow!.workgroup, workstep!);
 
         const stateTreeRoot = await this.stateAgent.storeNewLeafInStateTree(
           workflow!.bpiAccount,
