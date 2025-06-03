@@ -336,7 +336,6 @@ describe('Invoice origination use-case end-to-end test', () => {
       buyerBpiSubjectEddsaPrivateKey,
       createdBpiSubjectAccountSupplierId,
       JSON.stringify({
-        appName: 'bpi2',
         id: txId2,
         nonce: 5,
         fromBpiSubjectId: createdBpiSubjectBuyerId2,
@@ -358,6 +357,8 @@ describe('Invoice origination use-case end-to-end test', () => {
 
     const resultTransaction = await fetchTransaction(txid);
     console.log('tx bpi 1', resultTransaction);
+
+    await new Promise((r) => setTimeout(r, 5000));
 
     const resultTransaction2 = await fetchTransaction(
       txId2,

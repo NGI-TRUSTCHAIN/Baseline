@@ -21,16 +21,6 @@ export class ProcessInboundTransactionCommandHandler
   ) {}
 
   async execute(command: ProcessInboundBpiTransactionCommand) {
-    // TODO: why is nats handler hit twice?
-    try {
-      const tx = await this.storageAgent.getTransactionById(command.id);
-      console.log('tx exists');
-      return;
-    } catch (e) {
-      console.log('failed to fetch tx', e);
-    }
-
-    console.log('tx doesnt exist');
     if (this.agent.isCreateTransactionInputInvalid()) {
       return false;
     }
@@ -58,7 +48,6 @@ export class ProcessInboundTransactionCommandHandler
       return false;
     }
 
-    console.log('trying to create tx ', command.id);
     const newTransactionCandidate = this.agent.createNewTransaction(
       command.id,
       command.nonce,
@@ -70,14 +59,7 @@ export class ProcessInboundTransactionCommandHandler
       command.signature,
     );
 
-    try {
-      const createdTx = await this.storageAgent.storeNewTransaction(
-        newTransactionCandidate,
-      );
-      console.log('tx created', createdTx);
-    } catch (e) {
-      console.log('tx create error', e);
-    }
+    await this.storageAgent.storeNewTransaction(newTransactionCandidate);
 
     return true;
   }

@@ -49,6 +49,6 @@ export const QueryHandlers = [GetBpiMessageByIdQueryHandler];
       useClass: NatsMessagingClient,
     },
   ],
-  exports: ['IMessagingClient'],
+  exports: ['IMessagingClient', MessagingAgent],
 })
 export class CommunicationModule {}
