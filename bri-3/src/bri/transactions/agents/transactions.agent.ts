@@ -193,7 +193,7 @@ export class TransactionAgent {
     tx: Transaction,
     workstep: Workstep,
   ): Promise<TransactionResult> {
-    console.log("executing transaction", workstep.workstepConfig.type)
+    console.log('executing transaction', workstep.workstepConfig.type);
     const txResult = new TransactionResult();
 
     // For now defaulting to JSON in case undefined for backward compatibility
@@ -220,10 +220,14 @@ export class TransactionAgent {
         this.logger.logInfo(
           `called from another bpi with payload ${tx.payload}`,
         );
+        txResult.witness = {} as any; // TODO
+        break;
       case WorkstepType.BPI_TRIGGER:
         this.logger.logInfo(`triggering bpi with payload ${tx.payload}`);
         const parsedPayload = JSON.parse(tx.payload);
-        this.natsMessagingClient.publish("general", tx.payload);
+        this.natsMessagingClient.publish('general', tx.payload);
+        txResult.witness = {} as any; // TODO
+        break;
       case WorkstepType.BLOCKCHAIN:
         const {
           circuitProvingKeyPath,
