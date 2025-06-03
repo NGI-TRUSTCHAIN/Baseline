@@ -1,5 +1,4 @@
 import { ethers } from 'ethers';
-import * as request from 'supertest';
 import { v4 } from 'uuid';
 import {
   buyerBpiSubjectEcdsaPrivateKey,
@@ -16,16 +15,18 @@ import {
 } from '../src/shared/testing/utils';
 import {
   PayloadFormatType,
-  WorkstepConfig,
   WorkstepType,
 } from '../src/bri/workgroup/worksteps/models/workstep';
+import { ApiClient } from './helpers/apiClient';
+import { BpiService } from './helpers/bpiService';
 
 jest.setTimeout(240000);
 
-let accessToken: string;
-let accessToken2: string;
 const server = 'http://localhost:3000';
 const server2 = 'http://localhost:3001';
+
+let bpiService1: BpiService;
+let bpiService2: BpiService;
 
 let supplierBpiSubjectEddsaPublicKey: string;
 let supplierBpiSubjectEddsaPrivateKey: string;
@@ -65,17 +66,28 @@ describe('Invoice origination use-case end-to-end test', () => {
     buyerBpiSubjectEddsaPublicKey = await createEddsaPublicKey(
       buyerBpiSubjectEddsaPrivateKey,
     );
+
+    // Initialize API clients and services
+    const accessToken1 = await new BpiService(
+      new ApiClient(server, ''),
+    ).loginAsInternalBpiSubject(
+      internalBpiSubjectEcdsaPublicKey,
+      internalBpiSubjectEcdsaPrivateKey,
+    );
+    const accessToken2 = await new BpiService(
+      new ApiClient(server2, ''),
+    ).loginAsInternalBpiSubject(
+      internalBpiSubjectEcdsaPublicKey,
+      internalBpiSubjectEcdsaPrivateKey,
+    );
+
+    bpiService1 = new BpiService(new ApiClient(server, accessToken1));
+    bpiService2 = new BpiService(new ApiClient(server2, accessToken2));
   });
 
   it('Logs in an internal Bpi Subject, creates two external Bpi Subjects (Supplier and Buyer) and a Workgroup and adds the created Bpi Subjects as participants to the Workgroup', async () => {
-    accessToken = await loginAsInternalBpiSubjectAndReturnAnAccessToken();
-    console.log('AT1', accessToken);
-    accessToken2 =
-      await loginAsInternalBpiSubjectAndReturnAnAccessToken(server2);
-    console.log('AT2', accessToken2);
-
     // bpi1
-    createdBpiSubjectSupplierId = await createExternalBpiSubjectAndReturnId(
+    createdBpiSubjectSupplierId = await bpiService1.createExternalBpiSubject(
       'External Bpi Subject - Supplier',
       [
         { type: 'ecdsa', value: supplierBpiSubjectEcdsaPublicKey },
@@ -84,12 +96,12 @@ describe('Invoice origination use-case end-to-end test', () => {
     );
 
     createdBpiSubjectAccountSupplierId =
-      await createBpiSubjectAccountAndReturnId(
+      await bpiService1.createBpiSubjectAccount(
         createdBpiSubjectSupplierId,
         createdBpiSubjectSupplierId,
       );
 
-    createdBpiSubjectBuyerId = await createExternalBpiSubjectAndReturnId(
+    createdBpiSubjectBuyerId = await bpiService1.createExternalBpiSubject(
       'External Bpi Subject 2 - Buyer',
       [
         { type: 'ecdsa', value: buyerBpiSubjectEcdsaPublicKey },
@@ -97,58 +109,51 @@ describe('Invoice origination use-case end-to-end test', () => {
       ],
     );
 
-    createdBpiSubjectAccountBuyerId = await createBpiSubjectAccountAndReturnId(
+    createdBpiSubjectAccountBuyerId = await bpiService1.createBpiSubjectAccount(
       createdBpiSubjectBuyerId,
       createdBpiSubjectBuyerId,
     );
 
     // bpi2
-    createdBpiSubjectSupplierId2 = await createExternalBpiSubjectAndReturnId(
+    createdBpiSubjectSupplierId2 = await bpiService2.createExternalBpiSubject(
       'External Bpi Subject - Supplier',
       [
         { type: 'ecdsa', value: supplierBpiSubjectEcdsaPublicKey },
         { type: 'eddsa', value: supplierBpiSubjectEddsaPublicKey },
       ],
-      server2,
-      accessToken2,
     );
 
     createdBpiSubjectAccountSupplierId2 =
-      await createBpiSubjectAccountAndReturnId(
+      await bpiService2.createBpiSubjectAccount(
         createdBpiSubjectSupplierId2,
         createdBpiSubjectSupplierId2,
-        server2,
-        accessToken2,
       );
 
-    createdBpiSubjectBuyerId2 = await createExternalBpiSubjectAndReturnId(
+    createdBpiSubjectBuyerId2 = await bpiService2.createExternalBpiSubject(
       'External Bpi Subject 2 - Buyer',
       [
         { type: 'ecdsa', value: buyerBpiSubjectEcdsaPublicKey },
         { type: 'eddsa', value: buyerBpiSubjectEddsaPublicKey },
       ],
-      server2,
-      accessToken2,
     );
 
-    createdBpiSubjectAccountBuyerId2 = await createBpiSubjectAccountAndReturnId(
-      createdBpiSubjectBuyerId2,
-      createdBpiSubjectBuyerId2,
-      server2,
-      accessToken2,
-    );
+    createdBpiSubjectAccountBuyerId2 =
+      await bpiService2.createBpiSubjectAccount(
+        createdBpiSubjectBuyerId2,
+        createdBpiSubjectBuyerId2,
+      );
 
     // workgroup on bpi1
-    createdWorkgroupId = await createAWorkgroupAndReturnId();
+    createdWorkgroupId = await bpiService1.createWorkgroup();
 
-    await updateWorkgroupAdminsAndParticipants(
+    await bpiService1.updateWorkgroup(
       createdWorkgroupId,
       [createdBpiSubjectSupplierId],
       [createdBpiSubjectSupplierId, createdBpiSubjectBuyerId],
     );
 
-    console.log('WG 1', createdWorkgroupId);
-    const resultWorkgroup = await fetchWorkgroup(createdWorkgroupId);
+    const resultWorkgroup =
+      await bpiService1.fetchWorkgroup(createdWorkgroupId);
     expect(resultWorkgroup.participants.length).toBe(2);
     expect(resultWorkgroup.participants[0].id).toEqual(
       createdBpiSubjectSupplierId,
@@ -158,25 +163,16 @@ describe('Invoice origination use-case end-to-end test', () => {
     );
 
     // workgroup on bpi2
-    createdWorkgroupId2 = await createAWorkgroupAndReturnId(
-      server2,
-      accessToken2,
-    );
-    console.log('WG 2', createdWorkgroupId2);
+    createdWorkgroupId2 = await bpiService2.createWorkgroup();
 
-    await updateWorkgroupAdminsAndParticipants(
+    await bpiService2.updateWorkgroup(
       createdWorkgroupId2,
       [createdBpiSubjectSupplierId2],
       [createdBpiSubjectSupplierId2, createdBpiSubjectBuyerId2],
-      server2,
-      accessToken2,
     );
 
-    const resultWorkgroup2 = await fetchWorkgroup(
-      createdWorkgroupId2,
-      server2,
-      accessToken2,
-    );
+    const resultWorkgroup2 =
+      await bpiService2.fetchWorkgroup(createdWorkgroupId2);
     expect(resultWorkgroup2.participants.length).toBe(2);
     expect(resultWorkgroup2.participants[0].id).toEqual(
       createdBpiSubjectSupplierId2,
@@ -187,7 +183,7 @@ describe('Invoice origination use-case end-to-end test', () => {
   });
 
   it('Sets up a workflow with a single workstep for triggering efakture API in the previously created workgroup', async () => {
-    createdWorkstep1Id = await createWorkstepAndReturnId(
+    createdWorkstep1Id = await bpiService1.createWorkstep(
       'workstep1',
       createdWorkgroupId,
       {
@@ -199,7 +195,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       },
     );
 
-    createdWorkflowId = await createWorkflowAndReturnId(
+    createdWorkflowId = await bpiService1.createWorkflow(
       'workflow1',
       createdWorkgroupId,
       [createdWorkstep1Id],
@@ -207,47 +203,8 @@ describe('Invoice origination use-case end-to-end test', () => {
     );
   });
 
-  // TODO
-  // it('Add a circuit input translation schema to workstep 1', async () => {
-  //   const schema = `{
-  //         "mapping": [
-  //           {
-  //             "circuitInput": "invoiceStatus",
-  //             "description": "Invoice status",
-  //             "payloadJsonPath": "status",
-  //             "dataType": "string"
-  //           },
-  //           {
-  //             "circuitInput": "invoiceAmount",
-  //             "description": "Total gross amount of the invoice",
-  //             "payloadJsonPath": "amount",
-  //             "dataType": "integer"
-  //           },
-  //           {
-  //             "circuitInput": "itemPrices",
-  //             "description": "Invoice item prices",
-  //             "payloadJsonPath": "items",
-  //             "dataType": "array",
-  //             "arrayType": "object",
-  //             "arrayItemFieldName": "price",
-  //             "arrayItemFieldType": "integer"
-  //           },
-  //           {
-  //             "circuitInput": "itemAmount",
-  //             "description": "Invoice item amounts",
-  //             "payloadJsonPath": "items",
-  //             "dataType": "array",
-  //             "arrayType": "object",
-  //             "arrayItemFieldName": "amount",
-  //             "arrayItemFieldType": "integer"
-  //           }
-  //         ]
-  //       }`;
-  //   await addCircuitInputsSchema(createdWorkstep1Id, schema);
-  // });
-
   it('Submits transaction for execution of the workstep 1 with api call', async () => {
-    createdTransactionApiId = await createTransactionAndReturnId(
+    createdTransactionApiId = await bpiService1.createTransaction(
       v4(),
       3,
       createdWorkflowId,
@@ -267,57 +224,37 @@ describe('Invoice origination use-case end-to-end test', () => {
   });
 
   it('Creates BPI_TRIGGER on App1 and BPI_WAIT on App2', async () => {
-    const bpiWaitId = await request(server2)
-      .post('/worksteps')
-      .set('Authorization', `Bearer ${accessToken2}`)
-      .send({
-        name: 'wait-step',
-        version: '1',
-        status: 'NEW',
-        workgroupId: createdWorkgroupId2,
-        securityPolicy: 'Dummy',
-        privacyPolicy: 'Dummy',
-        workstepConfig: {
-          type: WorkstepType.BPI_WAIT,
-          executionParams: {},
-        },
-      })
-      .expect(201);
-    console.log('BPI WAIT', bpiWaitId.text);
+    const bpiWaitId = await bpiService2.createWorkstep(
+      'wait-step',
+      createdWorkgroupId2,
+      {
+        type: WorkstepType.BPI_WAIT,
+        executionParams: {},
+      } as any,
+    );
 
-    const bpiTriggerId = await request(server)
-      .post('/worksteps')
-      .set('Authorization', `Bearer ${accessToken}`)
-      .send({
-        name: 'trigger-step',
-        version: '1',
-        status: 'NEW',
-        workgroupId: createdWorkgroupId,
-        securityPolicy: 'Dummy security policy',
-        privacyPolicy: 'Dummy privacy policy',
-        workstepConfig: {
-          type: WorkstepType.BPI_TRIGGER,
-          executionParams: {},
-        },
-      })
-      .expect(201);
-    console.log('BPI TRIGGER', bpiTriggerId.text);
+    const bpiTriggerId = await bpiService1.createWorkstep(
+      'trigger-step',
+      createdWorkgroupId,
+      {
+        type: WorkstepType.BPI_TRIGGER,
+        executionParams: {},
+      } as any,
+    );
 
     // workflows
-    const createdWorkflowId = await createWorkflowAndReturnId(
+    const createdWorkflowId = await bpiService1.createWorkflow(
       'workflow1',
       createdWorkgroupId,
-      [bpiTriggerId.text],
+      [bpiTriggerId],
       [createdBpiSubjectAccountSupplierId, createdBpiSubjectAccountBuyerId],
     );
 
-    const createdWorkflowId2 = await createWorkflowAndReturnId(
+    const createdWorkflowId2 = await bpiService2.createWorkflow(
       'workflow1',
       createdWorkgroupId2,
-      [bpiWaitId.text],
+      [bpiWaitId],
       [createdBpiSubjectAccountSupplierId2, createdBpiSubjectAccountBuyerId2],
-      server2,
-      accessToken2,
     );
 
     const content = { test: 'test content' };
@@ -327,11 +264,11 @@ describe('Invoice origination use-case end-to-end test', () => {
     );
 
     const txId2 = v4();
-    const txid = await createTransactionAndReturnId(
+    const txid = await bpiService1.createTransaction(
       v4(),
       4,
       createdWorkflowId,
-      bpiTriggerId.text,
+      bpiTriggerId,
       createdBpiSubjectAccountBuyerId,
       buyerBpiSubjectEddsaPrivateKey,
       createdBpiSubjectAccountSupplierId,
@@ -346,246 +283,17 @@ describe('Invoice origination use-case end-to-end test', () => {
         fromBpiSubjectAccountId: createdBpiSubjectAccountBuyerId2,
         toBpiSubjectAccountId: createdBpiSubjectAccountSupplierId2,
         workflowId: createdWorkflowId2,
-        workstepId: bpiWaitId.text,
+        workstepId: bpiWaitId,
       }),
     );
-
-    console.log('tx id', txid);
 
     // wait and check both txs are created
     await new Promise((r) => setTimeout(r, 5000));
 
-    const resultTransaction = await fetchTransaction(txid);
-    console.log('tx bpi 1', resultTransaction);
+    await bpiService1.fetchTransaction(txid);
 
     await new Promise((r) => setTimeout(r, 5000));
 
-    const resultTransaction2 = await fetchTransaction(
-      txId2,
-      server2,
-      accessToken2,
-    );
-    console.log('tx bpi 2', resultTransaction2);
+    await bpiService2.fetchTransaction(txId2);
   });
-
-  // it('Waits for a single VSM cycle and then verifies that the transactions on both bpis has been executed', async () => {
-  //   await new Promise((r) => setTimeout(r, 5000));
-
-  //   // TODO add checks
-  // });
 });
-
-async function loginAsInternalBpiSubjectAndReturnAnAccessToken(
-  api = server,
-): Promise<string> {
-  const nonceResponse = await request(api)
-    .post('/auth/nonce')
-    .send({ publicKey: internalBpiSubjectEcdsaPublicKey })
-    .expect(201);
-
-  const signer = new ethers.Wallet(internalBpiSubjectEcdsaPrivateKey);
-  const signature = await signer.signMessage(nonceResponse.text);
-
-  const loginResponse = await request(api)
-    .post('/auth/login')
-    .send({
-      message: nonceResponse.text,
-      signature,
-      publicKey: internalBpiSubjectEcdsaPublicKey,
-    })
-    .expect(201);
-
-  return JSON.parse(loginResponse.text)['access_token'];
-}
-
-async function createExternalBpiSubjectAndReturnId(
-  bpiSubjectName: string,
-  pk: { type: string; value: string }[],
-  api = server,
-  token = accessToken,
-): Promise<string> {
-  const createdBpiSubjectResponse = await request(api)
-    .post('/subjects')
-    .set('Authorization', `Bearer ${token}`)
-    .send({
-      name: bpiSubjectName,
-      desc: 'A test Bpi Subject',
-      publicKeys: pk,
-    })
-    .expect(201);
-
-  return createdBpiSubjectResponse.text;
-}
-
-async function createBpiSubjectAccountAndReturnId(
-  creatorBpiSubjectId: string,
-  ownerBpiSubjectId: string,
-  api = server,
-  token = accessToken,
-): Promise<string> {
-  const createdBpiSubjectAccountResponse = await request(api)
-    .post('/subjectAccounts')
-    .set('Authorization', `Bearer ${token}`)
-    .send({
-      creatorBpiSubjectId: creatorBpiSubjectId,
-      ownerBpiSubjectId: ownerBpiSubjectId,
-    })
-    .expect(201);
-
-  return createdBpiSubjectAccountResponse.text;
-}
-
-async function createAWorkgroupAndReturnId(
-  api = server,
-  token = accessToken,
-): Promise<string> {
-  const createdWorkgroupResponse = await request(api)
-    .post('/workgroups')
-    .set('Authorization', `Bearer ${token}`)
-    .send({
-      name: 'Test workgroup',
-      securityPolicy: 'Dummy security policy',
-      privacyPolicy: 'Dummy privacy policy',
-    })
-    .expect(201);
-
-  return createdWorkgroupResponse.text;
-}
-
-async function updateWorkgroupAdminsAndParticipants(
-  workgroupId: string,
-  administratorIds: string[],
-  participantIds: string[],
-  api = server,
-  token = accessToken,
-): Promise<void> {
-  await request(api)
-    .put(`/workgroups/${workgroupId}`)
-    .set('Authorization', `Bearer ${token}`)
-    .send({
-      name: 'Test workgroup',
-      administratorIds: administratorIds,
-      securityPolicy: 'Dummy security policy',
-      privacyPolicy: 'Dummy privacy policy',
-      participantIds: participantIds,
-    })
-    .expect(200);
-}
-
-async function fetchWorkgroup(
-  workgroupId: string,
-  api = server,
-  token = accessToken,
-): Promise<any> {
-  const getWorkgroupResponse = await request(api)
-    .get(`/workgroups/${workgroupId}`)
-    .set('Authorization', `Bearer ${token}`)
-    .expect(200);
-
-  return JSON.parse(getWorkgroupResponse.text);
-}
-
-async function createWorkstepAndReturnId(
-  name: string,
-  workgroupId: string,
-  workstepConfig: WorkstepConfig,
-  api = server,
-  token = accessToken,
-): Promise<string> {
-  const createdWorkstepResponse = await request(api)
-    .post('/worksteps')
-    .set('Authorization', `Bearer ${token}`)
-    .send({
-      name: name,
-      version: '1',
-      status: 'NEW',
-      workgroupId: workgroupId,
-      securityPolicy: 'Dummy security policy',
-      privacyPolicy: 'Dummy privacy policy',
-      workstepConfig: workstepConfig,
-    })
-    .expect(201);
-
-  return createdWorkstepResponse.text;
-}
-
-async function addCircuitInputsSchema(
-  workstepId: string,
-  schema: string,
-): Promise<string> {
-  const addCircuitInputsSchemaResponse = await request(server)
-    .put(`/worksteps/${workstepId}/circuitinputsschema`)
-    .set('Authorization', `Bearer ${accessToken}`)
-    .send({
-      schema: schema,
-    })
-    .expect(200);
-
-  return addCircuitInputsSchemaResponse.text;
-}
-
-async function createWorkflowAndReturnId(
-  name: string,
-  workgroupId: string,
-  workstepIds: string[],
-  ownerIds: string[],
-  api = server,
-  token = accessToken,
-): Promise<string> {
-  const createdWorkflowResponse = await request(api)
-    .post('/workflows')
-    .set('Authorization', `Bearer ${token}`)
-    .send({
-      name: name,
-      workgroupId: workgroupId,
-      workstepIds: workstepIds,
-      workflowBpiAccountSubjectAccountOwnersIds: ownerIds,
-    })
-    .expect(201);
-
-  return createdWorkflowResponse.text;
-}
-
-async function createTransactionAndReturnId(
-  id: string,
-  nonce: number,
-  workflowId: string,
-  workstepId: string,
-  fromSubjectAccountId: string,
-  fromPrivatekey: string,
-  toSubjectAccountId: string,
-  payload: string,
-): Promise<string> {
-  //Eddsa signature
-  const signature = await createEddsaSignature(payload, fromPrivatekey);
-
-  const createdTransactionResponse = await request(server)
-    .post('/transactions')
-    .set('Authorization', `Bearer ${accessToken}`)
-    .send({
-      id: id,
-      nonce: nonce,
-      workflowId: workflowId,
-      workstepId: workstepId,
-      fromSubjectAccountId: fromSubjectAccountId,
-      toSubjectAccountId: toSubjectAccountId,
-      payload: payload,
-      signature: signature,
-    })
-    .expect(201);
-
-  return createdTransactionResponse.text;
-}
-
-async function fetchTransaction(
-  txId: string,
-  api = server,
-  token = accessToken,
-): Promise<any> {
-  const getTransactionResponse = await request(api)
-    .get(`/transactions/${txId}`)
-    .set('Authorization', `Bearer ${token}`)
-    .expect(200);
-
-  return JSON.parse(getTransactionResponse.text);
-}

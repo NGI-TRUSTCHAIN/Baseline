@@ -193,7 +193,6 @@ export class TransactionAgent {
     tx: Transaction,
     workstep: Workstep,
   ): Promise<TransactionResult> {
-    console.log('executing transaction', workstep.workstepConfig.type);
     const txResult = new TransactionResult();
 
     // For now defaulting to JSON in case undefined for backward compatibility
