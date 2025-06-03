@@ -2,6 +2,7 @@
 set -e
 
 basename=$(basename "$1")
+parent_dir=$(dirname "$1")
 
 # if zeroKnowledgeArtifacts/circuits/$1 does not exist, make folder
 [ -d zeroKnowledgeArtifacts/circuits/$1 ] || mkdir -p zeroKnowledgeArtifacts/circuits/$1
@@ -16,7 +17,7 @@ circom src/bri/zeroKnowledgeProof/services/circuit/snarkjs/$1.circom -o zeroKnow
 # Run setup using the basename for file names inside the nested folder
 snarkjs plonk setup \
   zeroKnowledgeArtifacts/circuits/$1/$basename.r1cs \
-  zeroKnowledgeArtifacts/ptau/pot20_final.ptau \
+  zeroKnowledgeArtifacts/ptau/pot15_final.ptau \
   zeroKnowledgeArtifacts/circuits/$1/${basename}_final.zkey
 
 # Export verification key
@@ -27,6 +28,6 @@ snarkjs zkey export verificationkey \
 # Export Solidity verifier contract
 snarkjs zkey export solidityverifier \
   zeroKnowledgeArtifacts/circuits/$1/${basename}_final.zkey \
-  ccsm/contracts/${basename}Verifier.sol
+  ccsm/contracts/${parent_dir}/${basename}Verifier.sol
 
 echo "------------------Phase 2 complete-------------------------"
