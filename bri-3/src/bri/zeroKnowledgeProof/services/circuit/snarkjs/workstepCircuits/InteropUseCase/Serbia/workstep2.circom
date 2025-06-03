@@ -10,9 +10,9 @@ template InteropSerbiaWorkstep2()
 	signal input efaktureSignatureABits[256];
 	signal input efaktureSignatureSBits[256];
 
-	signal input signerNameLeaf[256];
-	signal input signerNameRoot[256];
-	signal input signerNamePathElement[256 * 1]; // Height of tree: 1, each 256 bits
+	signal input signerNameLeaf;
+	signal input signerNameRoot;
+	signal input signerNamePathElement[1]; // Height of tree: 1, each 256 bits
 	signal input signerNamePathIndex[1];
 
 	signal output isVerified;
