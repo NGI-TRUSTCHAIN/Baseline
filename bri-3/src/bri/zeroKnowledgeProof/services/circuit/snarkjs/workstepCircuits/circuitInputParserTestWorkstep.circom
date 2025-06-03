@@ -12,9 +12,9 @@ template CircuitInputParserTestWorkstep()
 	signal input certificateSignatureABits[256];
 	signal input certificateSignatureSBits[256];
 
-	signal input signerNameLeaf[256];
-	signal input signerNameRoot[256];
-	signal input signerNamePathElement[256 * 2]; // Height of tree: 2, each 256 bits
+	signal input signerNameLeaf;
+	signal input signerNameRoot;
+	signal input signerNamePathElement[2]; // Height of tree: 2
 	signal input signerNamePathIndex[2];
 
 	signal input certHashPreimage[18464];
