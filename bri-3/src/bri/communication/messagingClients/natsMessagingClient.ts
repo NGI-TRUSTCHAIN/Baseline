@@ -36,7 +36,7 @@ export class NatsMessagingClient
 
   async subscribe(
     channelName: string,
-    callback: (message: string) => void,
+    callback: (message: string) => Promise<boolean>,
   ): Promise<void> {
     if (this.isNatsConnectionClosed()) {
       this.logger.logWarn(
@@ -53,7 +53,8 @@ export class NatsMessagingClient
       this.logger.logInfo(
         `${subscription.getSubject()}: [${subscription.getProcessed()}] : ${messageContent}`,
       );
-      callback(messageContent);
+
+      await callback(messageContent);
     }
   }
 

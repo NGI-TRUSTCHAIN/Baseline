@@ -82,6 +82,11 @@ export class BpiMessage {
     this.workstepId = id;
   }
 
+  // TODO: move to ctor
+  public updateNonce(nonce: number): void {
+    this.nonce = nonce;
+  }
+
   public isInfoMessage(): boolean {
     return this.type === BpiMessageType.Info;
   }

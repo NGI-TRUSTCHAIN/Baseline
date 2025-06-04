@@ -18,11 +18,14 @@ import { UpdateTransactionCommandHandler } from './capabilities/updateTransactio
 import { TransactionsProfile } from './transactions.profile';
 import { CcsmModule } from '../ccsm/ccsm.module';
 import { LoggingModule } from '../../shared/logging/logging.module';
+import { CommunicationModule } from '../communication/communication.module';
+import { ProcessInboundTransactionCommandHandler } from './capabilities/processInboundTransaction/processInboundTransactionCommand.handler';
 
 export const CommandHandlers = [
   CreateTransactionCommandHandler,
   UpdateTransactionCommandHandler,
   DeleteTransactionCommandHandler,
+  ProcessInboundTransactionCommandHandler,
 ];
 
 export const QueryHandlers = [
@@ -42,6 +45,7 @@ export const QueryHandlers = [
     CcsmModule,
     PrismaModule,
     LoggingModule,
+    CommunicationModule,
   ],
   controllers: [TransactionController],
   providers: [

@@ -3,6 +3,8 @@ import { AutoMap } from '@automapper/classes';
 export enum WorkstepType {
   BLOCKCHAIN = 'BLOCKCHAIN',
   API = 'API',
+  BPI_TRIGGER = 'BPI_TRIGGER',
+  BPI_WAIT = 'BPI_WAIT',
 }
 
 export enum PayloadFormatType {

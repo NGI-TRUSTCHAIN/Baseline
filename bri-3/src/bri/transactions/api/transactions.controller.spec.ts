@@ -36,6 +36,8 @@ import { CreateTransactionDto } from './dtos/request/createTransaction.dto';
 import { UpdateTransactionDto } from './dtos/request/updateTransaction.dto';
 import { NOT_FOUND_ERR_MESSAGE } from './err.messages';
 import { TransactionController } from './transactions.controller';
+import { CommunicationModule } from '../../../bri/communication/communication.module';
+import { NatsMessagingClient } from '../../../bri/communication/messagingClients/natsMessagingClient';
 
 describe('TransactionController', () => {
   let controller: TransactionController;
@@ -89,6 +91,7 @@ describe('TransactionController', () => {
         }),
         LoggingModule,
         CcsmModule,
+        CommunicationModule,
       ],
       controllers: [TransactionController],
       providers: [
@@ -109,6 +112,10 @@ describe('TransactionController', () => {
         {
           provide: 'ICircuitService',
           useClass: SnarkjsCircuitService,
+        },
+        {
+          provide: 'IMessagingClient',
+          useClass: NatsMessagingClient,
         },
         CircuitInputsParserService,
       ],

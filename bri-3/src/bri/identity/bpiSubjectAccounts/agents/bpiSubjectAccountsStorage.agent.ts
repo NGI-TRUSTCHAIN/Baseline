@@ -19,7 +19,10 @@ export class BpiSubjectAccountStorageAgent {
     const bpiSubjectAccountModel =
       await this.prisma.bpiSubjectAccount.findUnique({
         where: { id: id },
-        include: { ownerBpiSubject: true, creatorBpiSubject: true },
+        include: {
+          ownerBpiSubject: { include: { publicKeys: true } },
+          creatorBpiSubject: { include: { publicKeys: true } },
+        },
       });
 
     if (!bpiSubjectAccountModel) {
