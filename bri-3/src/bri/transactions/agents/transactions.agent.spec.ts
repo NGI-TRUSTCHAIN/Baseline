@@ -35,6 +35,8 @@ import {
   PayloadFormatType,
   WorkstepType,
 } from '../../workgroup/worksteps/models/workstep';
+import { CommunicationModule } from '../../../bri/communication/communication.module';
+import { NatsMessagingClient } from '../../../bri/communication/messagingClients/natsMessagingClient';
 
 let agent: TransactionAgent;
 let authAgent: AuthAgent;
@@ -58,6 +60,7 @@ beforeEach(async () => {
         strategyInitializer: classes(),
       }),
       CcsmModule,
+      CommunicationModule,
     ],
     providers: [
       TransactionAgent,
@@ -71,6 +74,10 @@ beforeEach(async () => {
       {
         provide: 'ICircuitService',
         useClass: SnarkjsCircuitService,
+      },
+      {
+        provide: 'IMessagingClient',
+        useClass: NatsMessagingClient,
       },
       CircuitInputsParserService,
     ],

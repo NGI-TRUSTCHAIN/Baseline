@@ -26,11 +26,14 @@ import {
   WorkstepType,
 } from '../src/bri/workgroup/worksteps/models/workstep';
 import * as dotenv from 'dotenv';
+import { ApiClient } from './helpers/apiClient';
+import { BpiService } from './helpers/bpiService';
 dotenv.config();
 
 jest.setTimeout(240000);
-let accessToken: string;
 const server = 'http://localhost:3000';
+
+let bpiService: BpiService;
 
 let supplierBpiSubjectEddsaPublicKey: string;
 let supplierBpiSubjectEddsaPrivateKey: string;
@@ -59,10 +62,7 @@ describe('SRI use-case end-to-end test', () => {
       supplierBpiSubjectEddsaPrivateKey,
     );
 
-    const buyerWallet = new ethers.Wallet(
-      buyerBpiSubjectEcdsaPrivateKey,
-      undefined,
-    );
+    const buyerWallet = new ethers.Wallet(buyerBpiSubjectEcdsaPrivateKey);
     buyerBpiSubjectEddsaPrivateKey = await createEddsaPrivateKey(
       buyerBpiSubjectEcdsaPublicKey,
       buyerWallet,
@@ -71,14 +71,21 @@ describe('SRI use-case end-to-end test', () => {
     buyerBpiSubjectEddsaPublicKey = await createEddsaPublicKey(
       buyerBpiSubjectEddsaPrivateKey,
     );
+
+    // Initialize API client and service
+    const accessToken = await new BpiService(
+      new ApiClient(server, ''),
+    ).loginAsInternalBpiSubject(
+      internalBpiSubjectEcdsaPublicKey,
+      internalBpiSubjectEcdsaPrivateKey,
+    );
+
+    bpiService = new BpiService(new ApiClient(server, accessToken));
   });
 
-  // TODO: Add detailed explanation of the SRI use-case setup and necessary seed data
   it('Logs in an internal Bpi Subject, creates two external Bpi Subjects (Supplier and Buyer) and a Workgroup and adds the created Bpi Subjects as participants to the Workgroup', async () => {
-    accessToken = await loginAsInternalBpiSubjectAndReturnAnAccessToken();
-
     const createdBpiSubjectSupplierId =
-      await createExternalBpiSubjectAndReturnId(
+      await bpiService.createExternalBpiSubject(
         'External Bpi Subject - Supplier',
         [
           { type: 'ecdsa', value: supplierBpiSubjectEcdsaPublicKey },
@@ -87,12 +94,12 @@ describe('SRI use-case end-to-end test', () => {
       );
 
     createdBpiSubjectAccountSupplierId =
-      await createBpiSubjectAccountAndReturnId(
+      await bpiService.createBpiSubjectAccount(
         createdBpiSubjectSupplierId,
         createdBpiSubjectSupplierId,
       );
 
-    const createdBpiSubjectBuyerId = await createExternalBpiSubjectAndReturnId(
+    const createdBpiSubjectBuyerId = await bpiService.createExternalBpiSubject(
       'External Bpi Subject 2 - Buyer',
       [
         { type: 'ecdsa', value: buyerBpiSubjectEcdsaPublicKey },
@@ -100,21 +107,21 @@ describe('SRI use-case end-to-end test', () => {
       ],
     );
 
-    createdBpiSubjectAccountBuyerId = await createBpiSubjectAccountAndReturnId(
+    createdBpiSubjectAccountBuyerId = await bpiService.createBpiSubjectAccount(
       createdBpiSubjectBuyerId,
       createdBpiSubjectBuyerId,
     );
 
-    createdWorkgroupId = await createAWorkgroupAndReturnId('sri');
+    createdWorkgroupId = await bpiService.createWorkgroup('sri');
 
-    await updateWorkgroupAdminsAndParticipants(
+    await bpiService.updateWorkgroup(
       createdWorkgroupId,
+      'sri',
       [createdBpiSubjectSupplierId],
       [createdBpiSubjectSupplierId, createdBpiSubjectBuyerId],
     );
 
-    const resultWorkgroup = await fetchWorkgroup(createdWorkgroupId);
-
+    const resultWorkgroup = await bpiService.fetchWorkgroup(createdWorkgroupId);
     expect(resultWorkgroup.participants.length).toBe(2);
     expect(resultWorkgroup.participants[0].id).toEqual(
       createdBpiSubjectSupplierId,
@@ -125,10 +132,7 @@ describe('SRI use-case end-to-end test', () => {
   });
 
   it('Sets up a workflow with 3 worksteps in the previously created workgroup', async () => {
-    // TODO: Auth as supplier?
-    // TODO: Can we  listen and fire NATS messages here
-
-    createdWorkstep1Id = await createWorkstepAndReturnId(
+    createdWorkstep1Id = await bpiService.createWorkstep(
       'workstep1',
       createdWorkgroupId,
       {
@@ -140,7 +144,7 @@ describe('SRI use-case end-to-end test', () => {
       },
     );
 
-    createdWorkstep2Id = await createWorkstepAndReturnId(
+    createdWorkstep2Id = await bpiService.createWorkstep(
       'workstep2',
       createdWorkgroupId,
       {
@@ -152,7 +156,7 @@ describe('SRI use-case end-to-end test', () => {
       },
     );
 
-    createdWorkstep3Id = await createWorkstepAndReturnId(
+    createdWorkstep3Id = await bpiService.createWorkstep(
       'workstep3',
       createdWorkgroupId,
       {
@@ -164,7 +168,7 @@ describe('SRI use-case end-to-end test', () => {
       },
     );
 
-    createdWorkflowId = await createWorkflowAndReturnId(
+    createdWorkflowId = await bpiService.createWorkflow(
       'worksflow1',
       createdWorkgroupId,
       [createdWorkstep1Id, createdWorkstep2Id, createdWorkstep3Id],
@@ -207,7 +211,7 @@ describe('SRI use-case end-to-end test', () => {
             }
           ]
         }`;
-    await addCircuitInputsSchema(createdWorkstep1Id, schema);
+    await bpiService.addCircuitInputsSchema(createdWorkstep1Id, schema);
   });
 
   it('Add a circuit input translation schema to workstep 2', async () => {
@@ -221,11 +225,10 @@ describe('SRI use-case end-to-end test', () => {
             }
           ]
         }`;
-    await addCircuitInputsSchema(createdWorkstep2Id, schema);
+    await bpiService.addCircuitInputsSchema(createdWorkstep2Id, schema);
   });
 
   it('Add a circuit input translation schema to workstep 3', async () => {
-    // TODO: Correct err in case of missing mapping
     const schema = `{
           "mapping": [
             {
@@ -236,13 +239,11 @@ describe('SRI use-case end-to-end test', () => {
             }
           ]
         }`;
-    await addCircuitInputsSchema(createdWorkstep3Id, schema);
+    await bpiService.addCircuitInputsSchema(createdWorkstep3Id, schema);
   });
 
   it('Submits transaction 1 for execution of the workstep 1', async () => {
-    // TODO: CheckAuthz on createTransaction and in other places
-    // TODO: Faking two items in the payload as the circuit is hardcoded to 4
-    createdTransaction1Id = await createTransactionAndReturnId(
+    createdTransaction1Id = await bpiService.createTransaction(
       v4(),
       1,
       createdWorkflowId,
@@ -268,8 +269,10 @@ describe('SRI use-case end-to-end test', () => {
 
   it('Waits for a single VSM cycle and then verifies that transaction 1 has been executed and that the state has been properly stored on chain and off chain', async () => {
     await new Promise((r) => setTimeout(r, 50000));
-    const resultWorkflow = await fetchWorkflow(createdWorkflowId);
-    const resultBpiAccount = await fetchBpiAccount(resultWorkflow.bpiAccountId);
+    const resultWorkflow = await bpiService.fetchWorkflow(createdWorkflowId);
+    const resultBpiAccount = await bpiService.fetchBpiAccount(
+      resultWorkflow.bpiAccountId,
+    );
 
     const stateBpiMerkleTree = new BpiMerkleTree(
       'ttt',
@@ -293,7 +296,9 @@ describe('SRI use-case end-to-end test', () => {
       historyBpiMerkleTree.getLeafIndex(stateBpiMerkleTree.getRoot()),
     ).toBe(0);
 
-    const resultTransaction = await fetchTransaction(createdTransaction1Id);
+    const resultTransaction = await bpiService.fetchTransaction(
+      createdTransaction1Id,
+    );
     const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
     const contract = getContractFromLocalNode();
@@ -306,7 +311,7 @@ describe('SRI use-case end-to-end test', () => {
 
     expect(stateBpiMerkleTree.getLeaf(0)).toEqual(contentAddressableHash);
 
-    const stateTreeLeafValue = await fetchStateTreeLeafViaCAH(
+    const stateTreeLeafValue = await bpiService.fetchStateTreeLeafViaCAH(
       contentAddressableHash,
     );
 
@@ -315,7 +320,7 @@ describe('SRI use-case end-to-end test', () => {
   });
 
   it('Submits transaction 2 for execution of the workstep 2', async () => {
-    createdTransaction2Id = await createTransactionAndReturnId(
+    createdTransaction2Id = await bpiService.createTransaction(
       v4(),
       1,
       createdWorkflowId,
@@ -341,8 +346,10 @@ describe('SRI use-case end-to-end test', () => {
 
   it('Waits for a single VSM cycle and then verifies that the transaction 2 has been executed and that the state has been properly stored on chain and off chain', async () => {
     await new Promise((r) => setTimeout(r, 50000));
-    const resultWorkflow = await fetchWorkflow(createdWorkflowId);
-    const resultBpiAccount = await fetchBpiAccount(resultWorkflow.bpiAccountId);
+    const resultWorkflow = await bpiService.fetchWorkflow(createdWorkflowId);
+    const resultBpiAccount = await bpiService.fetchBpiAccount(
+      resultWorkflow.bpiAccountId,
+    );
 
     const stateBpiMerkleTree = new BpiMerkleTree(
       'ttt',
@@ -366,7 +373,9 @@ describe('SRI use-case end-to-end test', () => {
       historyBpiMerkleTree.getLeafIndex(stateBpiMerkleTree.getRoot()),
     ).toBe(1);
 
-    const resultTransaction = await fetchTransaction(createdTransaction2Id);
+    const resultTransaction = await bpiService.fetchTransaction(
+      createdTransaction2Id,
+    );
     const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
     const contract = getContractFromLocalNode();
@@ -379,7 +388,7 @@ describe('SRI use-case end-to-end test', () => {
 
     expect(stateBpiMerkleTree.getLeaf(1)).toEqual(contentAddressableHash);
 
-    const stateTreeLeafValue = await fetchStateTreeLeafViaCAH(
+    const stateTreeLeafValue = await bpiService.fetchStateTreeLeafViaCAH(
       contentAddressableHash,
     );
 
@@ -388,7 +397,7 @@ describe('SRI use-case end-to-end test', () => {
   });
 
   it('Submits transaction 3 for execution of the workstep 3', async () => {
-    createdTransaction3Id = await createTransactionAndReturnId(
+    createdTransaction3Id = await bpiService.createTransaction(
       v4(),
       2,
       createdWorkflowId,
@@ -414,8 +423,10 @@ describe('SRI use-case end-to-end test', () => {
 
   it('Waits for a single VSM cycle and then verifies that the transaction 3 has been executed and that the state has been properly stored on chain and off chain', async () => {
     await new Promise((r) => setTimeout(r, 50000));
-    const resultWorkflow = await fetchWorkflow(createdWorkflowId);
-    const resultBpiAccount = await fetchBpiAccount(resultWorkflow.bpiAccountId);
+    const resultWorkflow = await bpiService.fetchWorkflow(createdWorkflowId);
+    const resultBpiAccount = await bpiService.fetchBpiAccount(
+      resultWorkflow.bpiAccountId,
+    );
 
     const stateBpiMerkleTree = new BpiMerkleTree(
       'ttt',
@@ -439,7 +450,9 @@ describe('SRI use-case end-to-end test', () => {
       historyBpiMerkleTree.getLeafIndex(stateBpiMerkleTree.getRoot()),
     ).toBe(2);
 
-    const resultTransaction = await fetchTransaction(createdTransaction3Id);
+    const resultTransaction = await bpiService.fetchTransaction(
+      createdTransaction3Id,
+    );
     const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
     const contract = getContractFromLocalNode();
@@ -452,7 +465,7 @@ describe('SRI use-case end-to-end test', () => {
 
     expect(stateBpiMerkleTree.getLeaf(2)).toEqual(contentAddressableHash);
 
-    const stateTreeLeafValue = await fetchStateTreeLeafViaCAH(
+    const stateTreeLeafValue = await bpiService.fetchStateTreeLeafViaCAH(
       contentAddressableHash,
     );
 
@@ -460,222 +473,6 @@ describe('SRI use-case end-to-end test', () => {
     expect(stateTreeLeafValue.leafIndex).toBe(2);
   });
 });
-
-async function loginAsInternalBpiSubjectAndReturnAnAccessToken(): Promise<string> {
-  // internalBpiSubjectEcdsaPublicKey & internalBpiSubjectEcdsaPrivateKey must be inline with the value for the bpiAdmin from seed.ts
-  // These values are used for testing purposes only
-
-  const nonceResponse = await request(server)
-    .post('/auth/nonce')
-    .send({ publicKey: internalBpiSubjectEcdsaPublicKey })
-    .expect(201);
-
-  const signer = new ethers.Wallet(
-    internalBpiSubjectEcdsaPrivateKey,
-    undefined,
-  );
-  const signature = await signer.signMessage(nonceResponse.text);
-
-  const loginResponse = await request(server)
-    .post('/auth/login')
-    .send({
-      message: nonceResponse.text,
-      signature: signature,
-      publicKey: internalBpiSubjectEcdsaPublicKey,
-    })
-    .expect(201);
-
-  return JSON.parse(loginResponse.text)['access_token'];
-}
-
-async function createExternalBpiSubjectAndReturnId(
-  bpiSubjectName: string,
-  pk: { type: string; value: string }[],
-): Promise<string> {
-  const createdBpiSubjectResponse = await request(server)
-    .post('/subjects')
-    .set('Authorization', `Bearer ${accessToken}`)
-    .send({
-      name: bpiSubjectName,
-      desc: 'A test Bpi Subject',
-      publicKeys: pk,
-    })
-    .expect(201);
-
-  return createdBpiSubjectResponse.text;
-}
-
-async function createBpiSubjectAccountAndReturnId(
-  creatorBpiSubjectId: string,
-  ownerBpiSubjectId: string,
-): Promise<string> {
-  const createdBpiSubjectAccountResponse = await request(server)
-    .post('/subjectAccounts')
-    .set('Authorization', `Bearer ${accessToken}`)
-    .send({
-      creatorBpiSubjectId: creatorBpiSubjectId,
-      ownerBpiSubjectId: ownerBpiSubjectId,
-    })
-    .expect(201);
-
-  return createdBpiSubjectAccountResponse.text;
-}
-
-async function createAWorkgroupAndReturnId(name: string): Promise<string> {
-  const createdWorkgroupResponse = await request(server)
-    .post('/workgroups')
-    .set('Authorization', `Bearer ${accessToken}`)
-    .send({
-      name: name,
-      securityPolicy: 'Dummy security policy',
-      privacyPolicy: 'Dummy privacy policy',
-    })
-    .expect(201);
-
-  return createdWorkgroupResponse.text;
-}
-
-async function updateWorkgroupAdminsAndParticipants(
-  workgroupId: string,
-  administratorIds: string[],
-  participantIds: string[],
-): Promise<void> {
-  await request(server)
-    .put(`/workgroups/${workgroupId}`)
-    .set('Authorization', `Bearer ${accessToken}`)
-    .send({
-      name: 'sri',
-      administratorIds: administratorIds,
-      securityPolicy: 'Dummy security policy',
-      privacyPolicy: 'Dummy privacy policy',
-      participantIds: participantIds,
-    })
-    .expect(200);
-}
-
-async function fetchWorkgroup(workgroupId: string): Promise<any> {
-  const getWorkgroupResponse = await request(server)
-    .get(`/workgroups/${workgroupId}`)
-    .set('Authorization', `Bearer ${accessToken}`)
-    .expect(200);
-
-  return JSON.parse(getWorkgroupResponse.text);
-}
-
-async function createWorkstepAndReturnId(
-  name: string,
-  workgroupId: string,
-  workstepConfig: WorkstepConfig,
-): Promise<string> {
-  const createdWorkstepResponse = await request(server)
-    .post('/worksteps')
-    .set('Authorization', `Bearer ${accessToken}`)
-    .send({
-      name: name,
-      version: '1',
-      status: 'NEW',
-      workgroupId: workgroupId,
-      securityPolicy: 'Dummy security policy',
-      privacyPolicy: 'Dummy privacy policy',
-      workstepConfig: workstepConfig,
-    })
-    .expect(201);
-
-  return createdWorkstepResponse.text;
-}
-
-async function addCircuitInputsSchema(
-  workstepId: string,
-  schema: string,
-): Promise<string> {
-  const addCircuitInputsSchemaResponse = await request(server)
-    .put(`/worksteps/${workstepId}/circuitinputsschema`)
-    .set('Authorization', `Bearer ${accessToken}`)
-    .send({
-      schema: schema,
-    })
-    .expect(200);
-
-  return addCircuitInputsSchemaResponse.text;
-}
-
-async function createWorkflowAndReturnId(
-  name: string,
-  workgroupId: string,
-  workstepIds: string[],
-  ownerIds: string[],
-): Promise<string> {
-  const createdWorkflowResponse = await request(server)
-    .post('/workflows')
-    .set('Authorization', `Bearer ${accessToken}`)
-    .send({
-      name: name,
-      workgroupId: workgroupId,
-      workstepIds: workstepIds,
-      workflowBpiAccountSubjectAccountOwnersIds: ownerIds,
-    })
-    .expect(201);
-
-  return createdWorkflowResponse.text;
-}
-
-async function createTransactionAndReturnId(
-  id: string,
-  nonce: number,
-  workflowId: string,
-  workstepId: string,
-  fromSubjectAccountId: string,
-  fromPrivatekey: string,
-  toSubjectAccountId: string,
-  payload: string,
-): Promise<string> {
-  //Eddsa signature
-  const signature = await createEddsaSignature(payload, fromPrivatekey);
-
-  const createdTransactionResponse = await request(server)
-    .post('/transactions')
-    .set('Authorization', `Bearer ${accessToken}`)
-    .send({
-      id: id,
-      nonce: nonce,
-      workflowId: workflowId,
-      workstepId: workstepId,
-      fromSubjectAccountId: fromSubjectAccountId,
-      toSubjectAccountId: toSubjectAccountId,
-      payload: payload,
-      signature: signature,
-    })
-    .expect(201);
-
-  return createdTransactionResponse.text;
-}
-
-async function fetchWorkflow(workflowId: string): Promise<any> {
-  const getWorkflowResponse = await request(server)
-    .get(`/workflows/${workflowId}`)
-    .set('Authorization', `Bearer ${accessToken}`)
-    .expect(200);
-
-  return JSON.parse(getWorkflowResponse.text);
-}
-
-async function fetchBpiAccount(bpiAccountId: string): Promise<any> {
-  const getBpiAccountResponse = await request(server)
-    .get(`/accounts/${bpiAccountId}`)
-    .set('Authorization', `Bearer ${accessToken}`)
-    .expect(200);
-
-  return JSON.parse(getBpiAccountResponse.text);
-}
-
-async function fetchTransaction(txId: string): Promise<any> {
-  const getTransactionResponse = await request(server)
-    .get(`/transactions/${txId}`)
-    .set('Authorization', `Bearer ${accessToken}`)
-    .expect(200);
-
-  return JSON.parse(getTransactionResponse.text);
-}
 
 function getContractFromLocalNode(): ethers.Contract {
   const provider = new JsonRpcProvider(process.env.LOCALHOST_RPC_URL);
@@ -686,14 +483,4 @@ function getContractFromLocalNode(): ethers.Contract {
   ];
 
   return new ethers.Contract(contractAddress, contractABI, provider);
-}
-
-async function fetchStateTreeLeafViaCAH(cah: string): Promise<any> {
-  const fetchStateTreeLeafResponse = await request(server)
-    .get(`/state`)
-    .query({ leafValue: cah })
-    .set('Authorization', `Bearer ${accessToken}`)
-    .expect(200);
-
-  return JSON.parse(fetchStateTreeLeafResponse.text);
 }
