@@ -112,10 +112,11 @@ describe('SRI use-case end-to-end test', () => {
       createdBpiSubjectBuyerId,
     );
 
-    createdWorkgroupId = await bpiService.createWorkgroup();
+    createdWorkgroupId = await bpiService.createWorkgroup('sri');
 
     await bpiService.updateWorkgroup(
       createdWorkgroupId,
+      'sri',
       [createdBpiSubjectSupplierId],
       [createdBpiSubjectSupplierId, createdBpiSubjectBuyerId],
     );
