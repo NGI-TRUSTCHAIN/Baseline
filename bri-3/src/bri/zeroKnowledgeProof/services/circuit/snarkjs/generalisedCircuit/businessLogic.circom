@@ -60,9 +60,9 @@ template BusinessLogic(
     var nMerkleProofVerification = businessOperations[2];
     var merkleProofVerificationParam = businessOperationParams[2];
 
-    signal input merkleProofLeaf[nMerkleProofVerification][256];
-    signal input merkleProofRoot[nMerkleProofVerification][256];
-    signal input merkleProofPathElement[nMerkleProofVerification][merkleProofVerificationParam * 256];
+    signal input merkleProofLeaf[nMerkleProofVerification];
+    signal input merkleProofRoot[nMerkleProofVerification];
+    signal input merkleProofPathElement[nMerkleProofVerification][merkleProofVerificationParam];
     signal input merkleProofPathIndex[nMerkleProofVerification][merkleProofVerificationParam];
     component merkleProofVerifications[nMerkleProofVerification];
 
@@ -121,10 +121,8 @@ template BusinessLogic(
         merkleProofVerifications[l] = parallel MerkleProofVerifier(merkleProofVerificationParam);
         merkleProofVerifications[l].leaf <== merkleProofLeaf[l];
         merkleProofVerifications[l].root <== merkleProofRoot[l];
-        for (var j = 0; j < merkleProofVerificationParam; j++) {
-            for (var k = 0; k < 256; k++) {
-                merkleProofVerifications[l].pathElements[j][k] <== merkleProofPathElement[l][j * 256 + k];
-            }
+        for (var j = 0; j < merkleProofVerificationParam; j++) { 
+            merkleProofVerifications[l].pathElements[j] <== merkleProofPathElement[l][j]; 
         }
         merkleProofVerifications[l].pathIndices <== merkleProofPathIndex[l];
         outputs[outputIndex] <== merkleProofVerifications[l].isVerified;
