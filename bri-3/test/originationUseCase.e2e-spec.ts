@@ -182,10 +182,8 @@ describe('Invoice origination use-case end-to-end test', () => {
   it('Waits for a single VSM cycle and then verifies that the transaction 4 has been executed', async () => {
     // TODO
     // await new Promise((r) => setTimeout(r, 50000));
-
     // const resultWorkflow = await fetchWorkflow(createdWorkflowId);
     // const resultBpiAccount = await fetchBpiAccount(resultWorkflow.bpiAccountId);
-
     // const stateBpiMerkleTree = new BpiMerkleTree(
     //   'ttt',
     //   'sha256',
@@ -194,7 +192,6 @@ describe('Invoice origination use-case end-to-end test', () => {
     //     new MerkleTreeService().createHashFunction('sha256'),
     //   ),
     // );
-
     // const historyBpiMerkleTree = new BpiMerkleTree(
     //   'ttt',
     //   'sha256',
@@ -203,7 +200,6 @@ describe('Invoice origination use-case end-to-end test', () => {
     //     new MerkleTreeService().createHashFunction('sha256'),
     //   ),
     // );
-
     // expect(
     //   historyBpiMerkleTree.getLeafIndex(stateBpiMerkleTree.getRoot()),
     // ).toBe(0);
