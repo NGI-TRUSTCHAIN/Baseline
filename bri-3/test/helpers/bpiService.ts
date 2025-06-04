@@ -47,9 +47,9 @@ export class BpiService {
     });
   }
 
-  async createWorkgroup(): Promise<string> {
+  async createWorkgroup(name: string): Promise<string> {
     return this.apiClient.post('/workgroups', {
-      name: 'Test workgroup',
+      name: name,
       securityPolicy: 'Dummy security policy',
       privacyPolicy: 'Dummy privacy policy',
     });
@@ -57,11 +57,12 @@ export class BpiService {
 
   async updateWorkgroup(
     workgroupId: string,
+    name: string,
     adminIds: string[],
     participantIds: string[],
   ): Promise<void> {
     await this.apiClient.put(`/workgroups/${workgroupId}`, {
-      name: 'Test workgroup',
+      name: name,
       administratorIds: adminIds,
       securityPolicy: 'Dummy security policy',
       privacyPolicy: 'Dummy privacy policy',
