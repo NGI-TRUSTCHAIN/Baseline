@@ -10,6 +10,15 @@ services:
     ports:
       - "8545:8545"
 
+  hardhat-2:
+    build:
+      context: ./ccsm
+      dockerfile: Dockerfile.hardhat
+    container_name: hardhat-2
+    hostname: hardhat-2
+    ports:
+      - "8546:8545"
+
   postgres:
     image: postgres:15
     container_name: postgres
