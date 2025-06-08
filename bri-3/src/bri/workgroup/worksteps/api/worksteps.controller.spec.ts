@@ -7,7 +7,6 @@ import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { v4 as uuid } from 'uuid';
 import { LoggingService } from '../../../../shared/logging/logging.service';
-import { CircuitInputsParserService } from '../../../zeroKnowledgeProof/services/circuit/circuitInputsParser/circuitInputParser.service';
 import { WorkstepAgent } from '../agents/worksteps.agent';
 import { WorkstepStorageAgent } from '../agents/workstepsStorage.agent';
 import { CreateWorkstepCommandHandler } from '../capabilities/createWorkstep/createWorkstepCommand.handler';
@@ -26,6 +25,7 @@ import { CreateWorkstepDto } from './dtos/request/createWorkstep.dto';
 import { UpdateWorkstepDto } from './dtos/request/updateWorkstep.dto';
 import { NOT_FOUND_ERR_MESSAGE } from './err.messages';
 import { WorkstepController } from './worksteps.controller';
+import { GeneralCircuitInputsParserService } from '../../../zeroKnowledgeProof/services/circuit/circuitInputsParser/generalCircuitInputParser.service';
 
 describe('WorkstepController', () => {
   let wController: WorkstepController;
@@ -62,7 +62,7 @@ describe('WorkstepController', () => {
       controllers: [WorkstepController],
       providers: [
         WorkstepAgent,
-        CircuitInputsParserService,
+        GeneralCircuitInputsParserService,
         LoggingService,
         CreateWorkstepCommandHandler,
         UpdateWorkstepCommandHandler,

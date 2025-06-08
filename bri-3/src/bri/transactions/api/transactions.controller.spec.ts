@@ -21,7 +21,6 @@ import {
 import { MerkleTreeService } from '../../merkleTree/services/merkleTree.service';
 import { WorkflowStorageAgent } from '../../workgroup/workflows/agents/workflowsStorage.agent';
 import { WorkstepStorageAgent } from '../../workgroup/worksteps/agents/workstepsStorage.agent';
-import { CircuitInputsParserService } from '../../zeroKnowledgeProof/services/circuit/circuitInputsParser/circuitInputParser.service';
 import { SnarkjsCircuitService } from '../../zeroKnowledgeProof/services/circuit/snarkjs/snarkjs.service';
 import { TransactionAgent } from '../agents/transactions.agent';
 import { TransactionStorageAgent } from '../agents/transactionStorage.agent';
@@ -38,6 +37,7 @@ import { NOT_FOUND_ERR_MESSAGE } from './err.messages';
 import { TransactionController } from './transactions.controller';
 import { CommunicationModule } from '../../../bri/communication/communication.module';
 import { NatsMessagingClient } from '../../../bri/communication/messagingClients/natsMessagingClient';
+import { GeneralCircuitInputsParserService } from '../../zeroKnowledgeProof/services/circuit/circuitInputsParser/generalCircuitInputParser.service';
 
 describe('TransactionController', () => {
   let controller: TransactionController;
@@ -117,7 +117,7 @@ describe('TransactionController', () => {
           provide: 'IMessagingClient',
           useClass: NatsMessagingClient,
         },
-        CircuitInputsParserService,
+        GeneralCircuitInputsParserService,
       ],
     })
       .overrideProvider(TransactionStorageAgent)
