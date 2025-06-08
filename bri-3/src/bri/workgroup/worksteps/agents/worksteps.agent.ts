@@ -9,12 +9,13 @@ import { v4 } from 'uuid';
 import { CircuitInputsParserService } from '../../../zeroKnowledgeProof/services/circuit/circuitInputsParser/circuitInputParser.service';
 import { NOT_FOUND_ERR_MESSAGE } from '../api/err.messages';
 import { WorkstepStorageAgent } from './workstepsStorage.agent';
+import { GeneralCircuitInputsParserService } from '../../../zeroKnowledgeProof/services/circuit/circuitInputsParser/generalCircuitInputParser.service';
 
 @Injectable()
 export class WorkstepAgent {
   constructor(
     private storageAgent: WorkstepStorageAgent,
-    private cips: CircuitInputsParserService,
+    private cips: GeneralCircuitInputsParserService,
   ) {}
 
   public createNewWorkstep(

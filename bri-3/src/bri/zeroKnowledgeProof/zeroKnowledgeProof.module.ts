@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { LoggingModule } from '../../shared/logging/logging.module';
 import { CircuitInputsParserService } from './services/circuit/circuitInputsParser/circuitInputParser.service';
+import { GeneralCircuitInputsParserService } from './services/circuit/circuitInputsParser/generalCircuitInputParser.service';
 import { SnarkjsCircuitService } from './services/circuit/snarkjs/snarkjs.service';
 
 @Module({
@@ -9,11 +10,16 @@ import { SnarkjsCircuitService } from './services/circuit/snarkjs/snarkjs.servic
 
   providers: [
     CircuitInputsParserService,
+    GeneralCircuitInputsParserService,
     {
       provide: 'ICircuitService',
       useClass: SnarkjsCircuitService,
     },
   ],
-  exports: ['ICircuitService', CircuitInputsParserService],
+  exports: [
+    'ICircuitService',
+    CircuitInputsParserService,
+    GeneralCircuitInputsParserService,
+  ],
 })
 export class ZeroKnowledgeProofModule {}
