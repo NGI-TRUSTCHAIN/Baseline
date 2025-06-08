@@ -6,9 +6,14 @@ services:
       context: ./ccsm
       dockerfile: Dockerfile.hardhat
     container_name: hardhat
+    platform: linux/amd64
+    environment:
+      HARDHAT_USE_NATIVE_SOLC: 'true'
+      NODE_OPTIONS: '--max-old-space-size=14336'
     hostname: hardhat
     ports:
       - "8545:8545"
+    mem_limit: 12g
 
   postgres:
     image: postgres:15
@@ -74,9 +79,10 @@ services:
 
   nestjs-app-2:
     image: bri-3-nestjs-app
+    mem_limit: 12g
     container_name: nestjs-app-2
     depends_on:
-      postgres:
+      postgres-2:
         condition: service_healthy
       nats:
         condition: service_started
@@ -94,11 +100,7 @@ services:
       BPI_NATS_SERVER_URL: "nats://nats:4222"
       EFAKTURA_URL: "http://efaktura-mock:3001/api/publicApi/sales-invoice/xml"
       LOCALHOST_RPC_URL: "http://hardhat:8545"
-    command: >
-      sh -c "
-        npx prisma migrate reset --force &&
-        npm run start:dev
-      "
+    command: ["sh", "./postgres_entrypoint.sh"]
   nats:
     image: nats:alpine
     container_name: nats

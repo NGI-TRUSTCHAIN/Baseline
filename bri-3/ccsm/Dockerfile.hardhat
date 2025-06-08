@@ -1,10 +1,21 @@
-FROM node:23-slim
+FROM node:20-slim
+
+# Install dependencies needed for solidity install script
+RUN apt-get update && apt-get install -y curl ca-certificates
+
+# Install solc binary manually as solcjs is unable to compile large contracts
+RUN curl -L -o /usr/bin/solc https://github.com/ethereum/solidity/releases/download/v0.8.28/solc-static-linux && \
+	chmod +x /usr/bin/solc
 
 WORKDIR /app
 
 # Copy and install deps
 COPY package*.json ./
 RUN npm install
+
+# Clean hardhat global cache to avoid solc errors
+RUN npx hardhat clean --global || true
+RUN chmod +x /app/node_modules/solc/soljson.js
 
 # Copy rest of the project
 COPY . .
