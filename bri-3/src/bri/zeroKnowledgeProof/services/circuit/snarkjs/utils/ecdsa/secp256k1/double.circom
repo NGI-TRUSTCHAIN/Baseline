@@ -1,27 +1,3 @@
-pragma circom 2.1.5;
-
-/**
- *  Secp256k1Double
- *  ===============
- *
- *  Double a specific point (xP, yP) on the secp256k1 curve. Should work for any 
- *  short Weierstrass curve (Pasta, P-256).
- */
-template Secp256k1Double() {
-    signal input xP; 
-    signal input yP;
-
-    signal output outX;
-    signal output outY;
-
-    signal lambda;
-    signal xPSquared;
-
-    xPSquared <== xP * xP;
-
-    lambda <-- (3 * xPSquared) / (2 * yP);
-    lambda * 2 * yP === 3 * xPSquared;
-
-    outX <== lambda * lambda - (2 * xP);
-    outY <== lambda * (xP - outX) - yP;
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:f6a8ea3b503c63dad1e7cea39a78ba3c26aadb389d8af051bc0aab29e6fe6061
+size 557

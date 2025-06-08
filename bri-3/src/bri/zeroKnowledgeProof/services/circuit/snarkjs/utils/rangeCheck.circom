@@ -1,29 +1,3 @@
-pragma circom 2.1.5;
-
-include "../../../../../../../node_modules/circomlib/circuits/comparators.circom";
-
-template RangeCheck(n) {
-    signal input x;
-    signal input min;
-    signal input max;
-    signal output isInRange;
-
-    component gteMin = GreaterThan(n);
-    component lteMax = LessThan(n);
-
-    signal minMinus1;
-    signal maxPlus1;
-
-    minMinus1 <== min - 1;
-    maxPlus1 <== max + 1;
-
-    gteMin.in[0] <== x;
-    gteMin.in[1] <== minMinus1;
-
-    lteMax.in[0] <== x;
-    lteMax.in[1] <== maxPlus1;
-
-    // isInRange <== gteMin.out * lteMax.out;
-    isInRange <== gteMin.out * lteMax.out;
-
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:ea13b13f3f726cd49a61632f4007acb5d5fba3c9b44df1a4c97bc49d52b0840e
+size 604
