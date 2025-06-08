@@ -1,3 +1,4 @@
 *.sol filter=lfs diff=lfs merge=lfs -text
 *.circom filter=lfs diff=lfs merge=lfs -text
 *Verifier.json filter=lfs diff=lfs merge=lfs -text
+*.zkey filter=lfs diff=lfs merge=lfs -text
