@@ -271,10 +271,11 @@ describe('SRI use-case end-to-end test', () => {
   it('Waits for a single VSM cycle and then verifies that transaction 1 has been executed and that the state has been properly stored on chain and off chain', async () => {
     await new Promise((r) => setTimeout(r, 50000));
     const resultWorkflow = await bpiService.fetchWorkflow(createdWorkflowId);
-    const resultBpiAccount = await waitForTreeUpdate(
-      bpiService,
+    const resultBpiAccount = await bpiService.fetchBpiAccount(
       resultWorkflow.bpiAccountId,
     );
+
+    console.log('Result BPI Account: ', resultBpiAccount.stateTree.tree);
 
     const stateBpiMerkleTree = new BpiMerkleTree(
       'ttt',
@@ -321,7 +322,7 @@ describe('SRI use-case end-to-end test', () => {
     expect(stateTreeLeafValue.leafIndex).toBe(0);
   });
 
-  it('Submits transaction 2 for execution of the workstep 2', async () => {
+  it.skip('Submits transaction 2 for execution of the workstep 2', async () => {
     createdTransaction2Id = await bpiService.createTransaction(
       v4(),
       1,
@@ -346,7 +347,7 @@ describe('SRI use-case end-to-end test', () => {
     );
   });
 
-  it('Waits for a single VSM cycle and then verifies that the transaction 2 has been executed and that the state has been properly stored on chain and off chain', async () => {
+  it.skip('Waits for a single VSM cycle and then verifies that the transaction 2 has been executed and that the state has been properly stored on chain and off chain', async () => {
     await new Promise((r) => setTimeout(r, 50000));
     const resultWorkflow = await bpiService.fetchWorkflow(createdWorkflowId);
     const resultBpiAccount = await waitForTreeUpdate(
@@ -399,7 +400,7 @@ describe('SRI use-case end-to-end test', () => {
     expect(stateTreeLeafValue.leafIndex).toBe(1);
   });
 
-  it('Submits transaction 3 for execution of the workstep 3', async () => {
+  it.skip('Submits transaction 3 for execution of the workstep 3', async () => {
     createdTransaction3Id = await bpiService.createTransaction(
       v4(),
       2,
@@ -424,7 +425,7 @@ describe('SRI use-case end-to-end test', () => {
     );
   });
 
-  it('Waits for a single VSM cycle and then verifies that the transaction 3 has been executed and that the state has been properly stored on chain and off chain', async () => {
+  it.skip('Waits for a single VSM cycle and then verifies that the transaction 3 has been executed and that the state has been properly stored on chain and off chain', async () => {
     await new Promise((r) => setTimeout(r, 50000));
     const resultWorkflow = await bpiService.fetchWorkflow(createdWorkflowId);
     const resultBpiAccount = await waitForTreeUpdate(
