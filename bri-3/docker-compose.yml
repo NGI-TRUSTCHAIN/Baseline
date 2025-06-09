@@ -7,12 +7,10 @@ services:
       dockerfile: Dockerfile.hardhat
     container_name: hardhat
     environment:
-      HARDHAT_USE_NATIVE_SOLC: 'true'
       NODE_OPTIONS: '--max-old-space-size=14336'
     hostname: hardhat
     ports:
       - "8545:8545"
-    mem_limit: 12g
 
   postgres:
     image: postgres:15
