@@ -6,7 +6,6 @@ services:
       context: ./ccsm
       dockerfile: Dockerfile.hardhat
     container_name: hardhat
-    platform: linux/amd64
     environment:
       HARDHAT_USE_NATIVE_SOLC: 'true'
       NODE_OPTIONS: '--max-old-space-size=14336'
