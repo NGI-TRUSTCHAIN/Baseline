@@ -6,8 +6,6 @@ services:
       context: ./ccsm
       dockerfile: Dockerfile.hardhat
     container_name: hardhat
-    environment:
-      NODE_OPTIONS: '--max-old-space-size=14336'
     hostname: hardhat
     ports:
       - "8545:8545"
