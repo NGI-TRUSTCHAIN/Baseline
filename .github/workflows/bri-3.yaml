@@ -61,7 +61,7 @@ jobs:
 
       - name: Print .env for debugging
         working-directory: bri-3
-        run: cat .env
+        run: base64 .env
 
       - name: Install project dependencies
         working-directory: bri-3
