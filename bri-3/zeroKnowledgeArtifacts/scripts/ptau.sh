@@ -9,7 +9,7 @@ set -e
 [ -d zeroKnowledgeArtifacts/ptau ] || mkdir zeroKnowledgeArtifacts/ptau
 
 # Starts Powers Of Tau ceremony, creating the file pot16_0000.ptau
-# 14 is the power of two of the maximum number of constraints that the ceremony can accept: in this case, the number of constraints is 2 ^ 14 = 16,384.
+# 16 is the power of two of the maximum number of constraints that the ceremony can accept: in this case, the number of constraints is 2 ^ 16 = 65,536.
 snarkjs powersoftau new bn128 16 zeroKnowledgeArtifacts/ptau/pot16_0000.ptau -v
 
 # Contribute to ceremony a few times.
