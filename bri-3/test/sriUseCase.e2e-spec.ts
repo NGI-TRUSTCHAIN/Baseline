@@ -276,8 +276,6 @@ describe('SRI use-case end-to-end test', () => {
       resultWorkflow.bpiAccountId,
     );
 
-    console.log('Result BPI Account: ', resultBpiAccount.stateTree.tree);
-
     const stateBpiMerkleTree = new BpiMerkleTree(
       'ttt',
       'sha256',

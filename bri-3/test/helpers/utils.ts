@@ -6,6 +6,8 @@ export async function waitForTreeUpdate(
 ) {
   for (let i = 0; i < maxTries; i++) {
     const result = await bpiService.fetchBpiAccount(bpiAccountId);
+    console.log('Result Tree: ', result.stateTree.tree);
+
     const tree = JSON.parse(result?.stateTree?.tree);
     const leaves = tree?.leaves;
 
