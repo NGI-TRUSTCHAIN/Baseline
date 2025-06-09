@@ -512,7 +512,7 @@ export class TransactionAgent {
         throw new Error(`Failed to parse inputs`);
       }
     }
-    if (schema.mapping.length === 0) {
+    if (!(schema.mapping.length === 0)) {
       return Object.assign(parsedInputs, await computeEddsaSigPublicInputs(tx));
     }
 
