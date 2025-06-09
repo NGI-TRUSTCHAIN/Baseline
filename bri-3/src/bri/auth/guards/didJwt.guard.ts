@@ -27,31 +27,7 @@ export class DidJwtAuthGuard implements CanActivate {
     const request = this.getRequest<any>(context);
     try {
       const token = this.getToken(request);
-      //const verified = await this.verifyJwt(token);
-      const verified = {
-        verified: true,
-        payload: {
-          sub: 'did:ethr:0x08872e27BC5d78F1FC4590803369492868A1FCCb',
-          exp: Math.floor(Date.now() / 1000) + 3600,
-          nbf: Math.floor(Date.now() / 1000) - 60,
-        },
-        issuer: 'did:ethr:0x1234567890abcdef',
-        jwt: 'mock.jwt.token',
-        signer: {
-          id: 'did:ethr:0x08872e27BC5d78F1FC4590803369492868A1FCCb#controller',
-          type: 'EcdsaSecp256k1RecoveryMethod2020',
-          controller: 'did:ethr:0x1234567890abcdef',
-          ethereumAddress: '0x08872e27BC5d78F1FC4590803369492868A1FCCb',
-        },
-        didResolutionResult: {
-          '@context': 'https://w3id.org/did-resolution/v1',
-          didDocument: {
-            id: 'did:ethr:0x08872e27BC5d78F1FC4590803369492868A1FCCb',
-          },
-          didDocumentMetadata: {},
-          didResolutionMetadata: { contentType: 'application/did+ld+json' },
-        },
-      } as JWTVerified;
+      const verified = await this.verifyJwt(token);
       await this.attachBpiSubjectToCurrentRequestContext(verified, context);
       return verified.verified;
     } catch (e) {
@@ -68,8 +44,7 @@ export class DidJwtAuthGuard implements CanActivate {
     const didSubstrLength = 20;
     const bpiSubject =
       await this.bpiSubjectStorageAgent.getBpiSubjectByPublicKey(
-        //verified.payload.sub!.substring(didSubstrLength),
-        '0x08872e27BC5d78F1FC4590803369492868A1FCCb',
+        verified.payload.sub!.substring(didSubstrLength),
       );
     const req = context.switchToHttp().getRequest();
     req.bpiSubject = bpiSubject;
@@ -86,32 +61,7 @@ export class DidJwtAuthGuard implements CanActivate {
 
     const resolver = await this.getDidResolver();
 
-    //const verified = await verifyJWT(jwt, { audience: serviceUrl, resolver });
-
-    const verified = {
-      verified: true,
-      payload: {
-        sub: 'did:ethr:0x08872e27BC5d78F1FC4590803369492868A1FCCb',
-        exp: Math.floor(Date.now() / 1000) + 3600,
-        nbf: Math.floor(Date.now() / 1000) - 60,
-      },
-      issuer: 'did:ethr:0x1234567890abcdef',
-      jwt: 'mock.jwt.token',
-      signer: {
-        id: 'did:ethr:0x08872e27BC5d78F1FC4590803369492868A1FCCb#controller',
-        type: 'EcdsaSecp256k1RecoveryMethod2020',
-        controller: 'did:ethr:0x1234567890abcdef',
-        ethereumAddress: '0x08872e27BC5d78F1FC4590803369492868A1FCCb',
-      },
-      didResolutionResult: {
-        '@context': 'https://w3id.org/did-resolution/v1',
-        didDocument: {
-          id: 'did:ethr:0x08872e27BC5d78F1FC4590803369492868A1FCCb',
-        },
-        didDocumentMetadata: {},
-        didResolutionMetadata: { contentType: 'application/did+ld+json' },
-      },
-    } as JWTVerified;
+    const verified = await verifyJWT(jwt, { audience: serviceUrl, resolver });
 
     const now = Math.floor(Date.now() / 1000);
     if (!verified.payload.exp || verified.payload.exp < now) {
