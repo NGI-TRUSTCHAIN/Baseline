@@ -28,6 +28,41 @@ async function main() {
     await ccsmBpiStateAnchor.getAddress(),
   );
 
+  //SRI USE CASE
+  // deploy verifier contracts for 3 worksteps from the e2e use-case.
+  // in practice, they would be deployed by however is setting up the workflow
+  // and only contract addresses would be added to the workstep
+  const Workstep1Verifier =
+    await hre.ethers.getContractFactory('Workstep1Verifier');
+
+  const workstep1Verifier = await Workstep1Verifier.deploy();
+
+  console.log(
+    'Workstep1Verifier deployed to:',
+    await workstep1Verifier.getAddress(),
+  );
+
+  const Workstep2Verifier =
+    await hre.ethers.getContractFactory('Workstep2Verifier');
+
+  const workstep2Verifier = await Workstep2Verifier.deploy();
+
+  console.log(
+    'Workstep2Verifier deployed to:',
+    await workstep2Verifier.getAddress(),
+  );
+
+  const Workstep3Verifier =
+    await hre.ethers.getContractFactory('Workstep3Verifier');
+
+  const workstep3Verifier = await Workstep3Verifier.deploy();
+
+  console.log(
+    'Workstep3Verifier deployed to:',
+    await workstep3Verifier.getAddress(),
+  );
+
+  //ORIGINATION USE CASE
   // deploy necessary contracts--> all contract names under hardhat project must be unique regardless of the folder structure
   //All contracts must be precompiled to be able to deploy them
   const RomaniaWorkstep1Verifier = await hre.ethers.getContractFactory(
