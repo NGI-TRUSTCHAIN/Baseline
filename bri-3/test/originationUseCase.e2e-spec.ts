@@ -406,7 +406,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       );
     });
 
-    it('Waits for a single VSM cycle and then verifies that the transaction 4 has been executed', async () => {
+    it('Waits for a single VSM cycle and then verifies that the transaction 1 has been executed', async () => {
       const resultWorkflow = await bpiService2.fetchWorkflow(createdWorkflowId);
       const resultBpiAccount = await waitForTreeUpdate(
         bpiService2,
