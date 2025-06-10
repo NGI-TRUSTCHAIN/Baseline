@@ -63,6 +63,17 @@ async function main() {
     'Workstep3Verifier deployed to:',
     await workstep3Verifier.getAddress(),
   );
+
+  const RomaniaWorkstep1Verifier = await hre.ethers.getContractFactory(
+    'contracts/originationWorkgroup/romania_workstep1Verifier.sol:PlonkVerifier',
+  );
+
+  const romaniaWorkstep1Verifier = await RomaniaWorkstep1Verifier.deploy();
+
+  console.log(
+    'Workstep3Verifier deployed to:',
+    await romaniaWorkstep1Verifier.getAddress(),
+  );
 }
 
 main()
