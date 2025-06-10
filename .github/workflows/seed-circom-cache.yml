@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Download artifacts zip from Dropbox (or Drive, etc.)
         run: |
-          curl -L "https://www.dropbox.com/scl/fi/bwxxp5m5pb1ohbwg47cyr/romania_workstep1.tar.zst?rlkey=lery5prob8jcfpmd36c4z4gif&st=j8wxct7w&dl=1" -o romania_workstep1.tar.zst &&
+          curl -L "https://www.dropbox.com/scl/fi/bwxxp5m5pb1ohbwg47cyr/romania_workstep1.tar.zst?rlkey=lery5prob8jcfpmd36c4z4gif&st=elvzuocm&dl=1" -o romania_workstep1.tar.zst &&
           mkdir -p bri-3/zeroKnowledgeArtifacts/circuits/originationWorkgroup/romania_workstep1 && 
           tar --use-compress-program=unzstd -xvf romania_workstep1.tar.zst -C bri-3/zeroKnowledgeArtifacts/circuits/originationWorkgroup/romania_workstep1
 
