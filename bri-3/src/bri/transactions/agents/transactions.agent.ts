@@ -445,7 +445,6 @@ export class TransactionAgent {
     };
   }
 
-  private capitalized = (str) => str.charAt(0).toUpperCase() + str.slice(1);
   private convertStringToSnakeCase(name: string): string {
     name = name.trim();
 
