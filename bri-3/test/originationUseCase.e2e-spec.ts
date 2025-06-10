@@ -440,7 +440,7 @@ describe('Invoice origination use-case end-to-end test', () => {
 async function waitForTreeUpdate(
   bpiService2,
   bpiAccountId,
-  maxTries = 50,
+  maxTries = 10,
   delay = 20000,
 ) {
   for (let i = 0; i < maxTries; i++) {
