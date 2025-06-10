@@ -25,6 +25,9 @@ snarkjs zkey export verificationkey \
   zeroKnowledgeArtifacts/circuits/$1/${basename}_final.zkey \
   zeroKnowledgeArtifacts/circuits/$1/${basename}_verification_key.json
 
+# Make folder if it doesn't exist
+mkdir -p ccsm/contracts/${parent_dir}
+
 # Export Solidity verifier contract
 snarkjs zkey export solidityverifier \
   zeroKnowledgeArtifacts/circuits/$1/${basename}_final.zkey \
