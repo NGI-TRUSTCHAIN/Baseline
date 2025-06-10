@@ -89,15 +89,14 @@ export class EvmService implements ICcsmService {
       witness.proof.value['eval_s1'],
       witness.proof.value['eval_s2'],
       witness.proof.value['eval_zw'],
-      witness.proof.value['eval_r'],
-    ];
+    ].map((p) => ethers.toBigInt(p));
 
-    const proofHex = '0x' + proofElements.map(this.formatHexString).join('');
-
-    const pubInputs = witness.publicInputs!.map((input) => BigInt(input));
+    const pubInputs = witness.publicInputs!.map((input) =>
+      ethers.toBigInt(input),
+    );
 
     try {
-      return await verifierContract.verifyProof(proofHex, pubInputs);
+      return await verifierContract.verifyProof(proofElements, pubInputs);
     } catch (error) {
       throw new InternalServerErrorException(
         `Error while trying to verify proof on chain : ${error}`,
