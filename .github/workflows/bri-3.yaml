@@ -68,6 +68,16 @@ jobs:
         working-directory: bri-3
         run: npm ci
 
+      - name: Free up disk space
+        run: |
+          echo "Disk usage before cleanup:"
+          df -h
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost ~/.cargo ~/.rustup || true
+          sudo apt-get clean
+          sudo docker system prune -af || true
+          echo "Disk usage after cleanup:"
+          df -h
+
       - name: Restore Circom artifact cache
         uses: actions/cache@v3
         with:
