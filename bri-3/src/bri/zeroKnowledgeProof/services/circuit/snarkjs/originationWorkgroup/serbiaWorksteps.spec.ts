@@ -1,10 +1,10 @@
 import * as path from 'path';
 import { F1Field, Scalar } from 'ffjavascript';
 import { wasm as wasm_tester } from 'circom_tester';
-import { GeneralCircuitInputsParserService } from '../../../../circuitInputsParser/generalCircuitInputParser.service';
+import { GeneralCircuitInputsParserService } from '../../circuitInputsParser/generalCircuitInputParser.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
-import { LoggingService } from '../../../../../../../../shared/logging/logging.service';
-import { PayloadFormatType } from '../../../../../../../workgroup/worksteps/models/workstep';
+import { LoggingService } from '../../../../../../shared/logging/logging.service';
+import { PayloadFormatType } from '../../../../../workgroup/worksteps/models/workstep';
 import * as fs from 'fs';
 
 // This is the prime field used in the circuit
@@ -60,8 +60,8 @@ declare global {
     }
   }
 }
-// TODO: Separate npm run command
-describe.skip('Supplier XML extraction and signature verification', () => {
+
+describe('Supplier XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
   let gcips: GeneralCircuitInputsParserService;
@@ -110,8 +110,8 @@ describe.skip('Supplier XML extraction and signature verification', () => {
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
 });
-// TODO: Separate npm run command
-describe.skip('Efakture XML extraction and signature verification', () => {
+
+describe('Efakture XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
   let gcips: GeneralCircuitInputsParserService;
@@ -171,8 +171,8 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
 });
-// TODO: Separate npm run command
-describe.skip('Supplier XML extraction and Id verification', () => {
+
+describe('Supplier XML extraction and Id verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
   let gcips: GeneralCircuitInputsParserService;
@@ -222,7 +222,7 @@ describe.skip('Supplier XML extraction and Id verification', () => {
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
 });
-// TODO: Separate npm run command
+
 describe.skip('Efakture XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;

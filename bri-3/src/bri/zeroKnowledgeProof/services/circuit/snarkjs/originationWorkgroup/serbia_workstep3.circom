@@ -1,13 +1,13 @@
 pragma circom 2.1.5;
 
-include "../../../generalisedCircuit/businessLogic.circom";
+include "../generalisedCircuit/businessLogic.circom";
 
 // Supplier signature is valid
 template InteropSerbiaWorkstep3()
 {
-	signal input supplierIdLeaf;
-	signal input supplierIdRoot;
-	signal input supplierIdPathElement[1]; // Height of tree: 1 (2 leaves), each 256 bits
+	signal input supplierIdLeaf[256];
+	signal input supplierIdRoot[256];
+	signal input supplierIdPathElement[256 * 1]; // Height of tree: 1 (2 leaves), each 256 bits
 	signal input supplierIdPathIndex[1];
 
 	signal output isVerified;
