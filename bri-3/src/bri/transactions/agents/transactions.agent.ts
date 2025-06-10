@@ -487,6 +487,12 @@ export class TransactionAgent {
       throw new Error(`Broken mapping`);
     }
     let parsedInputs;
+    let signatureInputs;
+
+    if (!(schema.mapping.length === 0)) {
+      signatureInputs = await computeEddsaSigPublicInputs(tx);
+    }
+
     if ('extractions' in schema) {
       const generalSchema = schema as GeneralCircuitInputsMapping;
       parsedInputs =
@@ -510,11 +516,8 @@ export class TransactionAgent {
         throw new Error(`Failed to parse inputs`);
       }
     }
-    if (!(schema.mapping.length === 0)) {
-      return Object.assign(parsedInputs, await computeEddsaSigPublicInputs(tx));
-    }
 
-    return Object.assign(parsedInputs);
+    return { ...parsedInputs, ...(signatureInputs || {}) };
   }
 
   private constructTxHash(
