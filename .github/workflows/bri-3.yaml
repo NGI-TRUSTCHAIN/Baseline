@@ -74,6 +74,9 @@ jobs:
           path: bri-3/zeroKnowledgeArtifacts/circuits/originationWorkgroup/
           key: circuits-cache-seed
 
+      - name: Show cache contents
+        run: ls -R bri-3/zeroKnowledgeArtifacts/circuits/originationWorkgroup/
+
       - name: Run build
         working-directory: bri-3
         run: npm run build
