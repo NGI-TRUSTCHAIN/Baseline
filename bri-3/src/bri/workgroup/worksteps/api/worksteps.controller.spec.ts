@@ -7,7 +7,7 @@ import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { validate as uuidValidate, version as uuidVersion } from 'uuid';
 import { v4 as uuid } from 'uuid';
 import { LoggingService } from '../../../../shared/logging/logging.service';
-import { GeneralCircuitInputsParserService } from '../../../zeroKnowledgeProof/services/circuit/circuitInputsParser/generalcircuitInputParser.service';
+import { GeneralCircuitInputsParserService } from '../../../zeroKnowledgeProof/services/circuit/circuitInputsParser/generalCircuitInputParser.service';
 import { WorkstepAgent } from '../agents/worksteps.agent';
 import { WorkstepStorageAgent } from '../agents/workstepsStorage.agent';
 import { CreateWorkstepCommandHandler } from '../capabilities/createWorkstep/createWorkstepCommand.handler';
