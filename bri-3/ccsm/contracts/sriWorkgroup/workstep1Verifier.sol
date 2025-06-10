@@ -20,7 +20,7 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-contract Workstep1Verifier {
+contract PlonkVerifier {
   // Omega
   uint256 constant w1 =
     20402931748843538985151001264530049874871572933694634836567070693966133783803;
