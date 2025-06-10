@@ -1,3 +1,4 @@
+#Add circom artifacts to cache
 name: Seed Circom Cache
 
 on:
@@ -19,3 +20,4 @@ jobs:
         with:
           path: bri-3/zeroKnowledgeArtifacts/circuits/originationWorkgroup/
           key: circuits-cache-seed
+# trigger
