@@ -1,0 +1,21 @@
+name: Seed Circom Cache
+
+on:
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  seed-cache:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts zip from Dropbox (or Drive, etc.)
+        run: |
+          curl -L "https://www.dropbox.com/scl/fi/bwxxp5m5pb1ohbwg47cyr/romania_workstep1.tar.zst?rlkey=lery5prob8jcfpmd36c4z4gif&st=j8wxct7w&dl=1" -o romania_workstep1.tar.zst &&
+          mkdir -p romania_workstep1 && 
+          tar --use-compress-program=unzstd -xvf romania_workstep1.tar.zst -C bri-3/zeroKnowledgeArtifacts/circuits/originationWorkgroup/romania_workstep1
+
+      - name: Cache Circom artifacts
+        uses: actions/cache@v3
+        with:
+          path: bri-3/zeroKnowledgeArtifacts/circuits/originationWorkgroup/
+          key: circuits-cache-seed
