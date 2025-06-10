@@ -6,7 +6,7 @@ import {
 import { Workstep, WorkstepType, WorkstepConfig } from '../models/workstep';
 
 import { v4 } from 'uuid';
-import { CircuitInputsParserService } from '../../../zeroKnowledgeProof/services/circuit/circuitInputsParser/circuitInputParser.service';
+import { GeneralCircuitInputsParserService } from '../../../zeroKnowledgeProof/services/circuit/circuitInputsParser/generalCircuitInputParser.service';
 import { NOT_FOUND_ERR_MESSAGE } from '../api/err.messages';
 import { WorkstepStorageAgent } from './workstepsStorage.agent';
 
@@ -14,7 +14,7 @@ import { WorkstepStorageAgent } from './workstepsStorage.agent';
 export class WorkstepAgent {
   constructor(
     private storageAgent: WorkstepStorageAgent,
-    private cips: CircuitInputsParserService,
+    private cips: GeneralCircuitInputsParserService,
   ) {}
 
   public createNewWorkstep(
