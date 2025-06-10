@@ -71,7 +71,7 @@ async function main() {
   const romaniaWorkstep1Verifier = await RomaniaWorkstep1Verifier.deploy();
 
   console.log(
-    'Workstep3Verifier deployed to:',
+    'RomaniaWorkstep1Verifier deployed to:',
     await romaniaWorkstep1Verifier.getAddress(),
   );
 }
