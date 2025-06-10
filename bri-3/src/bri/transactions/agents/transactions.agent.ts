@@ -426,11 +426,14 @@ export class TransactionAgent {
     const circuitWitnessFilePath = workstepZKArtifactsFolder + '/witness.txt';
 
     const verifierContractAbiFilePath =
-      workstepZKArtifactsFolder +
+      process.env.VERIFIER_CONTRACTS_PATH +
+      workgroupName +
+      'Workgroup' +
+      '/' +
       snakeCaseWorkstepName +
       'Verifier.sol' +
       '/' +
-      snakeCaseWorkstepName +
+      this.capitalized(workstepName) +
       'Verifier.json';
     return {
       circuitProvingKeyPath,
@@ -442,6 +445,7 @@ export class TransactionAgent {
     };
   }
 
+  private capitalized = (str) => str.charAt(0).toUpperCase() + str.slice(1);
   private convertStringToSnakeCase(name: string): string {
     name = name.trim();
 
