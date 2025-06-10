@@ -58,6 +58,7 @@ jobs:
           echo EFAKTURA_INVOICE_ID=${{ secrets.EFAKTURA_INVOICE_ID }} >> .env
           echo EFAKTURA_URL=${{ secrets.EFAKTURA_URL }} >> .env
           echo VERIFIER_CONTRACTS_PATH=ccsmArtifacts/contracts/ >> .env
+          echo CIRCUIT_TYPE=Plonk >> .env
 
       - name: Print .env for debugging
         working-directory: bri-3

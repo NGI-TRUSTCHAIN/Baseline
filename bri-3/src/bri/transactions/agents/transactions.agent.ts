@@ -433,7 +433,7 @@ export class TransactionAgent {
       snakeCaseWorkstepName +
       'Verifier.sol' +
       '/' +
-      this.capitalized(workstepName) +
+      process.env.CIRCUIT_TYPE +
       'Verifier.json';
     return {
       circuitProvingKeyPath,
