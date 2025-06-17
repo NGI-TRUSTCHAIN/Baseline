@@ -1,44 +1,58 @@
 #!/bin/sh
 set -e
 
+basename=$(basename "$1")
+parent_dir=$(dirname "$1")
+
+# if zeroKnowledgeArtifacts/circuits/$1 does not exist, make folder
+[ -d zeroKnowledgeArtifacts/circuits/$1 ] || mkdir -p zeroKnowledgeArtifacts/circuits/$1
+
 # --------------------------------------------------------------------------------
-# Phase 1
-# Circiut-independent setup
+# Phase 2
+# Circuit-specific setup
 
-# make ptau folder
-[ -d zeroKnowledgeArtifacts/ptau ] || mkdir zeroKnowledgeArtifacts/ptau
+# Compile circuit
+circom src/bri/zeroKnowledgeProof/services/circuit/snarkjs/$1.circom -o zeroKnowledgeArtifacts/circuits/$1 --r1cs --wasm
 
-# Starts Powers Of Tau ceremony, creating the file pot16_0000.ptau
-# 16 is the power of two of the maximum number of constraints that the ceremony can accept: in this case, the number of constraints is 2 ^ 16 = 65,536.
-snarkjs powersoftau new bn128 16 zeroKnowledgeArtifacts/ptau/pot16_0000.ptau -v
+# Run setup using the basename for file names inside the nested folder
+snarkjs plonk setup \
+  zeroKnowledgeArtifacts/circuits/$1/$basename.r1cs \
+  zeroKnowledgeArtifacts/ptau/pot16_final.ptau \
+  zeroKnowledgeArtifacts/circuits/$1/${basename}_final.zkey
 
-# Contribute to ceremony a few times.
-# As we want this to be non-interactive we'll just write something random-ish for entropy
-snarkjs powersoftau contribute zeroKnowledgeArtifacts/ptau/pot16_0000.ptau zeroKnowledgeArtifacts/ptau/pot16_0001.ptau \
-    --name="First contribution" -v -e="$(head -n 4096 /dev/urandom | openssl sha1)"
-snarkjs powersoftau contribute zeroKnowledgeArtifacts/ptau/pot16_0001.ptau zeroKnowledgeArtifacts/ptau/pot16_0002.ptau \
-    --name="Second contribution" -v -e="$(head -n 4096 /dev/urandom | openssl sha1)"
-snarkjs powersoftau contribute zeroKnowledgeArtifacts/ptau/pot16_0002.ptau zeroKnowledgeArtifacts/ptau/pot16_0003.ptau \
-    --name="Third contribution" -v -e="$(head -n 4096 /dev/urandom | openssl sha1)"
+# Export verification key
+snarkjs zkey export verificationkey \
+  zeroKnowledgeArtifacts/circuits/$1/${basename}_final.zkey \
+  zeroKnowledgeArtifacts/circuits/$1/${basename}_verification_key.json
 
-# Verify
-snarkjs powersoftau verify zeroKnowledgeArtifacts/ptau/pot16_0003.ptau
+# Make folder if it doesn't exist
+mkdir -p ccsm/contracts/${parent_dir}
 
-# Apply random beacon to finalise this phase of the setup.
-# For more information about random beacons see here: https://eprint.iacr.org/2017/1050.pdf
-# For the purposes, the beacon is essentially a delayed hash function evaluated on 0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
-# as given in snarkjs docs.
+# Export Solidity verifier contract
+snarkjs zkey export solidityverifier \
+  zeroKnowledgeArtifacts/circuits/$1/${basename}_final.zkey \
+  ccsm/contracts/${parent_dir}/${basename}Verifier.sol
 
-snarkjs powersoftau beacon zeroKnowledgeArtifacts/ptau/pot16_0003.ptau zeroKnowledgeArtifacts/ptau/pot16_beacon.ptau \
-    0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f 10 -n="Final Beacon"
+# Compile Solidity verifier and move artifacts
 
-# Prepare phase 2...
-# Under the hood, the prepare phase2 command calculates the encrypted evaluation of the Lagrange polynomials at tau for
-# tau, alpha*tau and beta*tau. It takes the beacon ptau file we generated in the previous step, and outputs a final pta
-# file which will be used to generate the circuit proving and verification keys.
-snarkjs powersoftau prepare phase2 zeroKnowledgeArtifacts/ptau/pot16_beacon.ptau zeroKnowledgeArtifacts/ptau/pot16_final.ptau -v
+# Move to ccsm folder to run Hardhat compile
+cd ccsm
 
-# Verify the final ptau file. Creates the file pot16_final.ptau
-snarkjs powersoftau verify zeroKnowledgeArtifacts/ptau/pot16_final.ptau
+# Compile only the specific verifier contract (optional: just 'npx hardhat compile' will compile all)
+npx hardhat compile
 
-echo "------------------Phase 1 complete-------------------------"
+# Return to root
+cd ..
+
+# Copy generated artifacts to the zeroKnowledgeArtifacts folder
+# Assuming hardhat config outputs to ccsm/ccsmArtifacts
+artifact_path="ccsmArtifacts/contracts/${parent_dir}/${basename}Verifier.sol"
+destination="zeroKnowledgeArtifacts/circuits/$1"
+
+if [ -d "$artifact_path" ]; then
+  cp -r "$artifact_path" "$destination"
+else
+  echo "Warning: Artifact path not found: $artifact_path"
+fi
+
+echo "------------------Phase 2 complete-------------------------"

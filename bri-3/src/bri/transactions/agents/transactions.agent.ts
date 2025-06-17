@@ -426,10 +426,7 @@ export class TransactionAgent {
     const circuitWitnessFilePath = workstepZKArtifactsFolder + '/witness.txt';
 
     const verifierContractAbiFilePath =
-      process.env.VERIFIER_CONTRACTS_PATH +
-      workgroupName +
-      'Workgroup' +
-      '/' +
+      workstepZKArtifactsFolder +
       snakeCaseWorkstepName +
       'Verifier.sol' +
       '/' +
