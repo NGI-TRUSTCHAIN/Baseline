@@ -33,4 +33,26 @@ snarkjs zkey export solidityverifier \
   zeroKnowledgeArtifacts/circuits/$1/${basename}_final.zkey \
   ccsm/contracts/${parent_dir}/${basename}Verifier.sol
 
+# Compile Solidity verifier and move artifacts
+
+# Move to ccsm folder to run Hardhat compile
+cd ccsm
+
+# Compile only the specific verifier contract (optional: just 'npx hardhat compile' will compile all)
+npx hardhat compile
+
+# Return to root
+cd ..
+
+# Copy generated artifacts to the zeroKnowledgeArtifacts folder
+# Assuming hardhat config outputs to ccsm/ccsmArtifacts
+artifact_path="ccsmArtifacts/contracts/${parent_dir}/${basename}Verifier.sol"
+destination="zeroKnowledgeArtifacts/circuits/$1"
+
+if [ -d "$artifact_path" ]; then
+  cp -r "$artifact_path" "$destination"
+else
+  echo "Warning: Artifact path not found: $artifact_path"
+fi
+
 echo "------------------Phase 2 complete-------------------------"
