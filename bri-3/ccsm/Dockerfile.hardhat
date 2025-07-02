@@ -1,13 +1,5 @@
 FROM node:23-slim
 
-RUN apt-get update && apt-get install -y \
-	curl \
-	ca-certificates
-
-# Install solc
-RUN curl -L -o /usr/bin/solc https://github.com/ethereum/solidity/releases/download/v0.8.24/solc-static-linux && \
-	chmod +x /usr/bin/solc
-
 WORKDIR /app
 
 # Copy and install deps

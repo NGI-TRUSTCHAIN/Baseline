@@ -7,10 +7,6 @@ services:
       dockerfile: Dockerfile.hardhat
     container_name: hardhat
     hostname: hardhat
-    environment:
-      HARDHAT_USE_NATIVE_SOLC: 'true'
-    mem_limit: 14g
-    platform: linux/amd64
     ports:
       - "8545:8545"
 

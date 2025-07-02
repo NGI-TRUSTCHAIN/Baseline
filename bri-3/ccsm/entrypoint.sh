@@ -9,7 +9,6 @@ NODE_PID=$!
 sleep 5
 
 echo "[HARDHAT] Deploying contracts..."
-ls -d */
 npx hardhat run --no-compile scripts/deploy.ts --network localhost
 
 # Keep container alive
