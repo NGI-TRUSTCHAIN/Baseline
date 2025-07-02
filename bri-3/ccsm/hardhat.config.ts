@@ -11,6 +11,7 @@ const config: HardhatUserConfig = {
     },
     localhost: {
       url: 'http://127.0.0.1:8545',
+      allowUnlimitedContractSize: true,
     },
     sepolia: {
       url:
@@ -20,7 +21,7 @@ const config: HardhatUserConfig = {
     },
   },
   paths: {
-    artifacts: '../ccsmArtifacts',
+    artifacts: 'artifacts',
   },
 };
 
