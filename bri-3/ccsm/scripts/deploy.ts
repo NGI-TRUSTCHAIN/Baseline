@@ -16,6 +16,9 @@ async function main() {
     value: hre.ethers.parseEther('1.0'),
   });
 
+  console.log('Available contract names:');
+  console.log(await hre.artifacts.getAllFullyQualifiedNames());
+
   const CcsmBpiStateAnchor =
     await hre.ethers.getContractFactory('CcsmBpiStateAnchor');
 
