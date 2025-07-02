@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import 'dotenv/config';
 import { BaseWallet, Contract, ethers, Provider, SigningKey } from 'ethers';
-import * as CcsmBpiStateAnchor from '../../../../ccsmArtifacts/contracts/CcsmBpiStateAnchor.sol/CcsmBpiStateAnchor.json';
+import * as CcsmBpiStateAnchor from '../../../../ccsm/artifacts/contracts/CcsmBpiStateAnchor.sol/CcsmBpiStateAnchor.json';
 import { internalBpiSubjectEcdsaPrivateKey } from '../../../shared/testing/constants';
 import { Witness } from '../../zeroKnowledgeProof/models/witness';
 import { ICcsmService } from './ccsm.interface';
