@@ -160,6 +160,7 @@ describe('Invoice origination use-case end-to-end test', () => {
           payloadFormatType: PayloadFormatType.XML,
         },
       );
+
       createdWorkstep2Id = await bpiService1.createWorkstep(
         'serbiaWorkstep2',
         createdWorkgroupId,
@@ -173,10 +174,23 @@ describe('Invoice origination use-case end-to-end test', () => {
         },
       );
 
+      createdWorkstep3Id = await bpiService1.createWorkstep(
+        'serbiaWorkstep3',
+        createdWorkgroupId,
+        {
+          type: WorkstepType.BLOCKCHAIN,
+          executionParams: {
+            verifierContractAddress:
+              '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853',
+          },
+          payloadFormatType: PayloadFormatType.XML,
+        },
+      );
+
       createdWorkflowId = await bpiService1.createWorkflow(
         'workflow1',
         createdWorkgroupId,
-        [createdWorkstep1Id, createdWorkstep2Id],
+        [createdWorkstep1Id, createdWorkstep2Id, createdWorkstep3Id],
         [createdBpiSubjectAccountSupplierId, createdBpiSubjectAccountBuyerId],
       );
     });
@@ -223,6 +237,24 @@ describe('Invoice origination use-case end-to-end test', () => {
             ]
           }`;
       await bpiService1.addCircuitInputsSchema(createdWorkstep2Id, schema);
+    });
+
+    it('Add a circuit input translation schema to workstep 3', async () => {
+      const schema = `{
+                        "mapping": [],
+                        "extractions": [
+                          {
+                            "field": "SupplierSEFSalesInvoiceId",
+                            "destinationPath": "supplierId",
+                            "circuitInput": "supplierId",
+                            "description": "Supplied Id number",
+                            "dataType": "string",
+                            "checkType": "merkleProof",
+                            "merkleTreeInputsPath": ["supplierId", "supplierId"]
+                          }
+                        ]
+                      }`;
+      await bpiService1.addCircuitInputsSchema(createdWorkstep3Id, schema);
     });
 
     it('Submits transaction for execution of the workstep 1', async () => {
@@ -272,6 +304,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         historyBpiMerkleTree.getLeafIndex(stateBpiMerkleTree.getRoot()),
       ).toBe(0);
     });
+
     it('Submits transaction for execution of the workstep 2', async () => {
       const xmlFilePath = path.join(
         __dirname,
@@ -293,6 +326,55 @@ describe('Invoice origination use-case end-to-end test', () => {
     });
 
     it('Waits for a single VSM cycle and then verifies that the transaction 2 has been executed', async () => {
+      const resultWorkflow = await bpiService1.fetchWorkflow(createdWorkflowId);
+      const resultBpiAccount = await waitForTreeUpdate(
+        bpiService1,
+        resultWorkflow.bpiAccountId,
+      );
+
+      const stateBpiMerkleTree = new BpiMerkleTree(
+        'ttt',
+        'sha256',
+        MerkleTree.unmarshalTree(
+          resultBpiAccount.stateTree.tree,
+          new MerkleTreeService().createHashFunction('sha256'),
+        ),
+      );
+      const historyBpiMerkleTree = new BpiMerkleTree(
+        'ttt',
+        'sha256',
+        MerkleTree.unmarshalTree(
+          resultBpiAccount.historyTree.tree,
+          new MerkleTreeService().createHashFunction('sha256'),
+        ),
+      );
+
+      expect(
+        historyBpiMerkleTree.getLeafIndex(stateBpiMerkleTree.getRoot()),
+      ).toBe(0);
+    });
+
+    it('Submits transaction for execution of the workstep 3', async () => {
+      const xmlFilePath = path.join(
+        __dirname,
+        '../src/shared/testing/interop/supplierInvoice.xml',
+      );
+      const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
+      const workstep3payload = xmlContent;
+
+      createdTransactionApiId = await bpiService1.createTransaction(
+        v4(),
+        3,
+        createdWorkflowId,
+        createdWorkstep2Id,
+        createdBpiSubjectAccountBuyerId,
+        buyerBpiSubjectEddsaPrivateKey,
+        createdBpiSubjectAccountSupplierId,
+        workstep3payload,
+      );
+    });
+
+    it('Waits for a single VSM cycle and then verifies that the transaction 3 has been executed', async () => {
       const resultWorkflow = await bpiService1.fetchWorkflow(createdWorkflowId);
       const resultBpiAccount = await waitForTreeUpdate(
         bpiService1,
