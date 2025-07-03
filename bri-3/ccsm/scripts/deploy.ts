@@ -85,6 +85,17 @@ async function main() {
     'SerbiaWorkstep1Verifier deployed to:',
     await serbiaWorkstep1Verifier.getAddress(),
   );
+
+  const SerbiaWorkstep2Verifier = await hre.ethers.getContractFactory(
+    'contracts/originationWorkgroup/serbia_workstep2Verifier.sol:PlonkVerifier',
+  );
+
+  const serbiaWorkstep2Verifier = await SerbiaWorkstep2Verifier.deploy();
+
+  console.log(
+    'SerbiaWorkstep2Verifier deployed to:',
+    await serbiaWorkstep2Verifier.getAddress(),
+  );
 }
 
 main()
