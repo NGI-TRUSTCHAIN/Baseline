@@ -5,9 +5,9 @@ include "../generalisedCircuit/businessLogic.circom";
 // Supplier signature is valid
 template InteropSerbiaWorkstep4()
 {
-	signal input invoiceStatusLeaf[256];
-	signal input invoiceStatusRoot[256];
-	signal input invoiceStatusPathElement[256 * 1]; // Height of tree: 1 (2 leaves), each 256 bits
+	signal input invoiceStatusLeaf;
+	signal input invoiceStatusRoot;
+	signal input invoiceStatusPathElement[1]; // Height of tree: 1 (2 leaves), each 256 bits
 	signal input invoiceStatusPathIndex[1];
 
 	signal output isVerified;
