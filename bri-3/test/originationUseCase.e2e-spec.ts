@@ -351,8 +351,15 @@ describe('Invoice origination use-case end-to-end test', () => {
         '../src/shared/testing/interop/supplierInvoice.xml',
       ); //API call to EFAKTURA with this file should generate the content of signatures0.xml file
       const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
-      const workstep2payload = xmlContent;
-
+      const workstep2payload = {
+        method: 'GET',
+        apiKey: process.env.EFAKTURA_API_KEY,
+        headers: {},
+        queryParams: {
+          invoiceId: '1',
+        },
+        body: xmlContent,
+      };
       createdTransactionApiId = await bpiService1.createTransaction(
         v4(),
         3,
@@ -361,7 +368,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         createdBpiSubjectAccountBuyerId,
         buyerBpiSubjectEddsaPrivateKey,
         createdBpiSubjectAccountSupplierId,
-        workstep2payload,
+        JSON.stringify(workstep2payload),
       );
     });
 
