@@ -24,6 +24,7 @@ import {
 } from '../src/shared/testing/utils';
 import { ApiClient } from './helpers/apiClient';
 import { BpiService } from './helpers/bpiService';
+import 'dotenv/config';
 
 jest.setTimeout(240000);
 
