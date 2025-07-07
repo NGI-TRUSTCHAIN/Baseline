@@ -58,166 +58,372 @@ export class EFakturaMockServer {
       });
 
       // Return mock XML response
-      const mockXml = `<?xml version="1.0" encoding="utf-8"?>
-<env:DocumentEnvelope xmlns:env="urn:eFaktura:MinFinrs:envelop:schema">
-  <env:DocumentHeader>
-    <env:SalesInvoiceId>999999999</env:SalesInvoiceId>
-    <env:PurchaseInvoiceId>888888888</env:PurchaseInvoiceId>
-    <env:DocumentId>abcde123-ffff-4aaa-8888-abcdefabcdef</env:DocumentId>
-    <env:CreationDate>2025-05-07</env:CreationDate>
-    <env:SendingDate>2025-05-07</env:SendingDate>
-    <env:DocumentPdf mimeCode="application/pdf"></env:DocumentPdf>
-  </env:DocumentHeader>
-  <env:DocumentBody>
-    <Invoice xmlns:cec="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:sbt="http://mfin.gov.rs/srbdt/srbdtext" xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
-      <cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:mfin.gov.rs:srbdt:2021</cbc:CustomizationID>
-      <cbc:ID>FOO/2025/01</cbc:ID>
-      <cbc:IssueDate>2025-05-07</cbc:IssueDate>
-      <cbc:DueDate>2025-06-05</cbc:DueDate>
-      <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
-      <cbc:DocumentCurrencyCode>RSD</cbc:DocumentCurrencyCode>
-      <cac:InvoicePeriod>
-        <cbc:DescriptionCode>35</cbc:DescriptionCode>
-      </cac:InvoicePeriod>
-      <cac:OrderReference />
-      <cac:DespatchDocumentReference>
-        <cbc:ID>FOO/2025/01</cbc:ID>
-        <cbc:IssueDate>2025-05-06</cbc:IssueDate>
-      </cac:DespatchDocumentReference>
-      <cac:OriginatorDocumentReference />
-      <cac:OriginatorDocumentReference />
-      <cac:ContractDocumentReference />
-      <cac:AdditionalDocumentReference>
-        <cbc:ID>FOO</cbc:ID>
-        <cac:Attachment>
-          <cbc:EmbeddedDocumentBinaryObject mimeCode="application/pdf"></cbc:EmbeddedDocumentBinaryObject>
-        </cac:Attachment>
-      </cac:AdditionalDocumentReference>
-      <cac:AccountingSupplierParty>
-        <cac:Party>
-          <cbc:EndpointID schemeID="9948">999999999</cbc:EndpointID>
-          <cac:PartyIdentification />
-          <cac:PartyName>
-            <cbc:Name>FOO LLC</cbc:Name>
-          </cac:PartyName>
-          <cac:PostalAddress>
-            <cbc:StreetName>123 FOO Street</cbc:StreetName>
-            <cbc:CityName>FOOTOWN</cbc:CityName>
-            <cac:Country>
-              <cbc:IdentificationCode>XX</cbc:IdentificationCode>
-            </cac:Country>
-          </cac:PostalAddress>
-          <cac:PartyTaxScheme>
-            <cbc:CompanyID>XX999999999</cbc:CompanyID>
-            <cac:TaxScheme>
-              <cbc:ID>VAT</cbc:ID>
-            </cac:TaxScheme>
-          </cac:PartyTaxScheme>
-          <cac:PartyLegalEntity>
-            <cbc:RegistrationName>FOO LLC</cbc:RegistrationName>
-            <cbc:CompanyID>12345678</cbc:CompanyID>
-          </cac:PartyLegalEntity>
-        </cac:Party>
-      </cac:AccountingSupplierParty>
-      <cac:AccountingCustomerParty>
-        <cac:Party>
-          <cbc:EndpointID schemeID="9948">888888888</cbc:EndpointID>
-          <cac:PartyIdentification>
-            <cbc:ID>87654321</cbc:ID>
-          </cac:PartyIdentification>
-          <cac:PartyName>
-            <cbc:Name>BAR Inc.</cbc:Name>
-          </cac:PartyName>
-          <cac:PostalAddress>
-            <cbc:StreetName>456 BAR Avenue</cbc:StreetName>
-            <cbc:CityName>BARVILLE</cbc:CityName>
-            <cbc:PostalZone>99999</cbc:PostalZone>
-            <cac:Country>
-              <cbc:IdentificationCode>YY</cbc:IdentificationCode>
-            </cac:Country>
-          </cac:PostalAddress>
-          <cac:PartyTaxScheme>
-            <cbc:CompanyID>YY888888888</cbc:CompanyID>
-            <cac:TaxScheme>
-              <cbc:ID>VAT</cbc:ID>
-            </cac:TaxScheme>
-          </cac:PartyTaxScheme>
-          <cac:PartyLegalEntity>
-            <cbc:RegistrationName>BAR Inc.</cbc:RegistrationName>
-            <cbc:CompanyID>87654321</cbc:CompanyID>
-          </cac:PartyLegalEntity>
-        </cac:Party>
-      </cac:AccountingCustomerParty>
-      <cac:Delivery>
-        <cbc:ActualDeliveryDate>2025-05-06</cbc:ActualDeliveryDate>
-        <cac:DeliveryParty>
-          <cac:PartyName>
-            <cbc:Name>BAR Inc.</cbc:Name>
-          </cac:PartyName>
-        </cac:DeliveryParty>
-      </cac:Delivery>
-      <cac:PaymentMeans>
-        <cbc:PaymentMeansCode>30</cbc:PaymentMeansCode>
-        <cbc:PaymentID>FOO/2025/01</cbc:PaymentID>
-        <cac:PayeeFinancialAccount>
-          <cbc:ID>000-000000-00 | 111-11111111111-11</cbc:ID>
-        </cac:PayeeFinancialAccount>
-      </cac:PaymentMeans>
-      <cac:TaxTotal>
-        <cbc:TaxAmount currencyID="RSD">999.99</cbc:TaxAmount>
-        <cac:TaxSubtotal>
-          <cbc:TaxableAmount currencyID="RSD">4999.99</cbc:TaxableAmount>
-          <cbc:TaxAmount currencyID="RSD">999.99</cbc:TaxAmount>
-          <cac:TaxCategory>
-            <cbc:ID>S</cbc:ID>
-            <cbc:Percent>20.00</cbc:Percent>
-            <cac:TaxScheme>
-              <cbc:ID>VAT</cbc:ID>
-            </cac:TaxScheme>
-          </cac:TaxCategory>
-        </cac:TaxSubtotal>
-      </cac:TaxTotal>
-      <cac:LegalMonetaryTotal>
-        <cbc:LineExtensionAmount currencyID="RSD">4999.99</cbc:LineExtensionAmount>
-        <cbc:TaxExclusiveAmount currencyID="RSD">4999.99</cbc:TaxExclusiveAmount>
-        <cbc:TaxInclusiveAmount currencyID="RSD">5999.98</cbc:TaxInclusiveAmount>
-        <cbc:AllowanceTotalAmount currencyID="RSD">0.00</cbc:AllowanceTotalAmount>
-        <cbc:PrepaidAmount currencyID="RSD">0</cbc:PrepaidAmount>
-        <cbc:PayableAmount currencyID="RSD">5999.98</cbc:PayableAmount>
-      </cac:LegalMonetaryTotal>
-      <cac:InvoiceLine>
-        <cbc:ID>99999</cbc:ID>
-        <cbc:InvoicedQuantity unitCode="H87" unitCodeListID="H87">1000</cbc:InvoicedQuantity>
-        <cbc:LineExtensionAmount currencyID="RSD">4999.99</cbc:LineExtensionAmount>
-        <cac:AllowanceCharge>
-          <cbc:ChargeIndicator>true</cbc:ChargeIndicator>
-          <cbc:MultiplierFactorNumeric>0.00</cbc:MultiplierFactorNumeric>
-          <cbc:Amount currencyID="RSD">0.00</cbc:Amount>
-        </cac:AllowanceCharge>
-        <cac:Item>
-          <cbc:Description>FOO PRODUCT XYZ 1000ml /1000</cbc:Description>
-          <cbc:Name>FOO PRODUCT XYZ 1000ml /1000</cbc:Name>
-          <cac:SellersItemIdentification>
-            <cbc:ID>XYZ-1000</cbc:ID>
-          </cac:SellersItemIdentification>
-          <cac:StandardItemIdentification />
-          <cac:CatalogueItemIdentification />
-          <cac:ClassifiedTaxCategory>
-            <cbc:ID>S</cbc:ID>
-            <cbc:Percent>20</cbc:Percent>
-            <cac:TaxScheme>
-              <cbc:ID>VAT</cbc:ID>
-            </cac:TaxScheme>
-          </cac:ClassifiedTaxCategory>
-        </cac:Item>
-        <cac:Price>
-          <cbc:PriceAmount currencyID="RSD">5.00</cbc:PriceAmount>
-        </cac:Price>
-      </cac:InvoiceLine>
-    </Invoice>
-  </env:DocumentBody>
-</env:DocumentEnvelope>
-`;
+      const mockXml = String.raw`<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<asic:XAdESSignatures xmlns:asic="http://uri.etsi.org/02918/v1.2.1#" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#">
+  <ds:Signature Id="S0">
+    <ds:SignedInfo>
+      <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2006/12/xml-c14n11"/>
+      <ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+      <ds:Reference Id="S0-RefId0" URI="bbb42e9d-6dea-4149-aab6-ea5424a84bae.xml">
+        <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+        <ds:DigestValue>YIxTa/gzyfkihN3jgyyBKrFRKpOzsEt5NdIcJFdZ5o0=
+</ds:DigestValue>
+      </ds:Reference>
+      <ds:Reference Id="S0-RefId1" Type="http://uri.etsi.org/01903#SignedProperties" URI="#S0-SignedProperties">
+        <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+        <ds:DigestValue>OnV1zAmtKn77rG29rNoDKSD6A8XA8MRkC91Zgwey4w4=
+</ds:DigestValue>
+      </ds:Reference>
+    </ds:SignedInfo>
+    <ds:SignatureValue Id="S0-SIG">RRc46aMAsEzEr4G2Ty0Qwp+b1RNsX/c/iMEgrJdqSgcopPcazGRhB0Q+gf1e
+4PiogOp5pInIdjkxbbC76pENmLjs8amhAck5Gq6dm7Ms49WNaP2gQFYzwPw2
+SnF+Eye4Pl9A7aMR+/PPiF81lZUOjkKtzCJpbxLlr6JeFSEGp+wlnlL9+a6G
+7YIXqPzyQdXHfg6HZ3F75JbpmOeJn1UeGOXlaPpJmRRMJN/2fK4droTvGpWF
+zWKIHYaZHSvn2H2mJgA0nvdTuAPr1668I9popaeKJSu4zjcxZoQUAe/KY7Iv
+eKcogSwtUcfmj7HK7FJpa3ZO/LLBX5WIsi3/8S4IVw==
+</ds:SignatureValue>
+    <ds:KeyInfo>
+      <ds:X509Data>
+        <ds:X509Certificate>MIIJADCCBuigAwIBAgIJWQtMhSOfTK5qMA0GCSqGSIb3DQEBDQUAMH8xCzAJ
+BgNVBAYTAlJTMRAwDgYDVQQHDAdCZW9ncmFkMRgwFgYDVQRhDA9WQVRSUy0x
+MDAwMDI4MDMxJzAlBgNVBAoMHkphdm5vIHByZWR1emXEh2UgUG/FoXRhIFNy
+YmlqZTEbMBkGA1UEAwwSUG/FoXRhIFNyYmlqZSBDQSAxMB4XDTIyMDIwODA5
+MzEwMloXDTI3MDIwODA5MzEwMlowgd4xCzAJBgNVBAYTAlJTMRAwDgYDVQQH
+DAdCZW9ncmFkMRcwFQYDVQRhDA5NQjpSUy0xNzg2MjE0NjEYMBYGA1UEYQwP
+VkFUUlMtMTA4MjEzNDEzMTIwMAYDVQQKDClSZXB1Ymxpa2EgU3JiaWphIC0g
+TWluaXN0YXJzdHZvIGZpbmFuc2lqYTEYMBYGA1UEBRMPQ0E6UlMtMjAwMDM3
+OTA4MTwwOgYDVQQDDDNSZXB1Ymxpa2EgU3JiaWphIC0gTWluaXN0YXJzdHZv
+IGZpbmFuc2lqYSAyMDAwMzc5MDgwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
+ggEKAoIBAQDE+R8nYKd4NXmmUQD4awm61M7WmmrclE3H75beOZuTGNC2DH8V
+mAliKNqer13mY6lfa6wmgNh3AjGLIcqkDA2WTfrVSCLm1VKgYzd5Z7vh0s20
+g88JkV1MvaQckPCNkQZyoDdfIPHL0v7EZh+KSQJsR00J3F0/rkP+VoyMBNNo
+K3wKc9Z7DR8P4FW9hlyN3iuu6XHr+/+EP1UJ4i4yDWXroYMBTwr5NLylCSNg
+cbJ4L9zM2vE8t0NDJ1or8qLHop1jlpkHdwiD4DkzrElajPE6zIDHftPLFAUr
+89W3UaLZY0O9pbvTtK2jEnXQD0VqL7xMAVk/nD+siqnZJwWoDGCjAgMBAAGj
+ggQdMIIEGTAJBgNVHRMEAjAAMA4GA1UdDwEB/wQEAwIGwDAfBgNVHSMEGDAW
+gBRjz3fZvAhlWlKKF9oe131ScgWjRzAdBgNVHQ4EFgQUjhgeKnnxIke9q7dA
+YbVQEQbazJkwggESBgNVHR8EggEJMIIBBTCCAQGggf6ggfuGgcJsZGFwOi8v
+bGRhcC1vY3NwLmNhLnBvc3RhLnJzL0NOPVBvJWM1JWExdGElMjBTcmJpamUl
+MjBDQSUyMDEsTz1KYXZubyUyMHByZWR1emUlYzQlODdlJTIwUG8lYzUlYTF0
+YSUyMFNyYmlqZSxvcmdhbml6YXRpb25JZGVudGlmaWVyPVZBVFJTLTEwMDAw
+MjgwMyxMPUJlb2dyYWQsQz1SUz9jZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0
+O2JpbmFyeYY0aHR0cDovL3JlcG9zaXRvcnkuY2EucG9zdGEucnMvY3JsL1Bv
+c3RhU3JiaWplQ0ExLmNybDB3BggrBgEFBQcBAwRrMGkwPgYIKwYBBQUHCwIw
+MgYHBACL7EkBAjAnhiVodHRwczovL3d3dy5jYS5wb3N0YS5ycy9kb2t1bWVu
+dGFjaWphMAgGBgQAjkYBATAIBgYEAI5GAQQwEwYGBACORgEGMAkGBwQAjkYB
+BgIwggFUBggrBgEFBQcBAQSCAUYwggFCMIHDBggrBgEFBQcwAoaBtmxkYXA6
+Ly9sZGFwLW9jc3AuY2EucG9zdGEucnMvQ049UG8lYzUlYTF0YSUyMFNyYmlq
+ZSUyMENBJTIwMSxPPUphdm5vJTIwcHJlZHV6ZSVjNCU4N2UlMjBQbyVjNSVh
+MXRhJTIwU3JiaWplLG9yZ2FuaXphdGlvbklkZW50aWZpZXI9VkFUUlMtMTAw
+MDAyODAzLEw9QmVvZ3JhZCxDPVJTP2NBQ2VydGlmaWNhdGU7YmluYXJ5MEsG
+CCsGAQUFBzAChj9odHRwOi8vcmVwb3NpdG9yeS5jYS5wb3N0YS5ycy9jYS1z
+ZXJ0aWZpa2F0aS9Qb3N0YVNyYmlqZUNBMS5kZXIwLQYIKwYBBQUHMAGGIWh0
+dHA6Ly9sZGFwLW9jc3AuY2EucG9zdGEucnMvb2NzcDCBrgYDVR0gBIGmMIGj
+MAkGBwQAi+xAAQMwgZUGCysGAQQB+jgKdgEAMIGFMDEGCCsGAQUFBwIBFiVo
+dHRwczovL3d3dy5jYS5wb3N0YS5ycy9kb2t1bWVudGFjaWphMFAGCCsGAQUF
+BwICMEQMQk92byBqZSBrdmFsaWZpa292YW5pIGVsZWt0cm9uc2tpIHNlcnRp
+ZmlrYXQgemEgZWxla3Ryb25za2kgcGXEjWF0LjAkBgNVHREEHTAbgRlhbmEu
+b2JyZW5vdmljQG1maW4uZ292LnJzMA0GCSqGSIb3DQEBDQUAA4ICAQBZOF6h
+Tg9Oo9fb8phgXFHzinDXinUQQeFIgU0GRYfTRjocYoRtstFru47qknJcnT6i
+BjGlGVFZgnqEJyGNmCEmKFVHOClxCMCoKAxQFanKK/aHeyYCAjelCNtL2ea8
+7JFIXkKyu2wsQU6o70KxWLGze0zH4eOPuGwXcoDtCKS9AogX9jPTPudYlzwc
+yH89BpayBEFeiHH45x36tOvQg1BwpXfzAoskx0o9/JH9PHhVRFfdcjN0nxdV
+GIL6IU/sBZSsM+hXF3Yj0NdRbQf1600vq9z4/7B+z21PsZ8CZiWUWSO23Bvr
+D3LSEU/mOyZwNz9W26FvNgTCrfMxyY3yvcApVuPzED9MjLnNPE4KeCg4J7xR
+DlkxYxoJ4EKD4pWGeWSWfA3HU0lHTDantvgpEeq4dBrTMNP0MPEwy3fCLJR0
+olbAwrFtckPFv1HavHeQajmMY3JPrMsQNaXI1f7oX1zGkfrSiXoa9TAedlZB
+n0RjWHNx95b+UbFTWh5ExHrXRa0FOqhyTUdD4WhmpPzWnRntqwHeEa2YW9vk
+yk2GVX9R3sIVn+/Ymy/5zHrMUPtRnbBM8xxPh7xZN38t6FrO02uPqZpIsnm9
+Laei3HVatsNd/YK7WgL9VR7LT/6v+/ZgDOQIcMM0WDLhHxz66kDCr/8ez8Ub
+oGocZpsvN/2yTct1xA==
+</ds:X509Certificate>
+      </ds:X509Data>
+    </ds:KeyInfo>
+    <ds:Object>
+      <xades:QualifyingProperties Target="#S0">
+        <xades:SignedProperties Id="S0-SignedProperties">
+          <xades:SignedSignatureProperties>
+            <xades:SigningTime>2025-05-26T05:06:55Z</xades:SigningTime>
+            <xades:SigningCertificate>
+              <xades:Cert>
+                <xades:CertDigest>
+                  <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+                  <ds:DigestValue>87LtMLFJAfCnjkLNgSXK39fTlwbJHMov6a2g+RZV5lM=
+</ds:DigestValue>
+                </xades:CertDigest>
+                <xades:IssuerSerial>
+                  <ds:X509IssuerName>CN=Po\C5\A1ta Srbije CA 1,O=Javno preduze\C4\87e Po\C5\A1ta Srbije,organizationIdentifier=VATRS-100002803,L=Beograd,C=RS</ds:X509IssuerName>
+                  <ds:X509SerialNumber>1642574394580840263274</ds:X509SerialNumber>
+                </xades:IssuerSerial>
+              </xades:Cert>
+            </xades:SigningCertificate>
+          </xades:SignedSignatureProperties>
+          <xades:SignedDataObjectProperties>
+            <xades:DataObjectFormat ObjectReference="#S0-RefId0">
+              <xades:MimeType>text/xml</xades:MimeType>
+            </xades:DataObjectFormat>
+          </xades:SignedDataObjectProperties>
+        </xades:SignedProperties>
+        <xades:UnsignedProperties>
+          <xades:UnsignedSignatureProperties>
+            <xades:SignatureTimeStamp Id="S0-T0">
+              <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2006/12/xml-c14n11"/>
+              <xades:EncapsulatedTimeStamp>MIIcIgYJKoZIhvcNAQcCoIIcEzCCHA8CAQMxDzANBglghkgBZQMEAgEFADCC
+AVcGCyqGSIb3DQEJEAEEoIIBRgSCAUIwggE+AgEBBgsrBgEEAYOtaAEBADAx
+MA0GCWCGSAFlAwQCAQUABCADZGKE0Ao6OckwilMINGWieIU9ByiWv7Ovjf2/
+EO6tyAIHBjYC6onXeRgPMjAyNTA1MjYwNTA2NTNaAhQ2T4a0+aNiUVMn530O
+kK8ysRp2R6CByKSBxTCBwjELMAkGA1UEBhMCUlMxFzAVBgNVBGEMDk1COlJT
+LTE4ODIwODAzMRgwFgYDVQRhDA9WQVRSUy0xMTAxNzc4ODYxRTBDBgNVBAoM
+PEthbmNlbGFyaWphIHphIGluZm9ybWFjaW9uZSB0ZWhub2xvZ2lqZSBpIGVs
+ZWt0cm9uc2t1IHVwcmF2dTEYMBYGA1UEBRMPQ0E6UlMtMjAwMDg2OTEzMR8w
+HQYDVQQDDBZSUy1HT1YgVFNBLTMgMjAwMDg2OTEzoIIXvDCCCUAwggcooAMC
+AQICCRlG5C6jNDLgYTANBgkqhkiG9w0BAQ0FADB/MQswCQYDVQQGEwJSUzEQ
+MA4GA1UEBwwHQmVvZ3JhZDEYMBYGA1UEYQwPVkFUUlMtMTAwMDAyODAzMScw
+JQYDVQQKDB5KYXZubyBwcmVkdXplxIdlIFBvxaF0YSBTcmJpamUxGzAZBgNV
+BAMMElBvxaF0YSBTcmJpamUgQ0EgMTAeFw0yNDEyMTIxMTE4MTBaFw0zMDEy
+MTIxMTE4MTBaMIHCMQswCQYDVQQGEwJSUzEXMBUGA1UEYQwOTUI6UlMtMTg4
+MjA4MDMxGDAWBgNVBGEMD1ZBVFJTLTExMDE3Nzg4NjFFMEMGA1UECgw8S2Fu
+Y2VsYXJpamEgemEgaW5mb3JtYWNpb25lIHRlaG5vbG9naWplIGkgZWxla3Ry
+b25za3UgdXByYXZ1MRgwFgYDVQQFEw9DQTpSUy0yMDAwODY5MTMxHzAdBgNV
+BAMMFlJTLUdPViBUU0EtMyAyMDAwODY5MTMwggEiMA0GCSqGSIb3DQEBAQUA
+A4IBDwAwggEKAoIBAQDiPfVk//PYA2pjq3yYH5eMaB+Wr2j91lLTCNcWqVd3
+0mv5t5XdaoLN9xBA6+PIIl0dm/bP/XO7c8lN8ZcLFWBaGaY8b7S0Ri6ZypRw
+JJkKwG0nfUXRfo6AUxUxAsxDHADNlhqtAWzPUD1RrU+6uKtEGBcm0uD+POY3
+Usgai+d9AtsusvaxTjDMhlS50Mmw0GXTS3SHKGWRxDIPkE7ktJb/8ZfGlfbe
+1p7HmsmA9nncYSPGkCCEqevr0XVVEKiSVP5ognnvwqw14b20sgZSgAY/4pTk
+eOT1PCg+tag5VFH+KtqZMXQN1vbmf4k7jgwXEpCTqQj4GlF5w6nAlMxLXdKD
+AgMBAAGjggR5MIIEdTAJBgNVHRMEAjAAMA4GA1UdDwEB/wQEAwIGwDAWBgNV
+HSUBAf8EDDAKBggrBgEFBQcDCDAfBgNVHSMEGDAWgBRjz3fZvAhlWlKKF9oe
+131ScgWjRzAdBgNVHQ4EFgQU3s2XKS9frjNZadzZrd677apka5QwggESBgNV
+HR8EggEJMIIBBTCCAQGggf6ggfuGgcJsZGFwOi8vbGRhcC1vY3NwLmNhLnBv
+c3RhLnJzL0NOPVBvJWM1JWExdGElMjBTcmJpamUlMjBDQSUyMDEsTz1KYXZu
+byUyMHByZWR1emUlYzQlODdlJTIwUG8lYzUlYTF0YSUyMFNyYmlqZSxvcmdh
+bml6YXRpb25JZGVudGlmaWVyPVZBVFJTLTEwMDAwMjgwMyxMPUJlb2dyYWQs
+Qz1SUz9jZXJ0aWZpY2F0ZVJldm9jYXRpb25MaXN0O2JpbmFyeYY0aHR0cDov
+L3JlcG9zaXRvcnkuY2EucG9zdGEucnMvY3JsL1Bvc3RhU3JiaWplQ0ExLmNy
+bDB3BggrBgEFBQcBAwRrMGkwPgYIKwYBBQUHCwIwMgYHBACL7EkBAjAnhiVo
+dHRwczovL3d3dy5jYS5wb3N0YS5ycy9kb2t1bWVudGFjaWphMAgGBgQAjkYB
+ATAIBgYEAI5GAQQwEwYGBACORgEGMAkGBwQAjkYBBgIwggFUBggrBgEFBQcB
+AQSCAUYwggFCMIHDBggrBgEFBQcwAoaBtmxkYXA6Ly9sZGFwLW9jc3AuY2Eu
+cG9zdGEucnMvQ049UG8lYzUlYTF0YSUyMFNyYmlqZSUyMENBJTIwMSxPPUph
+dm5vJTIwcHJlZHV6ZSVjNCU4N2UlMjBQbyVjNSVhMXRhJTIwU3JiaWplLG9y
+Z2FuaXphdGlvbklkZW50aWZpZXI9VkFUUlMtMTAwMDAyODAzLEw9QmVvZ3Jh
+ZCxDPVJTP2NBQ2VydGlmaWNhdGU7YmluYXJ5MEsGCCsGAQUFBzAChj9odHRw
+Oi8vcmVwb3NpdG9yeS5jYS5wb3N0YS5ycy9jYS1zZXJ0aWZpa2F0aS9Qb3N0
+YVNyYmlqZUNBMS5kZXIwLQYIKwYBBQUHMAGGIWh0dHA6Ly9sZGFwLW9jc3Au
+Y2EucG9zdGEucnMvb2NzcDCB0AYDVR0gBIHIMIHFMAkGBwQAi+xAAQMwgbcG
+DCsGAQQB+jgKhiwBADCBpjAxBggrBgEFBQcCARYlaHR0cHM6Ly93d3cuY2Eu
+cG9zdGEucnMvZG9rdW1lbnRhY2lqYTBxBggrBgEFBQcCAjBlDGNPdm8gamUg
+a3ZhbGlmaWtvdmFuaSBlbGVrdHJvbnNraSBzZXJ0aWZpa2F0IHphIGVsZWt0
+cm9uc2tpIHBlxI1hdCB6YSB2YWxpZGFjaWp1IHZyZW1lbnNraWggxb5pZ292
+YS4wGQYDVR0RBBIwEIEOdHNhQGl0ZS5nb3YucnMwKwYDVR0QBCQwIoAPMjAy
+NDEyMTIxMTE4MTBagQ8yMDI1MTIxMjExMTgxMFowDQYJKoZIhvcNAQENBQAD
+ggIBABPwEyjl2l80SryNEx0seZzFVfzRD1LtH1ZWLXtTr0A0bjydBvv7xkLO
+knHFDsykJi+AB71eBXb8dsorBte4IVhhmsuuPYalil8UVyxlNi/xpY5awEiY
+hxR/m07/P5PJ985KwKE2KI2+ugBCpy7soGdmuqnZTOklPjwRVA6FbDMeAy6F
+o2o7ggjUhIYFq5XZoIYI6ax1lum9XNKWXc3GhgszvwaF+KNHOg5aeT4i1+Tm
+9M4GzRxk52tcYsNymXvoOh4pPw18a9UnTaa/QaCGaTM7hE8lByNhC3OHCbbk
+On7HroOcMGJ1uwVDluvSSSK+4qfva3HnlzeBh61Ir7HW1D2ePwrBooGEHVY1
+w/3STI0sYaEGdh8+xEhmODkDIv09agCwoUhgMkGSh8HZaE5Oytwl9eT5nw5e
+1FTetBAybHLwLDl6msl6C8AZfokPlTySlJYGpYzVv6uIkcH+YZSSx+EgiEUi
+bLlrfTJWiX5rIhOmSWdy6WkdAe9xo4TU6u2VZ3R+tJuQ1MYHvRbijyDbvvMm
+/MveAvUqf20bgcALqRlzd2BQ3MmwG4nZF/GvrxGVhZAYJGMf/q4YBGwgIr60
+7HJm2dcCM+ZGsWF8bePXaIge7hbWDISDBWOnt+8714e2+Wk324iote4lrfXy
+H6kVhOyru+OcD4c3xf+nWWxqKG6VMIIIhDCCBmygAwIBAgIJRYRrAYSGtGbz
+MA0GCSqGSIb3DQEBDQUAMIGCMQswCQYDVQQGEwJSUzEQMA4GA1UEBwwHQmVv
+Z3JhZDEYMBYGA1UEYQwPVkFUUlMtMTAwMDAyODAzMScwJQYDVQQKDB5KYXZu
+byBwcmVkdXplxIdlIFBvxaF0YSBTcmJpamUxHjAcBgNVBAMMFVBvxaF0YSBT
+cmJpamUgQ0EgUm9vdDAeFw0xOTA0MjMxMDE5MDBaFw00NDA0MjMwOTA1Mzla
+MH8xCzAJBgNVBAYTAlJTMRAwDgYDVQQHDAdCZW9ncmFkMRgwFgYDVQRhDA9W
+QVRSUy0xMDAwMDI4MDMxJzAlBgNVBAoMHkphdm5vIHByZWR1emXEh2UgUG/F
+oXRhIFNyYmlqZTEbMBkGA1UEAwwSUG/FoXRhIFNyYmlqZSBDQSAxMIICIjAN
+BgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAkKs0BDkI9VDm4tuo+C13zv1l
+fpaQlxFfFVGh3X6qQC4slAa4Csccl086jq6quac4UtZu27JloDOQuDjMIHrM
+SWtYZOb+iKFIKFu45oo/OInjX5/7ZCxQdz/K0iGiJEgy15Ebqop8r5N1MJ/i
+kypfMle97R58VmxzE9dmK43goyZPjoQK2LkZUb3NrKQt3Vm1ROlHrUNXlV7K
+IS6if0NA9vbY16vUzwb+e9JrRkpgOL4ztrlAj40rOem0qFrp25es3nJIjhbX
+AsqK7LTWwFx6mmH/VQqNpHgxvnKxkLBMqJhojIEbH4c+jsXDqSd9tOA9ZKoL
+QkrEfcNx37LYITF6xEjGF9pYsZIR9B875FBCpTZWhn0dvjLZX0GboGDg85Q4
+43DMX0KGfPT52MKtA40tVdPLf5Yh00AvtKFHnpGAmYKyaZlWNeptCP61GQJI
+qneXKUEs5VgetTlCXlmtaido4goscbxjUwydCQB+Od85f5ac1+Z6RL0u7bgH
+bOZk+1/HX5XjqTcPo4+/inLepiZLXfLrudhG1XP+l00H/8pDSW1uCzh9b0C3
+umGSLBMUJlGgjvJ00gGZSU6zc7p0t8fHrqLNnTtD9rh3C8nVlp5taJGv/mu4
+3pFRNEOfP0LJZPp2Id7VSXR0Qh5gbFwB+zZkzeX23w3jmIiDJckFfpAStlcC
+AwEAAaOCAv0wggL5MBIGA1UdEwEB/wQIMAYBAf8CAQAwDgYDVR0PAQH/BAQD
+AgEGMB8GA1UdIwQYMBaAFKmqeallmzyCkb8w/sjHc1UhzvO4MB0GA1UdDgQW
+BBRjz3fZvAhlWlKKF9oe131ScgWjRzCCARoGA1UdHwSCAREwggENMIIBCaCC
+AQWgggEBhoHFbGRhcDovL2xkYXAtb2NzcC5jYS5wb3N0YS5ycy9DTj1QbyVj
+NSVhMXRhJTIwU3JiaWplJTIwQ0ElMjBSb290LE89SmF2bm8lMjBwcmVkdXpl
+JWM0JTg3ZSUyMFBvJWM1JWExdGElMjBTcmJpamUsb3JnYW5pemF0aW9uSWRl
+bnRpZmllcj1WQVRSUy0xMDAwMDI4MDMsTD1CZW9ncmFkLEM9UlM/Y2VydGlm
+aWNhdGVSZXZvY2F0aW9uTGlzdDtiaW5hcnmGN2h0dHA6Ly9yZXBvc2l0b3J5
+LmNhLnBvc3RhLnJzL2NybC9Qb3N0YVNyYmlqZUNBUm9vdC5jcmwwggErBggr
+BgEFBQcBAQSCAR0wggEZMIHGBggrBgEFBQcwAoaBuWxkYXA6Ly9sZGFwLW9j
+c3AuY2EucG9zdGEucnMvQ049UG8lYzUlYTF0YSUyMFNyYmlqZSUyMENBJTIw
+Um9vdCxPPUphdm5vJTIwcHJlZHV6ZSVjNCU4N2UlMjBQbyVjNSVhMXRhJTIw
+U3JiaWplLG9yZ2FuaXphdGlvbklkZW50aWZpZXI9VkFUUlMtMTAwMDAyODAz
+LEw9QmVvZ3JhZCxDPVJTP2NBQ2VydGlmaWNhdGU7YmluYXJ5ME4GCCsGAQUF
+BzAChkJodHRwOi8vcmVwb3NpdG9yeS5jYS5wb3N0YS5ycy9jYS1zZXJ0aWZp
+a2F0aS9Qb3N0YVNyYmlqZUNBUm9vdC5kZXIwRgYDVR0gBD8wPTA7BgRVHSAA
+MDMwMQYIKwYBBQUHAgEWJWh0dHBzOi8vd3d3LmNhLnBvc3RhLnJzL2Rva3Vt
+ZW50YWNpamEwDQYJKoZIhvcNAQENBQADggIBAJEL3z774do2KvuCrFG5YMm+
+DnyAFQcT1zWByT8D7tNb0Ib4paWPXn9QnC/7m6ULJxlAO1DOd6FzacNETHV4
+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
+3htWoMuM
+</xades:EncapsulatedTimeStamp>
+            </xades:SignatureTimeStamp>
+            <xades:CertificateValues>
+              <xades:EncapsulatedX509Certificate>MIIIhDCCBmygAwIBAgIJRYRrAYSGtGbzMA0GCSqGSIb3DQEBDQUAMIGCMQsw
+CQYDVQQGEwJSUzEQMA4GA1UEBwwHQmVvZ3JhZDEYMBYGA1UEYQwPVkFUUlMt
+MTAwMDAyODAzMScwJQYDVQQKDB5KYXZubyBwcmVkdXplxIdlIFBvxaF0YSBT
+cmJpamUxHjAcBgNVBAMMFVBvxaF0YSBTcmJpamUgQ0EgUm9vdDAeFw0xOTA0
+MjMxMDE5MDBaFw00NDA0MjMwOTA1MzlaMH8xCzAJBgNVBAYTAlJTMRAwDgYD
+VQQHDAdCZW9ncmFkMRgwFgYDVQRhDA9WQVRSUy0xMDAwMDI4MDMxJzAlBgNV
+BAoMHkphdm5vIHByZWR1emXEh2UgUG/FoXRhIFNyYmlqZTEbMBkGA1UEAwwS
+UG/FoXRhIFNyYmlqZSBDQSAxMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIIC
+CgKCAgEAkKs0BDkI9VDm4tuo+C13zv1lfpaQlxFfFVGh3X6qQC4slAa4Cscc
+l086jq6quac4UtZu27JloDOQuDjMIHrMSWtYZOb+iKFIKFu45oo/OInjX5/7
+ZCxQdz/K0iGiJEgy15Ebqop8r5N1MJ/ikypfMle97R58VmxzE9dmK43goyZP
+joQK2LkZUb3NrKQt3Vm1ROlHrUNXlV7KIS6if0NA9vbY16vUzwb+e9JrRkpg
+OL4ztrlAj40rOem0qFrp25es3nJIjhbXAsqK7LTWwFx6mmH/VQqNpHgxvnKx
+kLBMqJhojIEbH4c+jsXDqSd9tOA9ZKoLQkrEfcNx37LYITF6xEjGF9pYsZIR
+9B875FBCpTZWhn0dvjLZX0GboGDg85Q443DMX0KGfPT52MKtA40tVdPLf5Yh
+00AvtKFHnpGAmYKyaZlWNeptCP61GQJIqneXKUEs5VgetTlCXlmtaido4gos
+cbxjUwydCQB+Od85f5ac1+Z6RL0u7bgHbOZk+1/HX5XjqTcPo4+/inLepiZL
+XfLrudhG1XP+l00H/8pDSW1uCzh9b0C3umGSLBMUJlGgjvJ00gGZSU6zc7p0
+t8fHrqLNnTtD9rh3C8nVlp5taJGv/mu43pFRNEOfP0LJZPp2Id7VSXR0Qh5g
+bFwB+zZkzeX23w3jmIiDJckFfpAStlcCAwEAAaOCAv0wggL5MBIGA1UdEwEB
+/wQIMAYBAf8CAQAwDgYDVR0PAQH/BAQDAgEGMB8GA1UdIwQYMBaAFKmqeall
+mzyCkb8w/sjHc1UhzvO4MB0GA1UdDgQWBBRjz3fZvAhlWlKKF9oe131ScgWj
+RzCCARoGA1UdHwSCAREwggENMIIBCaCCAQWgggEBhoHFbGRhcDovL2xkYXAt
+b2NzcC5jYS5wb3N0YS5ycy9DTj1QbyVjNSVhMXRhJTIwU3JiaWplJTIwQ0El
+MjBSb290LE89SmF2bm8lMjBwcmVkdXplJWM0JTg3ZSUyMFBvJWM1JWExdGEl
+MjBTcmJpamUsb3JnYW5pemF0aW9uSWRlbnRpZmllcj1WQVRSUy0xMDAwMDI4
+MDMsTD1CZW9ncmFkLEM9UlM/Y2VydGlmaWNhdGVSZXZvY2F0aW9uTGlzdDti
+aW5hcnmGN2h0dHA6Ly9yZXBvc2l0b3J5LmNhLnBvc3RhLnJzL2NybC9Qb3N0
+YVNyYmlqZUNBUm9vdC5jcmwwggErBggrBgEFBQcBAQSCAR0wggEZMIHGBggr
+BgEFBQcwAoaBuWxkYXA6Ly9sZGFwLW9jc3AuY2EucG9zdGEucnMvQ049UG8l
+YzUlYTF0YSUyMFNyYmlqZSUyMENBJTIwUm9vdCxPPUphdm5vJTIwcHJlZHV6
+ZSVjNCU4N2UlMjBQbyVjNSVhMXRhJTIwU3JiaWplLG9yZ2FuaXphdGlvbklk
+ZW50aWZpZXI9VkFUUlMtMTAwMDAyODAzLEw9QmVvZ3JhZCxDPVJTP2NBQ2Vy
+dGlmaWNhdGU7YmluYXJ5ME4GCCsGAQUFBzAChkJodHRwOi8vcmVwb3NpdG9y
+eS5jYS5wb3N0YS5ycy9jYS1zZXJ0aWZpa2F0aS9Qb3N0YVNyYmlqZUNBUm9v
+dC5kZXIwRgYDVR0gBD8wPTA7BgRVHSAAMDMwMQYIKwYBBQUHAgEWJWh0dHBz
+Oi8vd3d3LmNhLnBvc3RhLnJzL2Rva3VtZW50YWNpamEwDQYJKoZIhvcNAQEN
+BQADggIBAJEL3z774do2KvuCrFG5YMm+DnyAFQcT1zWByT8D7tNb0Ib4paWP
+Xn9QnC/7m6ULJxlAO1DOd6FzacNETHV4uCfC8Tz1xfh2TqLUZwz8RPmdKxyE
+uboCFZCGp6gZHHIhMpknMVt8n7aViVCeGD7dvtb0++GOewoBBwl65ktHW7sY
+mpuapcOTZbilM6BfQ/ew+v7w+LtkASKYCAusWsj/WWubJRmPZYGEyll/wdeV
+bYkF27zdANlC53r3hNlDFAoxisN1HQ5p5A2U9SB7fGkbAX5aq5r+G1cnyPK7
+IBn5Q1myNmhmviw6mNQlonDZQT4k25q9lA4Kh5XBhg0unl5KCVFp8YOUSuCw
+vjCZOlkGymT4jCXnaF9zkKN8ZLhORnxljEBgMb5ghhqr5FHMAN09ZpJv5mcu
+aQch6lstgaqgDktZUpt7ce5HWPVrQrhht797LwWnYfk9OvbLjdrt1pFfSEdF
+idT6FPbit9I7jyfP4AcLEvfuybJZWbeE2ddU+hKSfZi/4jMQiXtx4dJj8N6f
+ndJhURc5mNDAf9N85FjKT6sn50zXd4KQtWv5jjYpquFzB6tIf1k+w6kB6XCW
+E0wpyCEW6OIe3XZEIGAtYIuMXZ38THTITGpOPgvfS7Hc0ZiQ/hf2nTTmpTcO
+PexybKGE9HQ0hypmKaN9QWgFKRwUqunu
+</xades:EncapsulatedX509Certificate>
+              <xades:EncapsulatedX509Certificate>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
+</xades:EncapsulatedX509Certificate>
+            </xades:CertificateValues>
+          </xades:UnsignedSignatureProperties>
+        </xades:UnsignedProperties>
+      </xades:QualifyingProperties>
+    </ds:Object>
+  </ds:Signature>
+</asic:XAdESSignatures>`;
 
       res.send(mockXml);
     };
