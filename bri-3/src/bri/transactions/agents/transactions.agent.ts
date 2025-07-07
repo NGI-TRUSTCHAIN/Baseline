@@ -201,31 +201,32 @@ export class TransactionAgent {
     const payloadFormatType =
       workstep.workstepConfig.payloadFormatType || PayloadFormatType.JSON;
 
+    let txPayload;
+
+    //Parse user input payload based on the workstep type
     if (workstep.workstepConfig.payloadFormatType === PayloadFormatType.XML) {
-      const xmlPayload = await this.circuitInputsParserService.parseXMLToFlat(
+      txPayload = await this.circuitInputsParserService.parseXMLToFlat(
         tx.payload,
       );
-      txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
-        xmlPayload,
-        `${process.env.MERKLE_TREE_HASH_ALGH}`,
-      );
     } else {
-      txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
-        JSON.parse(tx.payload),
-        `${process.env.MERKLE_TREE_HASH_ALGH}`,
-      );
+      txPayload = JSON.parse(tx.payload);
     }
 
+    txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
+      txPayload,
+      `${process.env.MERKLE_TREE_HASH_ALGH}`,
+    );
+
+    //Update the tx.payload based on the workstep type
     switch (workstep.workstepConfig.type) {
       case WorkstepType.BPI_WAIT:
         this.logger.logInfo(
-          `called from another bpi with payload ${tx.payload}`,
+          `Called from another bpi with payload ${tx.payload}`,
         );
         tx.payload = {} as any; // TODO
         break;
       case WorkstepType.BPI_TRIGGER:
-        this.logger.logInfo(`triggering bpi with payload ${tx.payload}`);
-        const parsedPayload = JSON.parse(tx.payload);
+        this.logger.logInfo(`Triggering bpi with payload ${tx.payload}`);
         this.natsMessagingClient.publish('general', tx.payload);
         tx.payload = {} as any; // TODO
         break;
@@ -235,17 +236,18 @@ export class TransactionAgent {
         break;
 
       case WorkstepType.PAYLOAD_FROM_API:
-        this.logger.logInfo('CALLING API WORKSTEP');
+        this.logger.logInfo('Calling API with payload');
         const response = await this.executeApiCall(
           workstep.workstepConfig.executionParams.apiUrl!,
-          JSON.parse(tx.payload),
+          txPayload,
         );
-        this.logger.logInfo(`RESPONSE: ${JSON.stringify(response.data)}`);
+        this.logger.logInfo(`Response: ${JSON.stringify(response.data)}`);
         const parsed = await parseStringPromise(response.data, {
           explicitArray: false,
           tagNameProcessors: [processors.stripPrefix],
         });
 
+        //Update tx payload with parsed API response
         tx.payload = JSON.stringify(parsed);
         break;
 
@@ -281,7 +283,7 @@ export class TransactionAgent {
     );
 
     txResult.verifiedOnChain = await this.ccsmService.verifyProof(
-      workstep.workstepConfig.executionParams.verifierContractAddress!,
+      workstep.workstepConfig.executionParams.verifierContractAddress,
       verifierContractAbiFilePath,
       txResult.witness,
     );
