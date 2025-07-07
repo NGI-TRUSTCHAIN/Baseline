@@ -196,7 +196,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       'workstep1',
       createdWorkgroupId,
       {
-        type: WorkstepType.BLOCKCHAIN,
+        type: WorkstepType.PAYLOAD_FROM_USER,
         executionParams: {
           verifierContractAddress: 'TODO',
         },
@@ -208,7 +208,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       'workstep2',
       createdWorkgroupId,
       {
-        type: WorkstepType.API,
+        type: WorkstepType.PAYLOAD_FROM_API,
         executionParams: {
           apiUrl: process.env.EFAKTURA_URL,
         },
