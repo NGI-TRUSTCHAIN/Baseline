@@ -1,8 +1,8 @@
 import { AutoMap } from '@automapper/classes';
 
 export enum WorkstepType {
-  BLOCKCHAIN = 'BLOCKCHAIN',
-  API = 'API',
+  PAYLOAD_FROM_USER = 'PAYLOAD_FROM_USER',
+  PAYLOAD_FROM_API = 'PAYLOAD_FROM_API',
   BPI_TRIGGER = 'BPI_TRIGGER',
   BPI_WAIT = 'BPI_WAIT',
 }
