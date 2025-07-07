@@ -35,7 +35,10 @@ import {
 import { TransactionResult } from '../models/transactionResult';
 import { TransactionStorageAgent } from './transactionStorage.agent';
 import { IMessagingClient } from '../../communication/messagingClients/messagingClient.interface';
+<<<<<<< HEAD
 //import fetch from 'node-fetch';
+=======
+>>>>>>> b0a550fd96adeca7008f87a795c21f4328de6488
 
 @Injectable()
 export class TransactionAgent {
