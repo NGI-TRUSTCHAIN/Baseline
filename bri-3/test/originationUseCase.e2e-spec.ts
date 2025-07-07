@@ -192,24 +192,14 @@ describe('Invoice origination use-case end-to-end test', () => {
   });
 
   it('Sets up a workflow with a two worksteps for validating supplier provided invoice and triggering efakture API in the previously created workgroup', async () => {
+    //Workstep 1 calls efaktura API and validates the supplier provided invoice using circuit
     createdWorkstep1Id = await bpiService1.createWorkstep(
       'workstep1',
       createdWorkgroupId,
       {
-        type: WorkstepType.PAYLOAD_FROM_USER,
-        executionParams: {
-          verifierContractAddress: 'TODO',
-        },
-        payloadFormatType: PayloadFormatType.XML,
-      },
-    );
-
-    createdWorkstep2Id = await bpiService1.createWorkstep(
-      'workstep2',
-      createdWorkgroupId,
-      {
         type: WorkstepType.PAYLOAD_FROM_API,
         executionParams: {
+          verifierContractAddress: 'TODO',
           apiUrl: process.env.EFAKTURA_URL,
         },
         payloadFormatType: PayloadFormatType.XML,
@@ -219,7 +209,7 @@ describe('Invoice origination use-case end-to-end test', () => {
     createdWorkflowId = await bpiService1.createWorkflow(
       'workflow1',
       createdWorkgroupId,
-      [createdWorkstep1Id, createdWorkstep2Id],
+      [createdWorkstep1Id],
       [createdBpiSubjectAccountSupplierId, createdBpiSubjectAccountBuyerId],
     );
   });
