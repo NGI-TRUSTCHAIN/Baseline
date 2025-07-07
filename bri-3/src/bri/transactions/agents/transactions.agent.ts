@@ -35,6 +35,7 @@ import {
 import { TransactionResult } from '../models/transactionResult';
 import { TransactionStorageAgent } from './transactionStorage.agent';
 import { IMessagingClient } from '../../communication/messagingClients/messagingClient.interface';
+import fetch from 'node-fetch';
 
 @Injectable()
 export class TransactionAgent {
@@ -203,20 +204,6 @@ export class TransactionAgent {
 
     let txPayload;
 
-    //Parse user input payload based on the workstep type
-    if (workstep.workstepConfig.payloadFormatType === PayloadFormatType.XML) {
-      txPayload = await this.circuitInputsParserService.parseXMLToFlat(
-        tx.payload,
-      );
-    } else {
-      txPayload = JSON.parse(tx.payload);
-    }
-
-    txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
-      txPayload,
-      `${process.env.MERKLE_TREE_HASH_ALGH}`,
-    );
-
     //Update the tx.payload based on the workstep type
     switch (workstep.workstepConfig.type) {
       case WorkstepType.BPI_WAIT:
@@ -239,16 +226,10 @@ export class TransactionAgent {
         this.logger.logInfo('Calling API with payload');
         const response = await this.executeApiCall(
           workstep.workstepConfig.executionParams.apiUrl!,
-          tx.payload,
+          JSON.parse(tx.payload),
         );
-        this.logger.logInfo(`Response: ${JSON.stringify(response.data)}`);
-        const parsed = await parseStringPromise(response.data, {
-          explicitArray: false,
-          tagNameProcessors: [processors.stripPrefix],
-        });
-
-        //Update tx payload with parsed API response
-        tx.payload = JSON.stringify(parsed);
+        this.logger.logInfo(`Response: ${response.data}`);
+        tx.payload = response.data;
         break;
 
       default:
@@ -256,6 +237,20 @@ export class TransactionAgent {
           `Unsupported workstep type: ${workstep.workstepConfig.type}`,
         );
     }
+
+    //Parse payload based on the workstep type
+    if (workstep.workstepConfig.payloadFormatType === PayloadFormatType.XML) {
+      txPayload = await this.circuitInputsParserService.parseXMLToFlat(
+        tx.payload,
+      );
+    } else {
+      txPayload = JSON.parse(tx.payload);
+    }
+
+    txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
+      txPayload,
+      `${process.env.MERKLE_TREE_HASH_ALGH}`,
+    );
 
     const {
       circuitProvingKeyPath,
@@ -458,17 +453,18 @@ export class TransactionAgent {
       this.logger.logInfo(`FULL URL ${fullUrl}`);
 
       const response = await fetch(fullUrl, {
-        method: payload.method || 'GET',
+        method: payload.method,
         headers: {
           'Content-Type': payload.contentType || 'application/json',
-          ApiKey: payload.apiKey,
-          ...payload.headers,
+          apiKey: payload.apiKey || '',
         },
-        body: payload.body ? JSON.stringify(payload.body) : undefined,
+        body:
+          payload.method !== 'GET' ? JSON.stringify(payload.body) : undefined,
       });
 
       if (!response.ok) {
-        throw new Error(`API call failed with status ${response.status}`);
+        const text = await response.text();
+        throw new Error(`API call failed with status ${text}`);
       }
 
       const contentType = response.headers.get('content-type');

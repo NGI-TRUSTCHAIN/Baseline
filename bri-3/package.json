@@ -68,6 +68,7 @@
     "logplease": "^1.2.15",
     "merkletreejs": "^0.5.2",
     "nats": "^2.29.3",
+    "node-fetch": "^3.3.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.0",
     "prisma-extension-bark": "^0.2.2",
