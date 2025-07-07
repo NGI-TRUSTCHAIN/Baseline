@@ -14,7 +14,7 @@ export enum PayloadFormatType {
 
 export class WorkstepExecutionParams {
   @AutoMap()
-  verifierContractAddress?: string;
+  verifierContractAddress: string;
 
   @AutoMap()
   apiUrl?: string;
