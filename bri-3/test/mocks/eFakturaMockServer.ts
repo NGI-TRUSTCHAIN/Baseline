@@ -7,7 +7,7 @@ export class EFakturaMockServer {
   private server!: Server; // Use definite assignment assertion
   private port: number;
 
-  constructor(port = 3001) {
+  constructor(port = 3005) {
     this.app = express();
     this.port = port;
   }
@@ -224,6 +224,7 @@ export class EFakturaMockServer {
 
     this.app.get('/api/publicApi/sales-invoice/xml', handleInvoiceRequest);
     this.app.get('/api/health', (_req: Request, res: Response) => {
+      console.log('Health check endpoint hit');
       res.status(200).json({ status: 'ok' });
     });
   }
