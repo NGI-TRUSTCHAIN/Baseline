@@ -239,7 +239,7 @@ export class TransactionAgent {
         this.logger.logInfo('Calling API with payload');
         const response = await this.executeApiCall(
           workstep.workstepConfig.executionParams.apiUrl!,
-          txPayload,
+          tx.payload,
         );
         this.logger.logInfo(`Response: ${JSON.stringify(response.data)}`);
         const parsed = await parseStringPromise(response.data, {

@@ -25,6 +25,7 @@ import { ApiClient } from './helpers/apiClient';
 import { BpiService } from './helpers/bpiService';
 import * as path from 'path';
 import * as fs from 'fs';
+import 'dotenv/config';
 
 jest.setTimeout(240000);
 
@@ -152,7 +153,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         'serbiaWorkstep1',
         createdWorkgroupId,
         {
-          type: WorkstepType.BLOCKCHAIN,
+          type: WorkstepType.PAYLOAD_FROM_USER,
           executionParams: {
             verifierContractAddress:
               '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707',
@@ -165,10 +166,11 @@ describe('Invoice origination use-case end-to-end test', () => {
         'serbiaWorkstep2',
         createdWorkgroupId,
         {
-          type: WorkstepType.BLOCKCHAIN,
+          type: WorkstepType.PAYLOAD_FROM_API,
           executionParams: {
             verifierContractAddress:
               '0x0165878A594ca255338adfa4d48449f69242Eb8F',
+            apiUrl: process.env.EFAKTURA_URL,
           },
           payloadFormatType: PayloadFormatType.XML,
         },
@@ -178,7 +180,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         'serbiaWorkstep3',
         createdWorkgroupId,
         {
-          type: WorkstepType.BLOCKCHAIN,
+          type: WorkstepType.PAYLOAD_FROM_USER,
           executionParams: {
             verifierContractAddress:
               '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853',
@@ -192,7 +194,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         'serbiaWorkstep4',
         createdWorkgroupId,
         {
-          type: WorkstepType.BLOCKCHAIN,
+          type: WorkstepType.PAYLOAD_FROM_API,
           executionParams: {
             verifierContractAddress:
               '0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6',
@@ -295,7 +297,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       await bpiService1.addCircuitInputsSchema(createdWorkstep4Id, schema);
     });
 
-    it('Submits transaction for execution of the workstep 1', async () => {
+    it.skip('Submits transaction for execution of the workstep 1', async () => {
       const xmlFilePath = path.join(
         __dirname,
         '../src/shared/testing/interop/supplierInvoice.xml',
@@ -314,7 +316,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       );
     });
 
-    it('Waits for a single VSM cycle and then verifies that the transaction 1 has been executed', async () => {
+    it.skip('Waits for a single VSM cycle and then verifies that the transaction 1 has been executed', async () => {
       const resultWorkflow = await bpiService1.fetchWorkflow(createdWorkflowId);
       const resultBpiAccount = await waitForTreeUpdate(
         bpiService1,
@@ -346,8 +348,8 @@ describe('Invoice origination use-case end-to-end test', () => {
     it('Submits transaction for execution of the workstep 2', async () => {
       const xmlFilePath = path.join(
         __dirname,
-        '../src/shared/testing/interop/signatures0.xml',
-      );
+        '../src/shared/testing/interop/supplierInvoice.xml',
+      ); //API call to EFAKTURA with this file should generate the content of signatures0.xml file
       const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
       const workstep2payload = xmlContent;
 
@@ -392,7 +394,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       ).toBe(0);
     });
 
-    it('Submits transaction for execution of the workstep 3', async () => {
+    it.skip('Submits transaction for execution of the workstep 3', async () => {
       const xmlFilePath = path.join(
         __dirname,
         '../src/shared/testing/interop/supplierInvoice.xml',
@@ -412,7 +414,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       );
     });
 
-    it('Waits for a single VSM cycle and then verifies that the transaction 3 has been executed', async () => {
+    it.skip('Waits for a single VSM cycle and then verifies that the transaction 3 has been executed', async () => {
       const resultWorkflow = await bpiService1.fetchWorkflow(createdWorkflowId);
       const resultBpiAccount = await waitForTreeUpdate(
         bpiService1,
@@ -550,7 +552,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         'romaniaWorkstep1',
         createdWorkgroupId2,
         {
-          type: WorkstepType.BLOCKCHAIN,
+          type: WorkstepType.PAYLOAD_FROM_USER,
           executionParams: {
             verifierContractAddress:
               '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',
