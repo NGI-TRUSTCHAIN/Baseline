@@ -35,7 +35,6 @@ import {
 import { TransactionResult } from '../models/transactionResult';
 import { TransactionStorageAgent } from './transactionStorage.agent';
 import { IMessagingClient } from '../../communication/messagingClients/messagingClient.interface';
-import fetch from 'node-fetch';
 
 @Injectable()
 export class TransactionAgent {
@@ -265,8 +264,6 @@ export class TransactionAgent {
       workstep.name,
     );
 
-    console.log('creating witness');
-
     txResult.witness = await this.circuitService.createWitness(
       await this.prepareCircuitInputs(
         tx,
@@ -279,8 +276,6 @@ export class TransactionAgent {
       circuitWitnessCalculatorPath,
       circuitWitnessFilePath,
     );
-
-    console.log('created witness');
 
     txResult.verifiedOnChain = await this.ccsmService.verifyProof(
       workstep.workstepConfig.executionParams.verifierContractAddress,
