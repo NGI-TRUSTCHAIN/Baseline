@@ -35,10 +35,7 @@ import {
 import { TransactionResult } from '../models/transactionResult';
 import { TransactionStorageAgent } from './transactionStorage.agent';
 import { IMessagingClient } from '../../communication/messagingClients/messagingClient.interface';
-<<<<<<< HEAD
-//import fetch from 'node-fetch';
-=======
->>>>>>> b0a550fd96adeca7008f87a795c21f4328de6488
+import fetch from 'node-fetch';
 
 @Injectable()
 export class TransactionAgent {
@@ -231,7 +228,8 @@ export class TransactionAgent {
           workstep.workstepConfig.executionParams.apiUrl!,
           JSON.parse(tx.payload),
         );
-        this.logger.logInfo(`Response: ${response.data}`);
+        // this.logger.logInfo(`Response: ${response.data}`);
+
         tx.payload = response.data;
         break;
 
@@ -267,6 +265,8 @@ export class TransactionAgent {
       workstep.name,
     );
 
+    console.log('creating witness');
+
     txResult.witness = await this.circuitService.createWitness(
       await this.prepareCircuitInputs(
         tx,
@@ -279,6 +279,8 @@ export class TransactionAgent {
       circuitWitnessCalculatorPath,
       circuitWitnessFilePath,
     );
+
+    console.log('created witness');
 
     txResult.verifiedOnChain = await this.ccsmService.verifyProof(
       workstep.workstepConfig.executionParams.verifierContractAddress,
@@ -458,8 +460,7 @@ export class TransactionAgent {
       const response = await fetch(fullUrl, {
         method: payload.method,
         headers: {
-          'Content-Type': payload.contentType || 'application/json',
-          apiKey: payload.apiKey || '',
+          apiKey: payload.apiKey,
         },
         body:
           payload.method !== 'GET' ? JSON.stringify(payload.body) : undefined,
