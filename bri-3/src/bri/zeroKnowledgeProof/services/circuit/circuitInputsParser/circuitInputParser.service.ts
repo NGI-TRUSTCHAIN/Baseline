@@ -192,6 +192,9 @@ export class CircuitInputsParserService {
 
     for (const part of parts) {
       if (currentValue[part] === undefined) {
+        this.logger.logError(
+          `Path '${part}' not found in payload: ${JSON.stringify(json)}`,
+        );
         return undefined;
       }
       currentValue = currentValue[part];
