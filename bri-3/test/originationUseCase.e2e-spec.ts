@@ -297,7 +297,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       await bpiService1.addCircuitInputsSchema(createdWorkstep4Id, schema);
     });
 
-    it.skip('Submits transaction for execution of the workstep 1', async () => {
+    it('Submits transaction for execution of the workstep 1', async () => {
       const xmlFilePath = path.join(
         __dirname,
         '../src/shared/testing/interop/supplierInvoice.xml',
@@ -316,7 +316,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       );
     });
 
-    it.skip('Waits for a single VSM cycle and then verifies that the transaction 1 has been executed', async () => {
+    it('Waits for a single VSM cycle and then verifies that the transaction 1 has been executed', async () => {
       const resultWorkflow = await bpiService1.fetchWorkflow(createdWorkflowId);
       const resultBpiAccount = await waitForTreeUpdate(
         bpiService1,
@@ -401,7 +401,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       ).toBe(0);
     });
 
-    it.skip('Submits transaction for execution of the workstep 3', async () => {
+    it('Submits transaction for execution of the workstep 3', async () => {
       const xmlFilePath = path.join(
         __dirname,
         '../src/shared/testing/interop/supplierInvoice.xml',
@@ -421,7 +421,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       );
     });
 
-    it.skip('Waits for a single VSM cycle and then verifies that the transaction 3 has been executed', async () => {
+    it('Waits for a single VSM cycle and then verifies that the transaction 3 has been executed', async () => {
       const resultWorkflow = await bpiService1.fetchWorkflow(createdWorkflowId);
       const resultBpiAccount = await waitForTreeUpdate(
         bpiService1,
@@ -457,7 +457,15 @@ describe('Invoice origination use-case end-to-end test', () => {
         '../src/shared/testing/interop/verifiedSupplierInvoice.xml',
       );
       const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
-      const workstep4payload = xmlContent;
+      const workstep4payload = {
+        method: 'GET',
+        apiKey: process.env.EFAKTURA_API_KEY,
+        headers: {},
+        queryParams: {
+          invoiceId: '1',
+        },
+        body: xmlContent,
+      };
 
       createdTransactionApiId = await bpiService1.createTransaction(
         v4(),
@@ -467,7 +475,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         createdBpiSubjectAccountBuyerId,
         buyerBpiSubjectEddsaPrivateKey,
         createdBpiSubjectAccountSupplierId,
-        workstep4payload,
+        JSON.stringify(workstep4payload),
       );
     });
 
