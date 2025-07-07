@@ -221,150 +221,32 @@ export class TransactionAgent {
         this.logger.logInfo(
           `called from another bpi with payload ${tx.payload}`,
         );
-        txResult.witness = {} as any; // TODO
+        tx.payload = {} as any; // TODO
         break;
       case WorkstepType.BPI_TRIGGER:
         this.logger.logInfo(`triggering bpi with payload ${tx.payload}`);
         const parsedPayload = JSON.parse(tx.payload);
         this.natsMessagingClient.publish('general', tx.payload);
-        txResult.witness = {} as any; // TODO
+        tx.payload = {} as any; // TODO
         break;
-      case WorkstepType.BLOCKCHAIN:
-        const {
-          circuitProvingKeyPath,
-          circuitVerificatioKeyPath,
-          circuitPath,
-          circuitWitnessCalculatorPath,
-          circuitWitnessFilePath,
-          verifierContractAbiFilePath,
-        } = this.constructCircuitPathsFromWorkgroupAndWorkstepName(
-          workgroup.name,
-          workstep.name,
-        );
-
-        txResult.witness = await this.circuitService.createWitness(
-          await this.prepareCircuitInputs(
-            tx,
-            workstep.circuitInputsTranslationSchema,
-            payloadFormatType,
-          ),
-          circuitPath,
-          circuitProvingKeyPath,
-          circuitVerificatioKeyPath,
-          circuitWitnessCalculatorPath,
-          circuitWitnessFilePath,
-        );
-
-        txResult.verifiedOnChain = await this.ccsmService.verifyProof(
-          workstep.workstepConfig.executionParams.verifierContractAddress!,
-          verifierContractAbiFilePath,
-          txResult.witness,
-        );
+      case WorkstepType.PAYLOAD_FROM_USER:
+        this.logger.logInfo('Triggering tx execution with user input payload');
+        //TODO: Add formatting or verification for tx.payload
         break;
 
-      case WorkstepType.API:
+      case WorkstepType.PAYLOAD_FROM_API:
         this.logger.logInfo('CALLING API WORKSTEP');
         const response = await this.executeApiCall(
           workstep.workstepConfig.executionParams.apiUrl!,
           JSON.parse(tx.payload),
         );
-        this.logger.logInfo(`RESPONSE: ${JSON.stringify(response)}`);
+        this.logger.logInfo(`RESPONSE: ${JSON.stringify(response.data)}`);
         const parsed = await parseStringPromise(response.data, {
           explicitArray: false,
           tagNameProcessors: [processors.stripPrefix],
         });
 
-        const envelope = parsed.DocumentEnvelope;
-        const header = envelope.DocumentHeader;
-        const body = envelope.DocumentBody;
-        const invoice = body.Invoice;
-
-        this.logger.logInfo('DOCUMENT HEADER');
-        this.logger.logInfo(`SalesInvoiceId: ${header.SalesInvoiceId}`);
-        this.logger.logInfo(`PurchaseInvoiceId: ${header.PurchaseInvoiceId}`);
-        this.logger.logInfo(`DocumentId: ${header.DocumentId}`);
-        this.logger.logInfo(`CreationDate: ${header.CreationDate}`);
-        this.logger.logInfo(`SendingDate: ${header.SendingDate}`);
-
-        this.logger.logInfo('\nINVOICE');
-        this.logger.logInfo(`ID: ${invoice.ID}`);
-        this.logger.logInfo(`IssueDate: ${invoice.IssueDate}`);
-        this.logger.logInfo(`DueDate: ${invoice.DueDate}`);
-        this.logger.logInfo(`TypeCode: ${invoice.InvoiceTypeCode}`);
-        this.logger.logInfo(`Currency: ${invoice.DocumentCurrencyCode}`);
-
-        const supplier = invoice.AccountingSupplierParty.Party;
-        const customer = invoice.AccountingCustomerParty.Party;
-
-        this.logger.logInfo('\nSUPPLIER');
-        this.logger.logInfo(`Name: ${supplier.PartyName?.Name}`);
-        this.logger.logInfo(`EndpointID: ${supplier.EndpointID?._}`);
-        this.logger.logInfo(`Street: ${supplier.PostalAddress?.StreetName}`);
-        this.logger.logInfo(`City: ${supplier.PostalAddress?.CityName}`);
-        this.logger.logInfo(
-          `Country: ${supplier.PostalAddress?.Country?.IdentificationCode}`,
-        );
-
-        this.logger.logInfo('\nCUSTOMER');
-        this.logger.logInfo(`Name: ${customer.PartyName?.Name}`);
-        this.logger.logInfo(`EndpointID: ${customer.EndpointID?._}`);
-        this.logger.logInfo(`Street: ${customer.PostalAddress?.StreetName}`);
-        this.logger.logInfo(`City: ${customer.PostalAddress?.CityName}`);
-        this.logger.logInfo(
-          `PostalZone: ${customer.PostalAddress?.PostalZone}`,
-        );
-        this.logger.logInfo(
-          `Country: ${customer.PostalAddress?.Country?.IdentificationCode}`,
-        );
-
-        this.logger.logInfo('\nTOTALS');
-        const totals = invoice.LegalMonetaryTotal;
-        this.logger.logInfo(
-          `LineExtensionAmount: ${JSON.stringify(totals.LineExtensionAmount)}`,
-        );
-        this.logger.logInfo(
-          `TaxExclusiveAmount: ${JSON.stringify(totals.TaxExclusiveAmount)}`,
-        );
-        this.logger.logInfo(
-          `TaxInclusiveAmount: ${JSON.stringify(totals.TaxInclusiveAmount)}`,
-        );
-        this.logger.logInfo(
-          `PayableAmount: ${JSON.stringify(totals.PayableAmount)}`,
-        );
-
-        this.logger.logInfo('\nTAX');
-        const tax = invoice.TaxTotal;
-        this.logger.logInfo(`TaxAmount: ${JSON.stringify(tax.TaxAmount)}`);
-        const taxCategory = tax.TaxSubtotal?.TaxCategory;
-        this.logger.logInfo(`TaxCategory ID: ${taxCategory?.ID}`);
-        this.logger.logInfo(`Percent: ${taxCategory?.Percent}`);
-        this.logger.logInfo(`TaxScheme ID: ${taxCategory?.TaxScheme?.ID}`);
-
-        this.logger.logInfo('\nINVOICE LINES');
-        const lines = Array.isArray(invoice.InvoiceLine)
-          ? invoice.InvoiceLine
-          : [invoice.InvoiceLine];
-        lines.forEach((line, index) => {
-          this.logger.logInfo(`\nLine ${index + 1}`);
-          this.logger.logInfo(`ID: ${line.ID}`);
-          this.logger.logInfo(
-            `Quantity: ${line.InvoicedQuantity?._ || line.InvoicedQuantity}`,
-          );
-          this.logger.logInfo(
-            `Amount: ${JSON.stringify(line.LineExtensionAmount)}`,
-          );
-          const item = line.Item;
-          this.logger.logInfo(`Product Description: ${item.Description}`);
-          this.logger.logInfo(`Product Name: ${item.Name}`);
-          this.logger.logInfo(
-            `Product ID: ${item.SellersItemIdentification?.ID}`,
-          );
-          this.logger.logInfo(
-            `Price: ${JSON.stringify(line.Price?.PriceAmount)}`,
-          );
-        });
-
-        txResult.witness = {} as any; // TODO
+        tx.payload = JSON.stringify(parsed);
         break;
 
       default:
@@ -372,6 +254,37 @@ export class TransactionAgent {
           `Unsupported workstep type: ${workstep.workstepConfig.type}`,
         );
     }
+
+    const {
+      circuitProvingKeyPath,
+      circuitVerificatioKeyPath,
+      circuitPath,
+      circuitWitnessCalculatorPath,
+      circuitWitnessFilePath,
+      verifierContractAbiFilePath,
+    } = this.constructCircuitPathsFromWorkgroupAndWorkstepName(
+      workgroup.name,
+      workstep.name,
+    );
+
+    txResult.witness = await this.circuitService.createWitness(
+      await this.prepareCircuitInputs(
+        tx,
+        workstep.circuitInputsTranslationSchema,
+        payloadFormatType,
+      ),
+      circuitPath,
+      circuitProvingKeyPath,
+      circuitVerificatioKeyPath,
+      circuitWitnessCalculatorPath,
+      circuitWitnessFilePath,
+    );
+
+    txResult.verifiedOnChain = await this.ccsmService.verifyProof(
+      workstep.workstepConfig.executionParams.verifierContractAddress!,
+      verifierContractAbiFilePath,
+      txResult.witness,
+    );
 
     txResult.hash = this.constructTxHash(
       txResult.merkelizedPayload,
