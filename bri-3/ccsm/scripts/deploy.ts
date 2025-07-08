@@ -31,9 +31,9 @@ async function main() {
   // deploy verifier contracts for 3 worksteps from the e2e use-case.
   // in practice, they would be deployed by however is setting up the workflow
   // and only contract addresses would be added to the workstep
-
-  const Workstep1Verifier =
-    await hre.ethers.getContractFactory('Workstep1Verifier');
+  const Workstep1Verifier = await hre.ethers.getContractFactory(
+    'contracts/sriWorkgroup/workstep1Verifier.sol:PlonkVerifier',
+  );
 
   const workstep1Verifier = await Workstep1Verifier.deploy();
 
@@ -42,8 +42,9 @@ async function main() {
     await workstep1Verifier.getAddress(),
   );
 
-  const Workstep2Verifier =
-    await hre.ethers.getContractFactory('Workstep2Verifier');
+  const Workstep2Verifier = await hre.ethers.getContractFactory(
+    'contracts/sriWorkgroup/workstep2Verifier.sol:PlonkVerifier',
+  );
 
   const workstep2Verifier = await Workstep2Verifier.deploy();
 
@@ -52,8 +53,9 @@ async function main() {
     await workstep2Verifier.getAddress(),
   );
 
-  const Workstep3Verifier =
-    await hre.ethers.getContractFactory('Workstep3Verifier');
+  const Workstep3Verifier = await hre.ethers.getContractFactory(
+    'contracts/sriWorkgroup/workstep3Verifier.sol:PlonkVerifier',
+  );
 
   const workstep3Verifier = await Workstep3Verifier.deploy();
 
