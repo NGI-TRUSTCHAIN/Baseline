@@ -25,7 +25,7 @@ import { WorkflowStorageAgent } from '../../workgroup/workflows/agents/workflows
 import { NOT_FOUND_ERR_MESSAGE as WORKFLOW_NOT_FOUND_ERR_MESSAGE } from '../../workgroup/workflows/api/err.messages';
 import { WorkstepStorageAgent } from '../../workgroup/worksteps/agents/workstepsStorage.agent';
 import { NOT_FOUND_ERR_MESSAGE as WORKSTEP_NOT_FOUND_ERR_MESSAGE } from '../../workgroup/worksteps/api/err.messages';
-import { CircuitInputsParserService } from '../../zeroKnowledgeProof/services/circuit/circuitInputsParser/circuitInputParser.service';
+import { GeneralCircuitInputsParserService } from '../../zeroKnowledgeProof/services/circuit/circuitInputsParser/generalCircuitInputParser.service';
 import { SnarkjsCircuitService } from '../../zeroKnowledgeProof/services/circuit/snarkjs/snarkjs.service';
 import { Transaction } from '../models/transaction';
 import { TransactionStatus } from '../models/transactionStatus.enum';
@@ -79,7 +79,7 @@ beforeEach(async () => {
         provide: 'IMessagingClient',
         useClass: NatsMessagingClient,
       },
-      CircuitInputsParserService,
+      GeneralCircuitInputsParserService,
     ],
   })
     .overrideProvider(PrismaService)

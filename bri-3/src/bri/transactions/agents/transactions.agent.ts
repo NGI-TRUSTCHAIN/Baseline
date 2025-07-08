@@ -24,7 +24,7 @@ import {
   Workstep,
   WorkstepType,
 } from '../../workgroup/worksteps/models/workstep';
-import { CircuitInputsParserService } from '../../zeroKnowledgeProof/services/circuit/circuitInputsParser/circuitInputParser.service';
+import { GeneralCircuitInputsParserService } from '../../zeroKnowledgeProof/services/circuit/circuitInputsParser/generalCircuitInputParser.service';
 import { ICircuitService } from '../../zeroKnowledgeProof/services/circuit/circuitService.interface';
 import { computeEddsaSigPublicInputs } from '../../zeroKnowledgeProof/services/circuit/snarkjs/utils/computePublicInputs';
 import {
@@ -46,7 +46,7 @@ export class TransactionAgent {
     private merkleTreeService: MerkleTreeService,
     @Inject('ICircuitService')
     private readonly circuitService: ICircuitService,
-    private circuitInputsParserService: CircuitInputsParserService,
+    private circuitInputsParserService: GeneralCircuitInputsParserService,
     @Inject('ICcsmService')
     private readonly ccsmService: ICcsmService,
     private readonly logger: LoggingService,
@@ -349,7 +349,7 @@ export class TransactionAgent {
       snakeCaseWorkstepName +
       'Verifier.sol' +
       '/' +
-      snakeCaseWorkstepName +
+      process.env.CIRCUIT_TYPE +
       'Verifier.json';
     return {
       circuitProvingKeyPath,
@@ -391,35 +391,47 @@ export class TransactionAgent {
       payloadFormatType,
     );
 
-    return Object.assign(
-      payloadAsCircuitInputs,
-      await computeEddsaSigPublicInputs(tx),
-    );
+    return payloadAsCircuitInputs;
   }
 
   private async preparePayloadAsCircuitInputs(
-    txPayload: string,
+    tx: Transaction,
     workstepTranslationSchema: string,
     payloadFormatType: PayloadFormatType,
   ): Promise<object> {
-    const mapping: CircuitInputsMapping = JSON.parse(workstepTranslationSchema);
-
-    if (!mapping) {
+    const schema = JSON.parse(workstepTranslationSchema);
+    if (!schema) {
       throw new Error(`Broken mapping`);
     }
-
-    const parsedInputs =
-      await this.circuitInputsParserService.applyMappingToTxPayload(
-        txPayload,
-        payloadFormatType,
-        mapping,
-      );
-
-    if (!parsedInputs) {
-      throw new Error(`Failed to parse inputs`);
+    let parsedInputs;
+    if ('extractions' in schema) {
+      const generalSchema = schema as GeneralCircuitInputsMapping;
+      parsedInputs =
+        await this.circuitInputsParserService.applyGeneralMappingToTxPayload(
+          tx.payload,
+          payloadFormatType,
+          generalSchema,
+        );
+      if (!parsedInputs) {
+        throw new Error(`Failed to parse inputs`);
+      }
+    } else {
+      const circuitSchema = schema as CircuitInputsMapping;
+      parsedInputs =
+        await this.circuitInputsParserService.applyMappingToTxPayload(
+          tx.payload,
+          payloadFormatType,
+          circuitSchema,
+        );
+      if (!parsedInputs) {
+        throw new Error(`Failed to parse inputs`);
+      }
+    }
+    if (!(schema.mapping.length === 0)) {
+      return Object.assign(parsedInputs, await computeEddsaSigPublicInputs(tx));
     }
 
-    return parsedInputs;
+    return Object.assign(parsedInputs);
   }
 
   private constructTxHash(
