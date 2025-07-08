@@ -386,6 +386,7 @@ export class TransactionAgent {
     payloadFormatType: PayloadFormatType,
   ): Promise<object> {
     const payloadAsCircuitInputs = await this.preparePayloadAsCircuitInputs(
+      tx,
       payload,
       circuitInputsTranslationSchema,
       payloadFormatType,
@@ -396,6 +397,7 @@ export class TransactionAgent {
 
   private async preparePayloadAsCircuitInputs(
     tx: Transaction,
+    payload: any,
     workstepTranslationSchema: string,
     payloadFormatType: PayloadFormatType,
   ): Promise<object> {
@@ -408,7 +410,7 @@ export class TransactionAgent {
       const generalSchema = schema as GeneralCircuitInputsMapping;
       parsedInputs =
         await this.circuitInputsParserService.applyGeneralMappingToTxPayload(
-          tx.payload,
+          payload,
           payloadFormatType,
           generalSchema,
         );
@@ -419,7 +421,7 @@ export class TransactionAgent {
       const circuitSchema = schema as CircuitInputsMapping;
       parsedInputs =
         await this.circuitInputsParserService.applyMappingToTxPayload(
-          tx.payload,
+          payload,
           payloadFormatType,
           circuitSchema,
         );
