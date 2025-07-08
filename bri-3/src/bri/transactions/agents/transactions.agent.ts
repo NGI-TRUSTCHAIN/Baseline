@@ -201,24 +201,34 @@ export class TransactionAgent {
     const payloadFormatType =
       workstep.workstepConfig.payloadFormatType || PayloadFormatType.JSON;
 
-    let txPayload;
+    let payload: any;
+    let parsedPayload: any;
 
-    //Update the tx.payload based on the workstep type
     switch (workstep.workstepConfig.type) {
       case WorkstepType.BPI_WAIT:
         this.logger.logInfo(
           `Called from another bpi with payload ${tx.payload}`,
         );
-        tx.payload = {} as any; // TODO
+        payload = {} as any; // TODO
         break;
       case WorkstepType.BPI_TRIGGER:
         this.logger.logInfo(`Triggering bpi with payload ${tx.payload}`);
         this.natsMessagingClient.publish('general', tx.payload);
-        tx.payload = {} as any; // TODO
+        payload = {} as any; // TODO
         break;
       case WorkstepType.PAYLOAD_FROM_USER:
         this.logger.logInfo('Triggering tx execution with user input payload');
-        //TODO: Add formatting or verification for tx.payload
+
+        payload = tx.payload;
+
+        if (
+          workstep.workstepConfig.payloadFormatType === PayloadFormatType.XML
+        ) {
+          parsedPayload =
+            await this.circuitInputsParserService.parseXMLToFlat(payload);
+        } else {
+          parsedPayload = JSON.parse(payload);
+        }
         break;
 
       case WorkstepType.PAYLOAD_FROM_API:
@@ -228,7 +238,15 @@ export class TransactionAgent {
           JSON.parse(tx.payload),
         );
         this.logger.logInfo(`Response: ${response.data}`);
-        tx.payload = response.data;
+        payload = response.data;
+
+        if (response.contentType === 'application/xml') {
+          parsedPayload =
+            await this.circuitInputsParserService.parseXMLToFlat(payload);
+        } else {
+          parsedPayload = JSON.parse(payload);
+        }
+
         break;
 
       default:
@@ -237,17 +255,8 @@ export class TransactionAgent {
         );
     }
 
-    //Parse payload based on the workstep type
-    if (workstep.workstepConfig.payloadFormatType === PayloadFormatType.XML) {
-      txPayload = await this.circuitInputsParserService.parseXMLToFlat(
-        tx.payload,
-      );
-    } else {
-      txPayload = JSON.parse(tx.payload);
-    }
-
     txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
-      txPayload,
+      parsedPayload,
       `${process.env.MERKLE_TREE_HASH_ALGH}`,
     );
 
@@ -266,6 +275,7 @@ export class TransactionAgent {
     txResult.witness = await this.circuitService.createWitness(
       await this.prepareCircuitInputs(
         tx,
+        payload,
         workstep.circuitInputsTranslationSchema,
         payloadFormatType,
       ),
@@ -371,11 +381,12 @@ export class TransactionAgent {
 
   private async prepareCircuitInputs(
     tx: Transaction,
+    payload: any,
     circuitInputsTranslationSchema: string,
     payloadFormatType: PayloadFormatType,
   ): Promise<object> {
     const payloadAsCircuitInputs = await this.preparePayloadAsCircuitInputs(
-      tx.payload,
+      payload,
       circuitInputsTranslationSchema,
       payloadFormatType,
     );
