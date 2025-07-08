@@ -23,6 +23,7 @@ import {
 } from '../src/shared/testing/utils';
 import { ApiClient } from './helpers/apiClient';
 import { BpiService } from './helpers/bpiService';
+import 'dotenv/config';
 
 jest.setTimeout(240000);
 
@@ -147,7 +148,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         'workstep1',
         createdWorkgroupId,
         {
-          type: WorkstepType.BLOCKCHAIN,
+          type: WorkstepType.PAYLOAD_FROM_USER,
           executionParams: {
             verifierContractAddress: 'TODO',
           },
@@ -159,8 +160,9 @@ describe('Invoice origination use-case end-to-end test', () => {
         'workstep2',
         createdWorkgroupId,
         {
-          type: WorkstepType.API,
+          type: WorkstepType.PAYLOAD_FROM_API,
           executionParams: {
+            verifierContractAddress: 'TODO',
             apiUrl: process.env.EFAKTURA_URL,
           },
           payloadFormatType: PayloadFormatType.XML,
@@ -294,7 +296,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         'romaniaWorkstep1',
         createdWorkgroupId2,
         {
-          type: WorkstepType.BLOCKCHAIN,
+          type: WorkstepType.PAYLOAD_FROM_USER,
           executionParams: {
             verifierContractAddress:
               '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9',

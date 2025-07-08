@@ -10,7 +10,7 @@ import {
 
 describe('CreateWorkstepDto', () => {
   const workstepConfig: WorkstepConfig = {
-    type: WorkstepType.BLOCKCHAIN,
+    type: WorkstepType.PAYLOAD_FROM_USER,
     executionParams: {
       verifierContractAddress: 'verifierContractAddress',
     },
