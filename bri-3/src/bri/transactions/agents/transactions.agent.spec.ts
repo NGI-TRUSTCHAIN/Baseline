@@ -204,7 +204,7 @@ beforeEach(async () => {
       privacyPolicy: '',
       workgroupId: workgroup.id,
       workstepConfig: {
-        type: WorkstepType.BLOCKCHAIN,
+        type: WorkstepType.PAYLOAD_FROM_USER,
         config: {
           verifierContractAddress: '',
         },
