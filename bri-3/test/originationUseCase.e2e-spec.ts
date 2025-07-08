@@ -507,6 +507,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         historyBpiMerkleTree.getLeafIndex(stateBpiMerkleTree.getRoot()),
       ).toBe(0);
     });
+
   });
 
   describe('Romania BPI service', () => {
@@ -685,6 +686,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         bpiService2,
         resultWorkflow.bpiAccountId,
       );
+
 
       const stateBpiMerkleTree = new BpiMerkleTree(
         'ttt',
