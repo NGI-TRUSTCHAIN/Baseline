@@ -12,6 +12,7 @@ import { buildMimcSponge } from 'circomlibjs';
 import { CircuitInputsParserService } from './circuitInputParser.service';
 import { PayloadFormatType } from '../../../../workgroup/worksteps/models/workstep';
 import { MerkleTree } from 'fixed-merkle-tree';
+import { UnifiedCircuitInputMapping } from './unifiedCircuitInputsMapping';
 
 @Injectable()
 export class GeneralCircuitInputsParserService extends CircuitInputsParserService {
@@ -156,7 +157,7 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
     return matches;
   }
 
-  private setPayloadValueByPath(obj: any, path: string, value: any): void {
+  protected setPayloadValueByPath(obj: any, path: string, value: any): void {
     const parts = path.split('.');
     const last = parts.pop();
 
@@ -335,5 +336,121 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
   private generateMimcMerkleHash(left: string, right: string) {
     const hash = this.mimcSponge.multiHash([left, right], 0, 1);
     return String(this.F.toObject(hash));
+  }
+
+  // Override the base class methods to support advanced features
+  protected async handleExtraction(
+    parsedPayload: any,
+    mapping: UnifiedCircuitInputMapping,
+    payloadType: PayloadFormatType,
+  ): Promise<any> {
+    if (!mapping.extractionField) {
+      return null;
+    }
+
+    // Handle x509 extraction
+    if (mapping.extractionParam === 'x509') {
+      return this.handleX509ExtractionAdvanced(parsedPayload, mapping.extractionField);
+    }
+
+    // Handle regular extraction
+    return this.extractMappings(payloadType, parsedPayload, mapping.extractionField, [], mapping.extractionParam)[0];
+  }
+
+  private handleX509ExtractionAdvanced(parsedPayload: any, field: string): any {
+    const certKeyPrefix = 'ds:X509Certificate';
+    const splitIndex = field.indexOf(certKeyPrefix) + certKeyPrefix.length;
+    const certKey = field.substring(0, splitIndex);
+    const certBase64 = parsedPayload[certKey];
+
+    if (typeof certBase64 !== 'string') return null;
+
+    const certBuffer = Buffer.from(certBase64.replace(/\s+/g, ''), 'base64');
+    const cert = new x509.X509Certificate(certBuffer);
+
+    const certInternalKey = field.startsWith(certKey + '.')
+      ? field.substring(certKey.length + 1)
+      : null;
+
+    return this.parseX509Certificate(cert, certInternalKey!);
+  }
+
+  protected async processCircuitInputMapping(
+    result: Record<string, any>,
+    mapping: UnifiedCircuitInputMapping,
+    value: any,
+  ): Promise<void> {
+    const circuitInput = mapping.circuitInput!;
+
+    // Handle different check types with full implementation
+    switch (mapping.checkType) {
+      case 'isEqual':
+        result[`${circuitInput}Value`] = value;
+        if (mapping.expectedValue !== undefined) {
+          result[`${circuitInput}Expected`] = mapping.expectedValue;
+        }
+        break;
+
+      case 'isInRange':
+        result[`${circuitInput}Value`] = value;
+        if (mapping.minValue !== undefined) {
+          result[`${circuitInput}Min`] = mapping.minValue;
+        }
+        if (mapping.maxValue !== undefined) {
+          result[`${circuitInput}Max`] = mapping.maxValue;
+        }
+        break;
+
+      case 'merkleProof':
+        const allLeaves = mapping.merkleTreeInputsPath?.map((path) =>
+          String(this.getPayloadValueByPath(result, path)),
+        );
+
+        if ((allLeaves?.length ?? 0) > 0) {
+          const {
+            merkleProofLeaf,
+            merkleProofRoot,
+            merkleProofPathElement,
+            merkleProofPathIndex,
+          } = await this.generateMerkleProofInputs(value, allLeaves!);
+          result[`${circuitInput}Leaf`] = merkleProofLeaf;
+          result[`${circuitInput}Root`] = merkleProofRoot;
+          result[`${circuitInput}PathElement`] = merkleProofPathElement;
+          result[`${circuitInput}PathIndex`] = merkleProofPathIndex;
+        }
+        break;
+
+      case 'hashCheck':
+        const { preimage, expectedHash } = await generateHashInputs(value);
+        result[`${circuitInput}Preimage`] = preimage;
+
+        if (mapping.expectedHashPath !== undefined) {
+          const expectedHashPreimage = this.getPayloadValueByPath(
+            result,
+            mapping.expectedHashPath,
+          );
+          const expectedHashHex = Buffer.from(
+            base64ToHash(expectedHashPreimage),
+            'hex',
+          );
+          result[`${circuitInput}ExpectedHash`] = buffer2bitsMSB(expectedHashHex);
+        } else {
+          result[`${circuitInput}ExpectedHash`] = expectedHash;
+        }
+        break;
+
+      case 'signatureCheck':
+        const { messageBits, r8Bits, sBits, aBits } = await generateSignatureInputs(value);
+        result[`${circuitInput}MessageBits`] = messageBits;
+        result[`${circuitInput}R8Bits`] = r8Bits;
+        result[`${circuitInput}SBits`] = sBits;
+        result[`${circuitInput}ABits`] = aBits;
+        break;
+
+      default:
+        // Fall back to parent class logic for legacy types
+        await super.processCircuitInputMapping(result, mapping, value);
+        break;
+    }
   }
 }

@@ -405,30 +405,18 @@ export class TransactionAgent {
     if (!schema) {
       throw new Error(`Broken mapping`);
     }
-    let parsedInputs;
-    if ('extractions' in schema) {
-      const generalSchema = schema as GeneralCircuitInputsMapping;
-      parsedInputs =
-        await this.circuitInputsParserService.applyGeneralMappingToTxPayload(
-          payload,
-          payloadFormatType,
-          generalSchema,
-        );
-      if (!parsedInputs) {
-        throw new Error(`Failed to parse inputs`);
-      }
-    } else {
-      const circuitSchema = schema as CircuitInputsMapping;
-      parsedInputs =
-        await this.circuitInputsParserService.applyMappingToTxPayload(
-          payload,
-          payloadFormatType,
-          circuitSchema,
-        );
-      if (!parsedInputs) {
-        throw new Error(`Failed to parse inputs`);
-      }
+    
+    // Use unified method for both schema types
+    const parsedInputs = await this.circuitInputsParserService.applyUnifiedMappingToTxPayload(
+      payload,
+      payloadFormatType,
+      schema,
+    );
+    
+    if (!parsedInputs) {
+      throw new Error(`Failed to parse inputs`);
     }
+    
     if (!(schema.mapping.length === 0)) {
       return Object.assign(parsedInputs, await computeEddsaSigPublicInputs(tx));
     }
