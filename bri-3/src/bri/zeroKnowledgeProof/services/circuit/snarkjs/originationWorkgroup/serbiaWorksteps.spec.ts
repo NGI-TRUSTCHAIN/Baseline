@@ -70,14 +70,14 @@ describe('Supplier XML extraction and signature verification', () => {
 
   beforeAll(async () => {
     gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
-    circuit = await loadBusinessLogicCircuit('./workstep1.circom');
+    circuit = await loadBusinessLogicCircuit('./serbia_workstep1.circom');
   });
 
   // ZK CIRCUIT: (supplier signature is valid)
   it('should extract and verify the supplier xml signature', async () => {
     const xmlFilePath = path.join(
       __dirname,
-      '../../../../../../../../shared/testing/interop/supplierInvoice.xml',
+      '../../../../../../shared/testing/interop/supplierInvoice.xml',
     );
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
@@ -120,14 +120,14 @@ describe('Efakture XML extraction and signature verification', () => {
 
   beforeAll(async () => {
     gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
-    circuit = await loadBusinessLogicCircuit('./workstep2.circom');
+    circuit = await loadBusinessLogicCircuit('./serbia_workstep2.circom');
   });
 
   // ZK CIRCUIT: (supplier signature is valid)
   it('should extract and verify that signer is Republika Srbija - Ministarstvo finansija', async () => {
     const xmlFilePath = path.join(
       __dirname,
-      '../../../../../../../../shared/testing/interop/signatures0.xml',
+      '../../../../../../shared/testing/interop/signatures0.xml',
     );
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
@@ -181,14 +181,14 @@ describe('Supplier XML extraction and Id verification', () => {
 
   beforeAll(async () => {
     gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
-    circuit = await loadBusinessLogicCircuit('./workstep3.circom');
+    circuit = await loadBusinessLogicCircuit('./serbia_workstep3.circom');
   });
 
   // ZK CIRCUIT: (supplier signature is valid)
   it('should extract and verify that signer is Republika Srbija - Ministarstvo finansija', async () => {
     const xmlFilePath = path.join(
       __dirname,
-      '../../../../../../../../shared/testing/interop/supplierInvoice.xml',
+      '../../../../../../shared/testing/interop/supplierInvoice.xml',
     );
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
@@ -232,14 +232,14 @@ describe.skip('Efakture XML extraction and signature verification', () => {
 
   beforeAll(async () => {
     gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
-    circuit = await loadBusinessLogicCircuit('./workstep4.circom');
+    circuit = await loadBusinessLogicCircuit('./serbia_workstep4.circom');
   });
 
   // ZK CIRCUIT: (supplier signature is valid)
   it('should extract and verify that invoice status is Approved', async () => {
     const xmlFilePath = path.join(
       __dirname,
-      '../../../../../../../../shared/testing/interop/verifiedSupplierInvoice.xml',
+      '../../../../../../shared/testing/interop/verifiedSupplierInvoice.xml',
     );
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
