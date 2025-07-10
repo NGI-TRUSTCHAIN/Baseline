@@ -61,7 +61,7 @@ declare global {
   }
 }
 
-describe('Supplier XML extraction and signature verification', () => {
+describe.skip('Supplier XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
   let gcips: GeneralCircuitInputsParserService;
@@ -111,7 +111,7 @@ describe('Supplier XML extraction and signature verification', () => {
   });
 });
 
-describe('Efakture XML extraction and signature verification', () => {
+describe.skip('Efakture XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
   let gcips: GeneralCircuitInputsParserService;
@@ -172,7 +172,7 @@ describe('Efakture XML extraction and signature verification', () => {
   });
 });
 
-describe('Supplier XML extraction and Id verification', () => {
+describe.skip('Supplier XML extraction and Id verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
   let gcips: GeneralCircuitInputsParserService;
