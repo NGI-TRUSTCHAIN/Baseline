@@ -2,7 +2,10 @@ import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { LoggingService } from '../../../../../shared/logging/logging.service';
 import { PayloadFormatType } from '../../../../workgroup/worksteps/models/workstep';
 import { CircuitInputsParserService } from './circuitInputParser.service';
-import { UnifiedCircuitInputMapping, UnifiedCircuitInputsMapping } from './unifiedCircuitInputsMapping';
+import {
+  UnifiedCircuitInputMapping,
+  UnifiedCircuitInputsMapping,
+} from './unifiedCircuitInputsMapping';
 
 let cips: CircuitInputsParserService;
 const loggingServiceMock: DeepMockProxy<LoggingService> =

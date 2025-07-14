@@ -8,6 +8,9 @@ import { PayloadFormatType } from '../../../../../../../workgroup/worksteps/mode
 import * as fs from 'fs';
 import { UnifiedCircuitInputsMapping } from '../../../../circuitInputsParser/unifiedCircuitInputsMapping';
 
+
+// TODO: check with shree if these tests should be deleted
+
 // This is the prime field used in the circuit
 // The prime field is defined by the following equation:
 // p = 2^255 - 19
@@ -135,7 +138,8 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     const cim: UnifiedCircuitInputsMapping = {
       mapping: [
         {
-          extractionField: 'asic:XAdESSignatures.ds:Signature.ds:SignatureValue._',
+          extractionField:
+            'asic:XAdESSignatures.ds:Signature.ds:SignatureValue._',
           payloadJsonPath: 'efaktureSignature',
           circuitInput: 'efaktureSignature',
           description: 'Signature on the document',

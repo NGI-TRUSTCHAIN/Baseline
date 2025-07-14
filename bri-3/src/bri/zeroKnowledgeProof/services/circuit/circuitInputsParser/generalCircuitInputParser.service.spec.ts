@@ -7,6 +7,10 @@ import { LoggingService } from '../../../../../shared/logging/logging.service';
 import * as fs from 'fs';
 import { PayloadFormatType } from '../../../../workgroup/worksteps/models/workstep';
 import { UnifiedCircuitInputsMapping } from './unifiedCircuitInputsMapping';
+
+
+// TODO: check with shree if these tests should be deleted
+
 // This is the prime field used in the circuit
 // The prime field is defined by the following equation:
 // p = 2^255 - 19
@@ -101,7 +105,8 @@ describe.skip('XML extraction and certificate validation', () => {
           dataType: 'string',
         },
         {
-          extractionField: 'asic:XAdESSignatures.ds:Signature.ds:SignatureValue._',
+          extractionField:
+            'asic:XAdESSignatures.ds:Signature.ds:SignatureValue._',
           payloadJsonPath: 'signatureValue',
           circuitInput: 'certificateSignature',
           description: 'Signature on the document',

@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PayloadFormatType } from '../../../../workgroup/worksteps/models/workstep';
 import * as xml2js from 'xml2js';
 import { LoggingService } from '../../../../../shared/logging/logging.service';
-import { UnifiedCircuitInputsMapping, UnifiedCircuitInputMapping } from './unifiedCircuitInputsMapping';
+import {
+  UnifiedCircuitInputsMapping,
+  UnifiedCircuitInputMapping,
+} from './unifiedCircuitInputsMapping';
 import * as x509 from '@peculiar/x509';
 import {
   base64ToHash,
@@ -140,9 +143,10 @@ export class CircuitInputsParserService {
   ): Promise<Record<string, any> | null> {
     try {
       // Parse payload
-      const parsedPayload = payloadType === PayloadFormatType.JSON
-        ? JSON.parse(payload)
-        : await this.parseXMLToFlat(payload);
+      const parsedPayload =
+        payloadType === PayloadFormatType.JSON
+          ? JSON.parse(payload)
+          : await this.parseXMLToFlat(payload);
 
       // Process unified mappings
       return await this.applyMappings(parsedPayload, schema, payloadType);
@@ -170,12 +174,18 @@ export class CircuitInputsParserService {
           payloadType,
         );
         if (extractedValue !== null) {
-          this.setPayloadValueByPath(parsedPayload, mapping.payloadJsonPath, extractedValue);
+          this.setPayloadValueByPath(
+            parsedPayload,
+            mapping.payloadJsonPath,
+            extractedValue,
+          );
         }
       }
 
       // Get value from payload
-      const value = this.getPayloadValueByPath(parsedPayload, mapping.payloadJsonPath) ?? mapping.defaultValue;
+      const value =
+        this.getPayloadValueByPath(parsedPayload, mapping.payloadJsonPath) ??
+        mapping.defaultValue;
 
       if (value === undefined && mapping.defaultValue === undefined) {
         this.logger.logError(
@@ -208,7 +218,13 @@ export class CircuitInputsParserService {
     }
 
     // Handle regular extraction
-    return this.extractMappings(payloadType, parsedPayload, mapping.extractionField, [], mapping.extractionParam)[0];
+    return this.extractMappings(
+      payloadType,
+      parsedPayload,
+      mapping.extractionField,
+      [],
+      mapping.extractionParam,
+    )[0];
   }
 
   private handleX509Extraction(parsedPayload: any, field: string): any {
@@ -228,7 +244,6 @@ export class CircuitInputsParserService {
 
     return this.parseX509Certificate(cert, certInternalKey!);
   }
-
 
   private extractMappings(
     payloadType: PayloadFormatType,
@@ -418,14 +433,16 @@ export class CircuitInputsParserService {
             base64ToHash(expectedHashPreimage),
             'hex',
           );
-          result[`${circuitInput}ExpectedHash`] = buffer2bitsMSB(expectedHashHex);
+          result[`${circuitInput}ExpectedHash`] =
+            buffer2bitsMSB(expectedHashHex);
         } else {
           result[`${circuitInput}ExpectedHash`] = expectedHash;
         }
         break;
 
       case 'signatureCheck':
-        const { messageBits, r8Bits, sBits, aBits } = await generateSignatureInputs(value);
+        const { messageBits, r8Bits, sBits, aBits } =
+          await generateSignatureInputs(value);
         result[`${circuitInput}MessageBits`] = messageBits;
         result[`${circuitInput}R8Bits`] = r8Bits;
         result[`${circuitInput}SBits`] = sBits;
@@ -433,7 +450,6 @@ export class CircuitInputsParserService {
         break;
 
       default:
-
         await this.processPrimitiveDataType(result, mapping, value);
         break;
     }
@@ -448,13 +464,16 @@ export class CircuitInputsParserService {
 
     switch (mapping.dataType) {
       case 'string':
-        result[circuitInput] = this.calculateStringCharCodeSum(value || mapping.defaultValue);
+        result[circuitInput] = this.calculateStringCharCodeSum(
+          value || mapping.defaultValue,
+        );
         break;
 
       case 'integer':
-        result[circuitInput] = value !== undefined
-          ? parseInt(value.toString(), 10)
-          : mapping.defaultValue;
+        result[circuitInput] =
+          value !== undefined
+            ? parseInt(value.toString(), 10)
+            : mapping.defaultValue;
         break;
 
       case 'array':
@@ -477,7 +496,9 @@ export class CircuitInputsParserService {
     if (mapping.arrayType === 'string') {
       result[circuitInput] = value
         ? value.map((val: any) => this.calculateStringCharCodeSum(val))
-        : mapping.defaultValue?.map((val: any) => this.calculateStringCharCodeSum(val));
+        : mapping.defaultValue?.map((val: any) =>
+            this.calculateStringCharCodeSum(val),
+          );
     } else if (mapping.arrayType === 'integer') {
       result[circuitInput] = value ?? mapping.defaultValue;
     } else if (mapping.arrayType === 'object') {

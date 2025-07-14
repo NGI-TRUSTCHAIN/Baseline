@@ -14,9 +14,6 @@ import { SnarkjsCircuitService } from './services/circuit/snarkjs/snarkjs.servic
       useClass: SnarkjsCircuitService,
     },
   ],
-  exports: [
-    'ICircuitService',
-    CircuitInputsParserService,
-  ],
+  exports: ['ICircuitService', CircuitInputsParserService],
 })
 export class ZeroKnowledgeProofModule {}
