@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { F1Field, Scalar } from 'ffjavascript';
 import { wasm as wasm_tester } from 'circom_tester';
-import { GeneralCircuitInputsParserService } from '../../../../circuitInputsParser/generalCircuitInputParser.service';
+import { CircuitInputsParserService } from '../../../../circuitInputsParser/circuitInputParser.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { LoggingService } from '../../../../../../../../shared/logging/logging.service';
 import { PayloadFormatType } from '../../../../../../../workgroup/worksteps/models/workstep';
@@ -65,12 +65,12 @@ declare global {
 describe.skip('Supplier XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
-  let gcips: GeneralCircuitInputsParserService;
+  let gcips: CircuitInputsParserService;
   const loggingServiceMock: DeepMockProxy<LoggingService> =
     mockDeep<LoggingService>();
 
   beforeAll(async () => {
-    gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
+    gcips = new CircuitInputsParserService(loggingServiceMock);
     circuit = await loadBusinessLogicCircuit('./workstep1.circom');
   });
 
@@ -97,7 +97,7 @@ describe.skip('Supplier XML extraction and signature verification', () => {
     };
 
     // Act
-    const result = await gcips.applyUnifiedMappingToTxPayload(
+    const result = await gcips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,
@@ -114,12 +114,12 @@ describe.skip('Supplier XML extraction and signature verification', () => {
 describe.skip('Efakture XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
-  let gcips: GeneralCircuitInputsParserService;
+  let gcips: CircuitInputsParserService;
   const loggingServiceMock: DeepMockProxy<LoggingService> =
     mockDeep<LoggingService>();
 
   beforeAll(async () => {
-    gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
+    gcips = new CircuitInputsParserService(loggingServiceMock);
     circuit = await loadBusinessLogicCircuit('./workstep2.circom');
   });
 
@@ -157,7 +157,7 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     };
 
     // Act
-    const result = await gcips.applyUnifiedMappingToTxPayload(
+    const result = await gcips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,
@@ -174,12 +174,12 @@ describe.skip('Efakture XML extraction and signature verification', () => {
 describe.skip('Supplier XML extraction and Id verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
-  let gcips: GeneralCircuitInputsParserService;
+  let gcips: CircuitInputsParserService;
   const loggingServiceMock: DeepMockProxy<LoggingService> =
     mockDeep<LoggingService>();
 
   beforeAll(async () => {
-    gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
+    gcips = new CircuitInputsParserService(loggingServiceMock);
     circuit = await loadBusinessLogicCircuit('./workstep3.circom');
   });
 
@@ -207,7 +207,7 @@ describe.skip('Supplier XML extraction and Id verification', () => {
     };
 
     // Act
-    const result = await gcips.applyUnifiedMappingToTxPayload(
+    const result = await gcips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,
@@ -224,12 +224,12 @@ describe.skip('Supplier XML extraction and Id verification', () => {
 describe.skip('Efakture XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
-  let gcips: GeneralCircuitInputsParserService;
+  let gcips: CircuitInputsParserService;
   const loggingServiceMock: DeepMockProxy<LoggingService> =
     mockDeep<LoggingService>();
 
   beforeAll(async () => {
-    gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
+    gcips = new CircuitInputsParserService(loggingServiceMock);
     circuit = await loadBusinessLogicCircuit('./workstep4.circom');
   });
 
@@ -257,7 +257,7 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     };
 
     // Act
-    const result = await gcips.applyUnifiedMappingToTxPayload(
+    const result = await gcips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,

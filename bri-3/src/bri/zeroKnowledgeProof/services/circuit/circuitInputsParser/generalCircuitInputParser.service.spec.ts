@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { F1Field, Scalar } from 'ffjavascript';
 import { wasm as wasm_tester } from 'circom_tester';
-import { GeneralCircuitInputsParserService } from './generalCircuitInputParser.service';
+import { CircuitInputsParserService } from './circuitInputParser.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { LoggingService } from '../../../../../shared/logging/logging.service';
 import * as fs from 'fs';
@@ -64,16 +64,15 @@ declare global {
     }
   }
 }
-// TODO: Separate npm run command
 describe.skip('XML extraction and certificate validation', () => {
   jest.setTimeout(100000);
   let circuit: any;
-  let gcips: GeneralCircuitInputsParserService;
+  let cips: CircuitInputsParserService;
   const loggingServiceMock: DeepMockProxy<LoggingService> =
     mockDeep<LoggingService>();
 
   beforeAll(async () => {
-    gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
+    cips = new CircuitInputsParserService(loggingServiceMock);
     circuit = await loadBusinessLogicCircuit();
   });
 
@@ -147,7 +146,7 @@ describe.skip('XML extraction and certificate validation', () => {
       ],
     };
 
-    const result = await gcips.applyUnifiedMappingToTxPayload(
+    const result = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,

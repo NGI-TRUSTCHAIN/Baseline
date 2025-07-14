@@ -4,7 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { parseStringPromise, processors } from 'xml2js';
 import { Transaction } from '../models/transaction';
 import { TransactionStatus } from '../models/transactionStatus.enum';
 
@@ -24,7 +23,7 @@ import {
   Workstep,
   WorkstepType,
 } from '../../workgroup/worksteps/models/workstep';
-import { GeneralCircuitInputsParserService } from '../../zeroKnowledgeProof/services/circuit/circuitInputsParser/generalCircuitInputParser.service';
+import { CircuitInputsParserService } from '../../zeroKnowledgeProof/services/circuit/circuitInputsParser/circuitInputParser.service';
 import { ICircuitService } from '../../zeroKnowledgeProof/services/circuit/circuitService.interface';
 import { computeEddsaSigPublicInputs } from '../../zeroKnowledgeProof/services/circuit/snarkjs/utils/computePublicInputs';
 import {
@@ -46,7 +45,7 @@ export class TransactionAgent {
     private merkleTreeService: MerkleTreeService,
     @Inject('ICircuitService')
     private readonly circuitService: ICircuitService,
-    private circuitInputsParserService: GeneralCircuitInputsParserService,
+    private circuitInputsParserService: CircuitInputsParserService,
     @Inject('ICcsmService')
     private readonly ccsmService: ICcsmService,
     private readonly logger: LoggingService,
@@ -407,7 +406,7 @@ export class TransactionAgent {
     }
     
     // Use unified method for both schema types
-    const parsedInputs = await this.circuitInputsParserService.applyUnifiedMappingToTxPayload(
+    const parsedInputs = await this.circuitInputsParserService.applyCircuitInputMappingToTxPayload(
       payload,
       payloadFormatType,
       schema,

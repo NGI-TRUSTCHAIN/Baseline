@@ -151,7 +151,7 @@ describe('CircuitInputsParserService', () => {
     const schema = {} as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       schema,
@@ -179,7 +179,7 @@ describe('CircuitInputsParserService', () => {
     } as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       schema,
@@ -210,7 +210,7 @@ describe('CircuitInputsParserService', () => {
     } as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       schema,
@@ -238,7 +238,7 @@ describe('CircuitInputsParserService', () => {
     } as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       schema,
@@ -268,7 +268,7 @@ describe('CircuitInputsParserService', () => {
     } as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       schema,
@@ -296,7 +296,7 @@ describe('CircuitInputsParserService', () => {
     } as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       schema,
@@ -327,7 +327,7 @@ describe('CircuitInputsParserService', () => {
     } as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       schema,
@@ -355,7 +355,7 @@ describe('CircuitInputsParserService', () => {
     } as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       schema,
@@ -388,7 +388,7 @@ describe('CircuitInputsParserService', () => {
     } as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       schema,
@@ -421,7 +421,7 @@ describe('CircuitInputsParserService', () => {
     } as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       schema,
@@ -456,7 +456,7 @@ describe('CircuitInputsParserService', () => {
     } as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       schema,
@@ -491,7 +491,7 @@ describe('CircuitInputsParserService', () => {
     } as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       schema,
@@ -520,7 +520,7 @@ describe('CircuitInputsParserService', () => {
     } as UnifiedCircuitInputsMapping;
 
     // Act
-    const circuitInputs = await cips.applyUnifiedMappingToTxPayload(
+    const circuitInputs = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       schema,
