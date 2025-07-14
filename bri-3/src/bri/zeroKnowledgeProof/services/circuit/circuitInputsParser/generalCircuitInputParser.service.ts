@@ -12,114 +12,12 @@ import { buildMimcSponge } from 'circomlibjs';
 import { CircuitInputsParserService } from './circuitInputParser.service';
 import { PayloadFormatType } from '../../../../workgroup/worksteps/models/workstep';
 import { MerkleTree } from 'fixed-merkle-tree';
-import { UnifiedCircuitInputMapping } from './unifiedCircuitInputsMapping';
+import { UnifiedCircuitInputMapping, UnifiedCircuitInputsMapping } from './unifiedCircuitInputsMapping';
 
 @Injectable()
 export class GeneralCircuitInputsParserService extends CircuitInputsParserService {
   private mimcSponge;
   private F;
-
-  public async applyGeneralMappingToTxPayload(
-    payload: string,
-    payloadType: PayloadFormatType,
-    cim: GeneralCircuitInputsMapping,
-  ) {
-    const result: Record<string, any> = {};
-
-    const fullParsedPayload =
-      payloadType === PayloadFormatType.JSON
-        ? JSON.parse(payload)
-        : await this.parseXMLToFlat(payload);
-
-    let parsedPayload = {};
-
-    let extractedMappings: GeneralCircuitInputMapping[] = [];
-    if (cim.extractions && cim.extractions.length > 0) {
-      ({ parsedPayload, extractedMappings } = this.executeExtractions(
-        payloadType,
-        fullParsedPayload,
-        cim.extractions,
-        parsedPayload,
-      ));
-
-      cim.mapping = cim.mapping.concat(extractedMappings);
-    }
-
-    for (const mapping of cim.mapping) {
-      const value =
-        this.getPayloadValueByPath(parsedPayload, mapping.payloadJsonPath) ??
-        mapping.defaultValue;
-
-      if (mapping.circuitInput) {
-        switch (mapping.checkType) {
-          case 'isEqual':
-            result[`${mapping.circuitInput}Value`] = value;
-            mapping.expectedValue !== undefined &&
-              (result[`${mapping.circuitInput}Expected`] =
-                mapping.expectedValue);
-            break;
-
-          case 'isInRange':
-            result[`${mapping.circuitInput}Value`] = value;
-            mapping.minValue !== undefined &&
-              (result[`${mapping.circuitInput}Min`] = mapping.minValue);
-            mapping.maxValue !== undefined &&
-              (result[`${mapping.circuitInput}Max`] = mapping.maxValue);
-            break;
-          case 'merkleProof':
-            const allLeaves = mapping.merkleTreeInputsPath?.map((path) =>
-              String(this.getPayloadValueByPath(parsedPayload, path)),
-            );
-
-            if ((allLeaves?.length ?? 0) > 0) {
-              const {
-                merkleProofLeaf,
-                merkleProofRoot,
-                merkleProofPathElement,
-                merkleProofPathIndex,
-              } = await this.generateMerkleProofInputs(value, allLeaves!);
-              result[`${mapping.circuitInput}Leaf`] = merkleProofLeaf;
-              result[`${mapping.circuitInput}Root`] = merkleProofRoot;
-              result[`${mapping.circuitInput}PathElement`] =
-                merkleProofPathElement;
-              result[`${mapping.circuitInput}PathIndex`] = merkleProofPathIndex;
-            }
-            break;
-          case 'hashCheck':
-            const { preimage, expectedHash } = await generateHashInputs(value);
-            result[`${mapping.circuitInput}Preimage`] = preimage;
-
-            if (mapping.expectedHashPath !== undefined) {
-              const expectedHashPreimage = this.getPayloadValueByPath(
-                parsedPayload,
-                mapping.expectedHashPath,
-              );
-              const expectedHashHex = Buffer.from(
-                base64ToHash(expectedHashPreimage),
-                'hex',
-              );
-              result[`${mapping.circuitInput}ExpectedHash`] =
-                buffer2bitsMSB(expectedHashHex);
-            } else {
-              result[`${mapping.circuitInput}ExpectedHash`] = expectedHash;
-            }
-            break;
-          case 'signatureCheck':
-            const { messageBits, r8Bits, sBits, aBits } =
-              await generateSignatureInputs(value);
-            result[`${mapping.circuitInput}MessageBits`] = messageBits;
-            result[`${mapping.circuitInput}R8Bits`] = r8Bits;
-            result[`${mapping.circuitInput}SBits`] = sBits;
-            result[`${mapping.circuitInput}ABits`] = aBits;
-            break;
-          default:
-            result[mapping.circuitInput] = value;
-            break;
-        }
-      }
-    }
-    return result;
-  }
 
   private extractMappings(
     payloadType: PayloadFormatType,
@@ -172,40 +70,6 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
     }
   }
 
-  private executeExtractions(
-    payloadType: PayloadFormatType,
-    fullParsedPayload: any,
-    extractions: GeneralCircuitInputExtraction[],
-    cleanParsedPayload: any,
-  ) {
-    const extractedMappings: GeneralCircuitInputMapping[] = [];
-
-    for (const extraction of extractions!) {
-      const extractedField = this.extractMappings(
-        payloadType,
-        fullParsedPayload,
-        extraction.field,
-        [],
-        extraction.extractionParam,
-      )[0];
-
-      // Write only to cleanParsedPayload (NOT fullParsedPayload)
-      this.setPayloadValueByPath(
-        cleanParsedPayload,
-        extraction.destinationPath,
-        extractedField,
-      );
-
-      if (extraction.circuitInput) {
-        const newCircuitMapping: GeneralCircuitInputMapping =
-          this.createCircuitInputMapping(extraction);
-        extractedMappings.push(newCircuitMapping);
-      }
-    }
-
-    return { parsedPayload: cleanParsedPayload, extractedMappings };
-  }
-
   private parseX509Certificate(
     certificate: x509.X509Certificate,
     key: string,
@@ -230,37 +94,6 @@ export class GeneralCircuitInputsParserService extends CircuitInputsParserServic
     // Use the first subKey to get value
     const result = parsedMap[subKeys[0]] ?? null;
     return result;
-  }
-
-  private createCircuitInputMapping(dataToExtract): GeneralCircuitInputMapping {
-    return {
-      circuitInput: dataToExtract.circuitInput,
-      description: dataToExtract.description,
-      payloadJsonPath: dataToExtract.destinationPath,
-      dataType: dataToExtract.dataType,
-      checkType: dataToExtract.checkType,
-      ...(dataToExtract.defaultValue !== undefined && {
-        defaultValue: dataToExtract.defaultValue,
-      }),
-      ...(dataToExtract.expectedValue !== undefined && {
-        expectedValue: dataToExtract.expectedValue,
-      }),
-      ...(dataToExtract.minValue !== undefined && {
-        minValue: dataToExtract.minValue,
-      }),
-      ...(dataToExtract.maxValue !== undefined && {
-        maxValue: dataToExtract.maxValue,
-      }),
-      ...(dataToExtract.merkleTreeInputsPath && {
-        merkleTreeInputsPath: dataToExtract.merkleTreeInputsPath,
-      }),
-      ...(dataToExtract.expectedHashPath && {
-        expectedHashPath: dataToExtract.expectedHashPath,
-      }),
-      ...(dataToExtract.messagePath && {
-        messagePath: dataToExtract.messagePath,
-      }),
-    };
   }
 
   private searchRecursively(

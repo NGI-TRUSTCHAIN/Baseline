@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PayloadFormatType } from '../../../../workgroup/worksteps/models/workstep';
 import * as xml2js from 'xml2js';
 import { LoggingService } from '../../../../../shared/logging/logging.service';
-import { UnifiedCircuitInputsMapping, UnifiedCircuitInputMapping, convertLegacySchemaToUnified, convertGeneralSchemaToUnified, detectSchemaType } from './unifiedCircuitInputsMapping';
+import { UnifiedCircuitInputsMapping, UnifiedCircuitInputMapping } from './unifiedCircuitInputsMapping';
 
 @Injectable()
 export class CircuitInputsParserService {
@@ -10,7 +10,7 @@ export class CircuitInputsParserService {
 
   public validateCircuitInputTranslationSchema(schema: string): string {
     try {
-      const parsedData: CircuitInputsMapping = JSON.parse(schema);
+      const parsedData: UnifiedCircuitInputsMapping = JSON.parse(schema);
 
       if (!parsedData.mapping || !Array.isArray(parsedData.mapping)) {
         return `Missing mapping array`;
@@ -56,7 +56,7 @@ export class CircuitInputsParserService {
   public async applyMappingToTxPayload(
     payload: string,
     payloadType: PayloadFormatType,
-    cim: CircuitInputsMapping,
+    cim: UnifiedCircuitInputsMapping,
   ) {
     const result: any = {};
 
@@ -77,6 +77,11 @@ export class CircuitInputsParserService {
             `Missing value and default value for mapping ${cim.mapping} while mapping circuit inputs for payload ${payload}`,
           );
           return null;
+        }
+
+        // Skip mappings without circuit input (extraction-only mappings)
+        if (!mapping.circuitInput) {
+          continue;
         }
 
         switch (mapping.dataType) {
@@ -217,19 +222,13 @@ export class CircuitInputsParserService {
     schema: any,
   ): Promise<Record<string, any> | null> {
     try {
-      // Convert schema to unified format
-      const schemaType = detectSchemaType(schema);
-      const unifiedSchema = schemaType === 'general' 
-        ? convertGeneralSchemaToUnified(schema)
-        : convertLegacySchemaToUnified(schema);
-
       // Parse payload
       const parsedPayload = payloadType === PayloadFormatType.JSON
         ? JSON.parse(payload)
         : await this.parseXMLToFlat(payload);
 
       // Process unified mappings
-      return await this.processUnifiedMappings(parsedPayload, unifiedSchema, payloadType);
+      return await this.processUnifiedMappings(parsedPayload, schema, payloadType);
     } catch (error) {
       this.logger.logError(
         `Error while applying unified mapping to payload: ${error.message}`,

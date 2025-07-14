@@ -6,6 +6,7 @@ import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { LoggingService } from '../../../../../../../../shared/logging/logging.service';
 import { PayloadFormatType } from '../../../../../../../workgroup/worksteps/models/workstep';
 import * as fs from 'fs';
+import { UnifiedCircuitInputsMapping } from '../../../../circuitInputsParser/unifiedCircuitInputsMapping';
 
 // This is the prime field used in the circuit
 // The prime field is defined by the following equation:
@@ -82,12 +83,11 @@ describe.skip('Supplier XML extraction and signature verification', () => {
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
 
-    const cim: GeneralCircuitInputsMapping = {
-      mapping: [],
-      extractions: [
+    const cim: UnifiedCircuitInputsMapping = {
+      mapping: [
         {
-          field: 'ds:Signature.ds:SignatureValue._',
-          destinationPath: 'supplierSignature',
+          extractionField: 'ds:Signature.ds:SignatureValue._',
+          payloadJsonPath: 'supplierSignature',
           circuitInput: 'supplierSignature',
           description: 'Signature on the document',
           dataType: 'string',
@@ -97,7 +97,7 @@ describe.skip('Supplier XML extraction and signature verification', () => {
     };
 
     // Act
-    const result = await gcips.applyGeneralMappingToTxPayload(
+    const result = await gcips.applyUnifiedMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,
@@ -132,22 +132,21 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
 
-    const cim: GeneralCircuitInputsMapping = {
-      mapping: [],
-      extractions: [
+    const cim: UnifiedCircuitInputsMapping = {
+      mapping: [
         {
-          field: 'asic:XAdESSignatures.ds:Signature.ds:SignatureValue._',
-          destinationPath: 'efaktureSignature',
+          extractionField: 'asic:XAdESSignatures.ds:Signature.ds:SignatureValue._',
+          payloadJsonPath: 'efaktureSignature',
           circuitInput: 'efaktureSignature',
           description: 'Signature on the document',
           dataType: 'string',
           checkType: 'signatureCheck',
         },
         {
-          field:
+          extractionField:
             'asic:XAdESSignatures.ds:Signature.ds:KeyInfo.ds:X509Data.ds:X509Certificate.subject.CN',
           extractionParam: 'x509',
-          destinationPath: 'signerName',
+          payloadJsonPath: 'signerName',
           circuitInput: 'signerName', //Merkle leaf used for proof
           description: 'Common name of certificate signer',
           dataType: 'string',
@@ -158,7 +157,7 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     };
 
     // Act
-    const result = await gcips.applyGeneralMappingToTxPayload(
+    const result = await gcips.applyUnifiedMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,
@@ -193,12 +192,11 @@ describe.skip('Supplier XML extraction and Id verification', () => {
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
 
-    const cim: GeneralCircuitInputsMapping = {
-      mapping: [],
-      extractions: [
+    const cim: UnifiedCircuitInputsMapping = {
+      mapping: [
         {
-          field: 'SupplierSEFSalesInvoiceId',
-          destinationPath: 'supplierId',
+          extractionField: 'SupplierSEFSalesInvoiceId',
+          payloadJsonPath: 'supplierId',
           circuitInput: 'supplierId', //Merkle leaf used for proof
           description: 'Supplied Id number',
           dataType: 'string',
@@ -209,7 +207,7 @@ describe.skip('Supplier XML extraction and Id verification', () => {
     };
 
     // Act
-    const result = await gcips.applyGeneralMappingToTxPayload(
+    const result = await gcips.applyUnifiedMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,
@@ -244,12 +242,11 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
 
-    const cim: GeneralCircuitInputsMapping = {
-      mapping: [],
-      extractions: [
+    const cim: UnifiedCircuitInputsMapping = {
+      mapping: [
         {
-          field: 'SupplierSEFSalesInvoiceId', //TODO: need accurate ID
-          destinationPath: 'invoiceStatus',
+          extractionField: 'SupplierSEFSalesInvoiceId', //TODO: need accurate ID
+          payloadJsonPath: 'invoiceStatus',
           circuitInput: 'invoiceStatus',
           description: 'Supplied Id number',
           dataType: 'string',
@@ -260,7 +257,7 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     };
 
     // Act
-    const result = await gcips.applyGeneralMappingToTxPayload(
+    const result = await gcips.applyUnifiedMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,

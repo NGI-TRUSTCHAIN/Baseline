@@ -217,11 +217,10 @@ describe('Invoice origination use-case end-to-end test', () => {
 
   it('Add a circuit input translation schema to workstep 1', async () => {
     const schema = `{
-                        "mapping": [],
-                        "extractions": [
+                        "mapping": [
                             {
-                                "field": "ds:Signature.ds:SignatureValue._",
-                                "destinationPath": "supplierSignature",
+                                "extractionField": "ds:Signature.ds:SignatureValue._",
+                                "payloadJsonPath": "supplierSignature",
                                 "circuitInput": "supplierSignature",
                                 "description": "Signature on the document",
                                 "dataType": "string",
