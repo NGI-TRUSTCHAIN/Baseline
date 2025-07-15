@@ -8,7 +8,6 @@ import * as fs from 'fs';
 import { PayloadFormatType } from '../../../../workgroup/worksteps/models/workstep';
 import { UnifiedCircuitInputsMapping } from './unifiedCircuitInputsMapping';
 
-
 // TODO: check with shree if these tests should be deleted
 
 // This is the prime field used in the circuit
