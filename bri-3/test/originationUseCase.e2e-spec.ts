@@ -178,7 +178,7 @@ describe('Invoice origination use-case end-to-end test', () => {
     });
 
     it('Add a circuit input translation schema to workstep 1', async () => {
-    const schema = `{
+      const schema = `{
                         "mapping": [
                             {
                                 "extractionField": "ds:Signature.ds:SignatureValue._",

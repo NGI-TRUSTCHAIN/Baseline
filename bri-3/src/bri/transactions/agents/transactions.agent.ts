@@ -405,6 +405,17 @@ export class TransactionAgent {
       throw new Error(`Broken mapping`);
     }
 
+    let signatureInputs;
+
+    //BPI subject signature verification from tx
+    const match = schema.mapping.find(
+      (m) => m.extractionParam === 'txSignatureVerification',
+    );
+    if (match) {
+      signatureInputs = await computeEddsaSigPublicInputs(tx);
+      schema.mapping.splice(schema.mapping.indexOf(match), 1);
+    }
+
     const parsedInputs =
       await this.circuitInputsParserService.applyCircuitInputMappingToTxPayload(
         payload,
@@ -415,13 +426,6 @@ export class TransactionAgent {
     if (!parsedInputs) {
       throw new Error(`Failed to parse inputs`);
     }
-
-    let signatureInputs;
-
-    // TODO:  This should be executed only for the SRI use-case
-    // if (!(schema.mapping.length === 0)) {
-    //   signatureInputs = await computeEddsaSigPublicInputs(tx);
-    // }
 
     return { ...parsedInputs, ...(signatureInputs || {}) };
   }

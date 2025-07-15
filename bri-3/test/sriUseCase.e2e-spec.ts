@@ -208,6 +208,13 @@ describe('SRI use-case end-to-end test', () => {
               "arrayType": "object",
               "arrayItemFieldName": "amount",
               "arrayItemFieldType": "integer"
+            },
+            {
+              "circuitInput": "txSignatureVerification", 
+              "description": "BPI subject tx signature verification", 
+              "payloadJsonPath": "bpiSubjectId", 
+              "dataType": "string",
+              "extractionParam": "txSignatureVerification"
             }
           ]
         }`;
@@ -222,6 +229,13 @@ describe('SRI use-case end-to-end test', () => {
               "description": "Invoice status", 
               "payloadJsonPath": "status", 
               "dataType": "string"
+            },
+            {
+              "circuitInput": "txSignatureVerification", 
+              "description": "BPI subject tx signature verification", 
+              "payloadJsonPath": "bpiSubjectId", 
+              "dataType": "string",
+              "extractionParam": "txSignatureVerification"
             }
           ]
         }`;
@@ -236,6 +250,13 @@ describe('SRI use-case end-to-end test', () => {
               "description": "Invoice status", 
               "payloadJsonPath": "status", 
               "dataType": "string"
+            },
+            {
+              "circuitInput": "txSignatureVerification", 
+              "description": "BPI subject tx signature verification", 
+              "payloadJsonPath": "bpiSubjectId", 
+              "dataType": "string",
+              "extractionParam": "txSignatureVerification"
             }
           ]
         }`;
