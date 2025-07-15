@@ -178,12 +178,11 @@ describe('Invoice origination use-case end-to-end test', () => {
     });
 
     it('Add a circuit input translation schema to workstep 1', async () => {
-      const schema = `{
-                        "mapping": [],
-                        "extractions": [
+    const schema = `{
+                        "mapping": [
                             {
-                                "field": "ds:Signature.ds:SignatureValue._",
-                                "destinationPath": "supplierSignature",
+                                "extractionField": "ds:Signature.ds:SignatureValue._",
+                                "payloadJsonPath": "supplierSignature",
                                 "circuitInput": "supplierSignature",
                                 "description": "Signature on the document",
                                 "dataType": "string",
@@ -315,19 +314,18 @@ describe('Invoice origination use-case end-to-end test', () => {
 
     it('Add a circuit input translation schema to workstep 1', async () => {
       const schema = `{
-                        "mapping": [],
-                        "extractions": [
+                        "mapping": [
                             {
-                                "field": "supplier.signature_base64",
-                                "destinationPath": "supplierSignature",
+                                "extractionField": "supplier.signature_base64",
+                                "payloadJsonPath": "supplierSignature",
                                 "circuitInput": "supplierSignature",
                                 "description": "Supplier signature on the document",
                                 "dataType": "string",
                                 "checkType": "signatureCheck"
                             },
                             {
-                                "field": "buyer.signature_base64",
-                                "destinationPath": "buyerSignature",
+                                "extractionField": "buyer.signature_base64",
+                                "payloadJsonPath": "buyerSignature",
                                 "circuitInput": "buyerSignature",
                                 "description": "Buyer signature on the document",
                                 "dataType": "string",

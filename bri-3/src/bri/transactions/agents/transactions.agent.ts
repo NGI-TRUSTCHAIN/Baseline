@@ -4,7 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { parseStringPromise, processors } from 'xml2js';
 import { Transaction } from '../models/transaction';
 import { TransactionStatus } from '../models/transactionStatus.enum';
 
@@ -24,7 +23,7 @@ import {
   Workstep,
   WorkstepType,
 } from '../../workgroup/worksteps/models/workstep';
-import { GeneralCircuitInputsParserService } from '../../zeroKnowledgeProof/services/circuit/circuitInputsParser/generalCircuitInputParser.service';
+import { CircuitInputsParserService } from '../../zeroKnowledgeProof/services/circuit/circuitInputsParser/circuitInputParser.service';
 import { ICircuitService } from '../../zeroKnowledgeProof/services/circuit/circuitService.interface';
 import { computeEddsaSigPublicInputs } from '../../zeroKnowledgeProof/services/circuit/snarkjs/utils/computePublicInputs';
 import {
@@ -46,7 +45,7 @@ export class TransactionAgent {
     private merkleTreeService: MerkleTreeService,
     @Inject('ICircuitService')
     private readonly circuitService: ICircuitService,
-    private circuitInputsParserService: GeneralCircuitInputsParserService,
+    private circuitInputsParserService: CircuitInputsParserService,
     @Inject('ICcsmService')
     private readonly ccsmService: ICcsmService,
     private readonly logger: LoggingService,
@@ -405,36 +404,24 @@ export class TransactionAgent {
     if (!schema) {
       throw new Error(`Broken mapping`);
     }
-    let parsedInputs;
+
+    const parsedInputs =
+      await this.circuitInputsParserService.applyCircuitInputMappingToTxPayload(
+        payload,
+        payloadFormatType,
+        schema,
+      );
+
+    if (!parsedInputs) {
+      throw new Error(`Failed to parse inputs`);
+    }
+
     let signatureInputs;
 
-    if (!(schema.mapping.length === 0)) {
-      signatureInputs = await computeEddsaSigPublicInputs(tx);
-    }
-
-    if ('extractions' in schema) {
-      const generalSchema = schema as GeneralCircuitInputsMapping;
-      parsedInputs =
-        await this.circuitInputsParserService.applyGeneralMappingToTxPayload(
-          payload,
-          payloadFormatType,
-          generalSchema,
-        );
-      if (!parsedInputs) {
-        throw new Error(`Failed to parse inputs`);
-      }
-    } else {
-      const circuitSchema = schema as CircuitInputsMapping;
-      parsedInputs =
-        await this.circuitInputsParserService.applyMappingToTxPayload(
-          payload,
-          payloadFormatType,
-          circuitSchema,
-        );
-      if (!parsedInputs) {
-        throw new Error(`Failed to parse inputs`);
-      }
-    }
+    // TODO:  This should be executed only for the SRI use-case
+    // if (!(schema.mapping.length === 0)) {
+    //   signatureInputs = await computeEddsaSigPublicInputs(tx);
+    // }
 
     return { ...parsedInputs, ...(signatureInputs || {}) };
   }
