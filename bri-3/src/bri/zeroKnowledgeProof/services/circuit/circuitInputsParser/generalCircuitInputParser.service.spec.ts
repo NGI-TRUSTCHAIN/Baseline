@@ -1,12 +1,15 @@
 import * as path from 'path';
 import { F1Field, Scalar } from 'ffjavascript';
 import { wasm as wasm_tester } from 'circom_tester';
-import { GeneralCircuitInputsParserService } from './generalCircuitInputParser.service';
+import { CircuitInputsParserService } from './circuitInputParser.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { LoggingService } from '../../../../../shared/logging/logging.service';
-import { doc } from 'prettier';
 import * as fs from 'fs';
 import { PayloadFormatType } from '../../../../workgroup/worksteps/models/workstep';
+import { UnifiedCircuitInputsMapping } from './unifiedCircuitInputsMapping';
+
+// TODO: check with shree if these tests should be deleted
+
 // This is the prime field used in the circuit
 // The prime field is defined by the following equation:
 // p = 2^255 - 19
@@ -64,16 +67,15 @@ declare global {
     }
   }
 }
-// TODO: Separate npm run command
 describe.skip('XML extraction and certificate validation', () => {
   jest.setTimeout(100000);
   let circuit: any;
-  let gcips: GeneralCircuitInputsParserService;
+  let cips: CircuitInputsParserService;
   const loggingServiceMock: DeepMockProxy<LoggingService> =
     mockDeep<LoggingService>();
 
   beforeAll(async () => {
-    gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
+    cips = new CircuitInputsParserService(loggingServiceMock);
     circuit = await loadBusinessLogicCircuit();
   });
 
@@ -85,34 +87,36 @@ describe.skip('XML extraction and certificate validation', () => {
     );
     const xmlContent = fs.readFileSync(XML_FILE_PATH, 'utf8');
     const payload = xmlContent;
-    const cim: GeneralCircuitInputsMapping = {
-      mapping: [],
-      extractions: [
+    const cim: UnifiedCircuitInputsMapping = {
+      mapping: [
         {
-          field:
+          extractionField:
             'asic:XAdESSignatures.ds:Signature.ds:Object.xades:QualifyingProperties.xades:SignedProperties.xades:SignedSignatureProperties.xades:SigningTime',
-          destinationPath: 'signingTime',
+          payloadJsonPath: 'signingTime',
           description: 'Timestamp of the signature',
+          dataType: 'string',
         },
         {
-          field:
+          extractionField:
             'asic:XAdESSignatures.ds:Signature.ds:Object.xades:QualifyingProperties.xades:SignedProperties.xades:SignedSignatureProperties.xades:SigningCertificate.xades:Cert.xades:CertDigest.ds:DigestValue',
-          destinationPath: 'signedCertificateHash',
+          payloadJsonPath: 'signedCertificateHash',
           description: 'Hash of the certificate',
+          dataType: 'string',
         },
         {
-          field: 'asic:XAdESSignatures.ds:Signature.ds:SignatureValue._',
-          destinationPath: 'signatureValue',
+          extractionField:
+            'asic:XAdESSignatures.ds:Signature.ds:SignatureValue._',
+          payloadJsonPath: 'signatureValue',
           circuitInput: 'certificateSignature',
           description: 'Signature on the document',
           dataType: 'string',
           checkType: 'signatureCheck',
         },
         {
-          field:
+          extractionField:
             'asic:XAdESSignatures.ds:Signature.ds:KeyInfo.ds:X509Data.ds:X509Certificate.subject.CN',
           extractionParam: 'x509',
-          destinationPath: 'signerName',
+          payloadJsonPath: 'signerName',
           circuitInput: 'signerName', //Merkle leaf used for proof
           description: 'Common name of certificate signer',
           dataType: 'string',
@@ -125,18 +129,18 @@ describe.skip('XML extraction and certificate validation', () => {
           ],
         },
         {
-          field:
+          extractionField:
             'asic:XAdESSignatures.ds:Signature.ds:KeyInfo.ds:X509Data.ds:X509Certificate.issuer.CN',
           extractionParam: 'x509',
-          destinationPath: 'issuerName',
+          payloadJsonPath: 'issuerName',
           description: 'Common name of issuing authority',
           dataType: 'string',
         },
         {
-          field:
+          extractionField:
             'asic:XAdESSignatures.ds:Signature.ds:KeyInfo.ds:X509Data.ds:X509Certificate.rawData',
           extractionParam: 'x509',
-          destinationPath: 'certPreimage',
+          payloadJsonPath: 'certPreimage',
           circuitInput: 'certHash',
           description: 'Preimage of certificate raw data',
           dataType: 'array',
@@ -146,7 +150,7 @@ describe.skip('XML extraction and certificate validation', () => {
       ],
     };
 
-    const result = await gcips.applyGeneralMappingToTxPayload(
+    const result = await cips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,
