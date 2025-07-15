@@ -34,7 +34,7 @@ export class CircuitInputsParserService {
       }
 
       for (const mapping of parsedData.mapping) {
-        if (typeof mapping.circuitInput !== 'string') {
+        if (mapping.circuitInput && typeof mapping.circuitInput !== 'string') {
           return `${mapping.circuitInput} not of type string`;
         }
 
