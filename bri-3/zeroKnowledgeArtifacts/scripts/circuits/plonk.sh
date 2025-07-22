@@ -45,8 +45,8 @@ npx hardhat compile
 cd ..
 
 # Copy generated artifacts to the zeroKnowledgeArtifacts folder
-# Assuming hardhat config outputs to ccsm/ccsmArtifacts
-artifact_path="ccsmArtifacts/contracts/${parent_dir}/${basename}Verifier.sol"
+# Assuming hardhat config outputs to ccsm/artifacts
+artifact_path="ccsm/artifacts/contracts/${parent_dir}/${basename}Verifier.sol"
 destination="zeroKnowledgeArtifacts/circuits/$1"
 
 if [ -d "$artifact_path" ]; then

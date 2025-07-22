@@ -3,10 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Workstep, WorkstepType, WorkstepConfig } from '../models/workstep';
+import { Workstep, WorkstepConfig } from '../models/workstep';
 
 import { v4 } from 'uuid';
-import { GeneralCircuitInputsParserService } from '../../../zeroKnowledgeProof/services/circuit/circuitInputsParser/generalCircuitInputParser.service';
+import { CircuitInputsParserService } from '../../../zeroKnowledgeProof/services/circuit/circuitInputsParser/circuitInputParser.service';
 import { NOT_FOUND_ERR_MESSAGE } from '../api/err.messages';
 import { WorkstepStorageAgent } from './workstepsStorage.agent';
 
@@ -14,7 +14,7 @@ import { WorkstepStorageAgent } from './workstepsStorage.agent';
 export class WorkstepAgent {
   constructor(
     private storageAgent: WorkstepStorageAgent,
-    private cips: GeneralCircuitInputsParserService,
+    private cips: CircuitInputsParserService,
   ) {}
 
   public createNewWorkstep(
@@ -67,7 +67,7 @@ export class WorkstepAgent {
     workstepToUpdate.updatePrivacyPolicy(privacyPolicy);
   }
 
-  public throwIfCircuitInputTranslationSchemaInvalid(schema): void {
+  public throwIfCircuitInputTranslationSchemaInvalid(schema: string): void {
     const error = this.cips.validateCircuitInputTranslationSchema(schema);
     if (error) {
       throw new BadRequestException(error);
