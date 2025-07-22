@@ -2,10 +2,13 @@ import * as path from 'path';
 import { F1Field, Scalar } from 'ffjavascript';
 import { wasm as wasm_tester } from 'circom_tester';
 // Update the import path below if the actual location is different
-import { GeneralCircuitInputsParserService } from '../../circuitInputsParser/generalCircuitInputParser.service';
+import { CircuitInputsParserService } from '../../circuitInputsParser/circuitInputParser.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { LoggingService } from '../../../../../../shared/logging/logging.service';
 import { PayloadFormatType } from '../../../../../workgroup/worksteps/models/workstep';
+import {
+  UnifiedCircuitInputsMapping,
+} from '../../circuitInputsParser/unifiedCircuitInputsMapping';
 
 // This is the prime field used in the circuit
 // The prime field is defined by the following equation:
@@ -64,12 +67,12 @@ declare global {
 describe.skip('Invoice payload verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
-  let gcips: GeneralCircuitInputsParserService;
+  let gcips: CircuitInputsParserService;
   const loggingServiceMock: DeepMockProxy<LoggingService> =
     mockDeep<LoggingService>();
 
   beforeAll(async () => {
-    gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
+    gcips = new CircuitInputsParserService(loggingServiceMock);
     circuit = await loadBusinessLogicCircuit('./workstep1.circom');
   });
 
@@ -135,20 +138,19 @@ describe.skip('Invoice payload verification', () => {
     }
 `;
 
-    const cim: GeneralCircuitInputsMapping = {
-      mapping: [],
-      extractions: [
+    const cim: UnifiedCircuitInputsMapping = {
+      mapping: [
         {
-          field: 'supplier.signature_base64',
-          destinationPath: 'supplierSignature',
+          extractionField: 'supplier.signature_base64',
+          payloadJsonPath: 'supplierSignature',
           circuitInput: 'supplierSignature',
           description: 'Supplier signature on the document',
           dataType: 'string',
           checkType: 'signatureCheck',
         },
         {
-          field: 'buyer.signature_base64',
-          destinationPath: 'buyerSignature',
+          extractionField: 'buyer.signature_base64',
+          payloadJsonPath: 'buyerSignature',
           circuitInput: 'buyerSignature',
           description: 'Buyer signature on the document',
           dataType: 'string',
@@ -158,7 +160,7 @@ describe.skip('Invoice payload verification', () => {
     };
 
     // Act
-    const result = await gcips.applyGeneralMappingToTxPayload(
+    const result = await gcips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.JSON,
       cim,

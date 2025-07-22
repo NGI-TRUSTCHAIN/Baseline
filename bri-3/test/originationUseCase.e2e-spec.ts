@@ -218,11 +218,10 @@ describe('Invoice origination use-case end-to-end test', () => {
 
     it('Add a circuit input translation schema to workstep 1', async () => {
       const schema = `{
-                        "mapping": [],
-                       "extractions": [
+                        "mapping": [
                              {
-                                 "field": "ds:Signature.ds:SignatureValue._",
-                                 "destinationPath": "supplierSignature",
+                                 "extractionField": "ds:Signature.ds:SignatureValue._",
+                                 "payloadJsonPath": "supplierSignature",
                                  "circuitInput": "supplierSignature",
                                  "description": "Signature on the document",
                                  "dataType": "string",
@@ -235,20 +234,19 @@ describe('Invoice origination use-case end-to-end test', () => {
 
     it('Add a circuit input translation schema to workstep 2', async () => {
       const schema = `{
-            "mapping": [],
-            "extractions": [
+            "mapping": [
               {
-                "field": "asic:XAdESSignatures.ds:Signature.ds:SignatureValue._",
-                "destinationPath": "efaktureSignature",
+                "extractionField": "asic:XAdESSignatures.ds:Signature.ds:SignatureValue._",
+                "payloadJsonPath": "efaktureSignature",
                 "circuitInput": "efaktureSignature",
                 "description": "Signature on the document",
                 "dataType": "string",
                 "checkType": "signatureCheck"
               },
               {
-                "field": "asic:XAdESSignatures.ds:Signature.ds:KeyInfo.ds:X509Data.ds:X509Certificate.subject.CN",
+                "extractionField": "asic:XAdESSignatures.ds:Signature.ds:KeyInfo.ds:X509Data.ds:X509Certificate.subject.CN",
                 "extractionParam": "x509",
-                "destinationPath": "signerName",
+                "payloadJsonPath": "signerName",
                 "circuitInput": "signerName",
                 "description": "Common name of certificate signer",
                 "dataType": "string",
@@ -262,11 +260,10 @@ describe('Invoice origination use-case end-to-end test', () => {
 
     it('Add a circuit input translation schema to workstep 3', async () => {
       const schema = `{
-                        "mapping": [],
-                        "extractions": [
+                        "mapping": [
                           {
-                            "field": "SupplierSEFSalesInvoiceId",
-                            "destinationPath": "supplierId",
+                            "extractionField": "SupplierSEFSalesInvoiceId",
+                            "payloadJsonPath": "supplierId",
                             "circuitInput": "supplierId",
                             "description": "Supplied Id number",
                             "dataType": "string",
@@ -281,11 +278,10 @@ describe('Invoice origination use-case end-to-end test', () => {
     it('Add a circuit input translation schema to workstep 4', async () => {
       //TODO: Add correct schema for checking invoice status
       const schema = `{
-                        "mapping": [],
-                        "extractions": [
+                        "mapping": [
                           {
-                            "field": "SupplierSEFSalesInvoiceId",
-                            "destinationPath": "invoiceStatus",
+                            "extractionField": "SupplierSEFSalesInvoiceId",
+                            "payloadJsonPath": "invoiceStatus",
                             "circuitInput": "invoiceStatus",
                             "description": "Supplied Id number",
                             "dataType": "string",
@@ -586,19 +582,18 @@ describe('Invoice origination use-case end-to-end test', () => {
 
     it('Add a circuit input translation schema to workstep 1', async () => {
       const schema = `{
-                        "mapping": [],
-                        "extractions": [
+                        "mapping": [
                             {
-                                "field": "supplier.signature_base64",
-                                "destinationPath": "supplierSignature",
+                                "extractionField": "supplier.signature_base64",
+                                "payloadJsonPath": "supplierSignature",
                                 "circuitInput": "supplierSignature",
                                 "description": "Supplier signature on the document",
                                 "dataType": "string",
                                 "checkType": "signatureCheck"
                             },
                             {
-                                "field": "buyer.signature_base64",
-                                "destinationPath": "buyerSignature",
+                                "extractionField": "buyer.signature_base64",
+                                "payloadJsonPath": "buyerSignature",
                                 "circuitInput": "buyerSignature",
                                 "description": "Buyer signature on the document",
                                 "dataType": "string",

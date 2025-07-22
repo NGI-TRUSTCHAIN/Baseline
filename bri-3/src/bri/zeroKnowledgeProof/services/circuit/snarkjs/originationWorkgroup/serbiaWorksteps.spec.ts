@@ -1,11 +1,14 @@
 import * as path from 'path';
 import { F1Field, Scalar } from 'ffjavascript';
 import { wasm as wasm_tester } from 'circom_tester';
-import { GeneralCircuitInputsParserService } from '../../circuitInputsParser/generalCircuitInputParser.service';
+import { CircuitInputsParserService } from '../../circuitInputsParser/circuitInputParser.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { LoggingService } from '../../../../../../shared/logging/logging.service';
 import { PayloadFormatType } from '../../../../../workgroup/worksteps/models/workstep';
 import * as fs from 'fs';
+import { UnifiedCircuitInputsMapping } from '../../circuitInputsParser/unifiedCircuitInputsMapping';
+
+// TODO: check with shree if these tests should be deleted
 
 // This is the prime field used in the circuit
 // The prime field is defined by the following equation:
@@ -64,13 +67,13 @@ declare global {
 describe.skip('Supplier XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
-  let gcips: GeneralCircuitInputsParserService;
+  let gcips: CircuitInputsParserService;
   const loggingServiceMock: DeepMockProxy<LoggingService> =
     mockDeep<LoggingService>();
 
   beforeAll(async () => {
-    gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
-    circuit = await loadBusinessLogicCircuit('./serbia_workstep1.circom');
+    gcips = new CircuitInputsParserService(loggingServiceMock);
+    circuit = await loadBusinessLogicCircuit('./workstep1.circom');
   });
 
   // ZK CIRCUIT: (supplier signature is valid)
@@ -82,12 +85,11 @@ describe.skip('Supplier XML extraction and signature verification', () => {
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
 
-    const cim: GeneralCircuitInputsMapping = {
-      mapping: [],
-      extractions: [
+    const cim: UnifiedCircuitInputsMapping = {
+      mapping: [
         {
-          field: 'ds:Signature.ds:SignatureValue._',
-          destinationPath: 'supplierSignature',
+          extractionField: 'ds:Signature.ds:SignatureValue._',
+          payloadJsonPath: 'supplierSignature',
           circuitInput: 'supplierSignature',
           description: 'Signature on the document',
           dataType: 'string',
@@ -97,7 +99,7 @@ describe.skip('Supplier XML extraction and signature verification', () => {
     };
 
     // Act
-    const result = await gcips.applyGeneralMappingToTxPayload(
+    const result = await gcips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,
@@ -114,13 +116,13 @@ describe.skip('Supplier XML extraction and signature verification', () => {
 describe.skip('Efakture XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
-  let gcips: GeneralCircuitInputsParserService;
+  let gcips: CircuitInputsParserService;
   const loggingServiceMock: DeepMockProxy<LoggingService> =
     mockDeep<LoggingService>();
 
   beforeAll(async () => {
-    gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
-    circuit = await loadBusinessLogicCircuit('./serbia_workstep2.circom');
+    gcips = new CircuitInputsParserService(loggingServiceMock);
+    circuit = await loadBusinessLogicCircuit('./workstep2.circom');
   });
 
   // ZK CIRCUIT: (supplier signature is valid)
@@ -132,22 +134,22 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
 
-    const cim: GeneralCircuitInputsMapping = {
-      mapping: [],
-      extractions: [
+    const cim: UnifiedCircuitInputsMapping = {
+      mapping: [
         {
-          field: 'asic:XAdESSignatures.ds:Signature.ds:SignatureValue._',
-          destinationPath: 'efaktureSignature',
+          extractionField:
+            'asic:XAdESSignatures.ds:Signature.ds:SignatureValue._',
+          payloadJsonPath: 'efaktureSignature',
           circuitInput: 'efaktureSignature',
           description: 'Signature on the document',
           dataType: 'string',
           checkType: 'signatureCheck',
         },
         {
-          field:
+          extractionField:
             'asic:XAdESSignatures.ds:Signature.ds:KeyInfo.ds:X509Data.ds:X509Certificate.subject.CN',
           extractionParam: 'x509',
-          destinationPath: 'signerName',
+          payloadJsonPath: 'signerName',
           circuitInput: 'signerName', //Merkle leaf used for proof
           description: 'Common name of certificate signer',
           dataType: 'string',
@@ -158,7 +160,7 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     };
 
     // Act
-    const result = await gcips.applyGeneralMappingToTxPayload(
+    const result = await gcips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,
@@ -175,13 +177,13 @@ describe.skip('Efakture XML extraction and signature verification', () => {
 describe.skip('Supplier XML extraction and Id verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
-  let gcips: GeneralCircuitInputsParserService;
+  let gcips: CircuitInputsParserService;
   const loggingServiceMock: DeepMockProxy<LoggingService> =
     mockDeep<LoggingService>();
 
   beforeAll(async () => {
-    gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
-    circuit = await loadBusinessLogicCircuit('./serbia_workstep3.circom');
+    gcips = new CircuitInputsParserService(loggingServiceMock);
+    circuit = await loadBusinessLogicCircuit('./workstep3.circom');
   });
 
   // ZK CIRCUIT: (supplier signature is valid)
@@ -193,12 +195,11 @@ describe.skip('Supplier XML extraction and Id verification', () => {
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
 
-    const cim: GeneralCircuitInputsMapping = {
-      mapping: [],
-      extractions: [
+    const cim: UnifiedCircuitInputsMapping = {
+      mapping: [
         {
-          field: 'SupplierSEFSalesInvoiceId',
-          destinationPath: 'supplierId',
+          extractionField: 'SupplierSEFSalesInvoiceId',
+          payloadJsonPath: 'supplierId',
           circuitInput: 'supplierId', //Merkle leaf used for proof
           description: 'Supplied Id number',
           dataType: 'string',
@@ -209,7 +210,7 @@ describe.skip('Supplier XML extraction and Id verification', () => {
     };
 
     // Act
-    const result = await gcips.applyGeneralMappingToTxPayload(
+    const result = await gcips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,
@@ -226,13 +227,13 @@ describe.skip('Supplier XML extraction and Id verification', () => {
 describe.skip('Efakture XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
-  let gcips: GeneralCircuitInputsParserService;
+  let gcips: CircuitInputsParserService;
   const loggingServiceMock: DeepMockProxy<LoggingService> =
     mockDeep<LoggingService>();
 
   beforeAll(async () => {
-    gcips = new GeneralCircuitInputsParserService(loggingServiceMock);
-    circuit = await loadBusinessLogicCircuit('./serbia_workstep4.circom');
+    gcips = new CircuitInputsParserService(loggingServiceMock);
+    circuit = await loadBusinessLogicCircuit('./workstep4.circom');
   });
 
   // ZK CIRCUIT: (supplier signature is valid)
@@ -244,12 +245,11 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
 
-    const cim: GeneralCircuitInputsMapping = {
-      mapping: [],
-      extractions: [
+    const cim: UnifiedCircuitInputsMapping = {
+      mapping: [
         {
-          field: 'SupplierSEFSalesInvoiceId', //TODO: need accurate ID
-          destinationPath: 'invoiceStatus',
+          extractionField: 'SupplierSEFSalesInvoiceId', //TODO: need accurate ID
+          payloadJsonPath: 'invoiceStatus',
           circuitInput: 'invoiceStatus',
           description: 'Supplied Id number',
           dataType: 'string',
@@ -260,7 +260,7 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     };
 
     // Act
-    const result = await gcips.applyGeneralMappingToTxPayload(
+    const result = await gcips.applyCircuitInputMappingToTxPayload(
       payload,
       PayloadFormatType.XML,
       cim,
