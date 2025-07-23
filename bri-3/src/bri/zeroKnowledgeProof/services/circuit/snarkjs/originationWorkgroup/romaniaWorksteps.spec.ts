@@ -6,10 +6,7 @@ import { CircuitInputsParserService } from '../../circuitInputsParser/circuitInp
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { LoggingService } from '../../../../../../shared/logging/logging.service';
 import { PayloadFormatType } from '../../../../../workgroup/worksteps/models/workstep';
-import {
-  UnifiedCircuitInputMapping,
-  UnifiedCircuitInputsMapping,
-} from '../../circuitInputsParser/unifiedCircuitInputsMapping';
+import { UnifiedCircuitInputsMapping } from '../../circuitInputsParser/unifiedCircuitInputsMapping';
 
 // This is the prime field used in the circuit
 // The prime field is defined by the following equation:
