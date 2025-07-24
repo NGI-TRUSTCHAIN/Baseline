@@ -211,7 +211,7 @@ export class CircuitInputsParserService {
       }
     }
 
-    return result;
+    return null;
   }
 
   private async handleExtraction(
