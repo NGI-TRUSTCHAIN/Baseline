@@ -83,6 +83,16 @@ $ npm run test
 # Run single spec file
 $ npm run test -- transactions.agent.spec.ts
 ```
+```bash
+# Use following commands to generate the zk artifacts for the origination e2e test case
+
+$ cd Baseline/bri-3
+$ PROTOCOL=plonk npm run snarkjs:circuit originationWorkgroup/serbia_workstep1
+$ PROTOCOL=plonk npm run snarkjs:circuit originationWorkgroup/serbia_workstep2
+$ PROTOCOL=plonk npm run snarkjs:circuit originationWorkgroup/serbia_workstep3
+$ PROTOCOL=plonk npm run snarkjs:circuit originationWorkgroup/serbia_workstep4
+$ PROTOCOL=plonk npm run snarkjs:circuit originationWorkgroup/romania_workstep1 
+```
 
 ```bash
 # e2e testing - .e2e.spec files and the bash script used for running located in ./test folder
