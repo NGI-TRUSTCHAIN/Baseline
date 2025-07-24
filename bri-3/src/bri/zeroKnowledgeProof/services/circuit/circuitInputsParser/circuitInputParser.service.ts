@@ -184,7 +184,8 @@ export class CircuitInputsParserService {
           );
         }
       }
-
+    }
+    for (const mapping of schema.mapping) {
       // Get value from payload
       const value =
         this.getPayloadValueByPath(parsedPayload, mapping.payloadJsonPath) ??
@@ -199,7 +200,7 @@ export class CircuitInputsParserService {
 
       // Process mapping based on check type and data type
       if (mapping.circuitInput) {
-        await this.processCircuitInputMapping(result, mapping, value);
+        await this.processCircuitInputMapping(parsedPayload, mapping, value);
       }
     }
 
