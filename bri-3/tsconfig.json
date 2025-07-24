@@ -19,6 +19,6 @@
     "noFallthroughCasesInSwitch": false,
     "useDefineForClassFields": true,
     "allowJs": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
   }
 }

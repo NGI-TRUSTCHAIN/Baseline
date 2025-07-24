@@ -118,6 +118,9 @@ export class CircuitInputsParserService {
 
     for (const part of parts) {
       if (currentValue[part] === undefined) {
+        this.logger.logError(
+          `Path '${part}' not found in payload: ${JSON.stringify(json)}`,
+        );
         return undefined;
       }
       currentValue = currentValue[part];
@@ -163,7 +166,7 @@ export class CircuitInputsParserService {
     schema: UnifiedCircuitInputsMapping,
     payloadType: PayloadFormatType,
   ): Promise<Record<string, any> | null> {
-    const result: Record<string, any> = {};
+    let result: Record<string, any> = {};
 
     for (const mapping of schema.mapping) {
       // Handle extraction if needed
@@ -181,7 +184,8 @@ export class CircuitInputsParserService {
           );
         }
       }
-
+    }
+    for (const mapping of schema.mapping) {
       // Get value from payload
       const value =
         this.getPayloadValueByPath(parsedPayload, mapping.payloadJsonPath) ??
@@ -196,7 +200,14 @@ export class CircuitInputsParserService {
 
       // Process mapping based on check type and data type
       if (mapping.circuitInput) {
-        await this.processCircuitInputMapping(result, mapping, value);
+        result = {
+          ...result,
+          ...(await this.processCircuitInputMapping(
+            parsedPayload,
+            mapping,
+            value,
+          )),
+        };
       }
     }
 
@@ -376,10 +387,11 @@ export class CircuitInputsParserService {
   }
 
   private async processCircuitInputMapping(
-    result: Record<string, any>,
+    parsedPayload: any,
     mapping: UnifiedCircuitInputMapping,
     value: any,
-  ): Promise<void> {
+  ): Promise<Record<string, any>> {
+    let result: Record<string, any> = {};
     const circuitInput = mapping.circuitInput!;
 
     // Handle different check types with full implementation
@@ -403,7 +415,7 @@ export class CircuitInputsParserService {
 
       case 'merkleProof':
         const allLeaves = mapping.merkleTreeInputsPath?.map((path) =>
-          String(this.getPayloadValueByPath(result, path)),
+          String(this.getPayloadValueByPath(parsedPayload, path)),
         );
 
         if ((allLeaves?.length ?? 0) > 0) {
@@ -426,7 +438,7 @@ export class CircuitInputsParserService {
 
         if (mapping.expectedHashPath !== undefined) {
           const expectedHashPreimage = this.getPayloadValueByPath(
-            result,
+            parsedPayload,
             mapping.expectedHashPath,
           );
           const expectedHashHex = Buffer.from(
@@ -450,16 +462,27 @@ export class CircuitInputsParserService {
         break;
 
       default:
-        await this.processPrimitiveDataType(result, mapping, value);
+        result = {
+          ...result,
+          ...(await this.processPrimitiveDataType(
+            parsedPayload,
+            mapping,
+            value,
+          )),
+        };
+
         break;
     }
+
+    return result;
   }
 
   private async processPrimitiveDataType(
-    result: Record<string, any>,
+    parsedPayload: Record<string, any>,
     mapping: UnifiedCircuitInputMapping,
     value: any,
-  ): Promise<void> {
+  ): Promise<Record<string, any>> {
+    let result: Record<string, any> = {};
     const circuitInput = mapping.circuitInput!;
 
     switch (mapping.dataType) {
@@ -477,20 +500,25 @@ export class CircuitInputsParserService {
         break;
 
       case 'array':
-        await this.processArrayType(result, mapping, value);
+        result = {
+          ...result,
+          ...(await this.processArrayType(mapping, value)),
+        };
         break;
 
       default:
         result[circuitInput] = value;
         break;
     }
+
+    return result;
   }
 
   private async processArrayType(
-    result: Record<string, any>,
     mapping: UnifiedCircuitInputMapping,
     value: any,
-  ): Promise<void> {
+  ): Promise<Record<string, any>> {
+    const result: Record<string, any> = {};
     const circuitInput = mapping.circuitInput!;
 
     if (mapping.arrayType === 'string') {
@@ -520,6 +548,7 @@ export class CircuitInputsParserService {
         );
       }
     }
+    return result;
   }
 
   private setPayloadValueByPath(obj: any, path: string, value: any): void {

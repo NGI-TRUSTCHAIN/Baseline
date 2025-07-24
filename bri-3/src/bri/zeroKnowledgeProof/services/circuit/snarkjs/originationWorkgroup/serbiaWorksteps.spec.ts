@@ -1,12 +1,12 @@
 import * as path from 'path';
 import { F1Field, Scalar } from 'ffjavascript';
 import { wasm as wasm_tester } from 'circom_tester';
-import { CircuitInputsParserService } from '../../../../circuitInputsParser/circuitInputParser.service';
+import { CircuitInputsParserService } from '../../circuitInputsParser/circuitInputParser.service';
 import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
-import { LoggingService } from '../../../../../../../../shared/logging/logging.service';
-import { PayloadFormatType } from '../../../../../../../workgroup/worksteps/models/workstep';
+import { LoggingService } from '../../../../../../shared/logging/logging.service';
+import { PayloadFormatType } from '../../../../../workgroup/worksteps/models/workstep';
 import * as fs from 'fs';
-import { UnifiedCircuitInputsMapping } from '../../../../circuitInputsParser/unifiedCircuitInputsMapping';
+import { UnifiedCircuitInputsMapping } from '../../circuitInputsParser/unifiedCircuitInputsMapping';
 
 // TODO: check with shree if these tests should be deleted
 
@@ -63,7 +63,7 @@ declare global {
     }
   }
 }
-// TODO: Separate npm run command
+
 describe.skip('Supplier XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
@@ -80,7 +80,7 @@ describe.skip('Supplier XML extraction and signature verification', () => {
   it('should extract and verify the supplier xml signature', async () => {
     const xmlFilePath = path.join(
       __dirname,
-      '../../../../../../../../shared/testing/interop/supplierInvoice.xml',
+      '../../../../../../shared/testing/interop/supplierInvoice.xml',
     );
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
@@ -112,7 +112,7 @@ describe.skip('Supplier XML extraction and signature verification', () => {
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
 });
-// TODO: Separate npm run command
+
 describe.skip('Efakture XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
@@ -129,7 +129,7 @@ describe.skip('Efakture XML extraction and signature verification', () => {
   it('should extract and verify that signer is Republika Srbija - Ministarstvo finansija', async () => {
     const xmlFilePath = path.join(
       __dirname,
-      '../../../../../../../../shared/testing/interop/signatures0.xml',
+      '../../../../../../shared/testing/interop/signatures0.xml',
     );
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
@@ -173,7 +173,7 @@ describe.skip('Efakture XML extraction and signature verification', () => {
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
 });
-// TODO: Separate npm run command
+
 describe.skip('Supplier XML extraction and Id verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
@@ -190,7 +190,7 @@ describe.skip('Supplier XML extraction and Id verification', () => {
   it('should extract and verify that signer is Republika Srbija - Ministarstvo finansija', async () => {
     const xmlFilePath = path.join(
       __dirname,
-      '../../../../../../../../shared/testing/interop/supplierInvoice.xml',
+      '../../../../../../shared/testing/interop/supplierInvoice.xml',
     );
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;
@@ -223,7 +223,7 @@ describe.skip('Supplier XML extraction and Id verification', () => {
     expect(witness[WITNESS_IS_OUTPUT_INDEX]).toEqualInFr(expectedOutput);
   });
 });
-// TODO: Separate npm run command
+
 describe.skip('Efakture XML extraction and signature verification', () => {
   jest.setTimeout(100000);
   let circuit: any;
@@ -240,7 +240,7 @@ describe.skip('Efakture XML extraction and signature verification', () => {
   it('should extract and verify that invoice status is Approved', async () => {
     const xmlFilePath = path.join(
       __dirname,
-      '../../../../../../../../shared/testing/interop/verifiedSupplierInvoice.xml',
+      '../../../../../../shared/testing/interop/verifiedSupplierInvoice.xml',
     );
     const xmlContent = fs.readFileSync(xmlFilePath, 'utf-8');
     const payload = xmlContent;

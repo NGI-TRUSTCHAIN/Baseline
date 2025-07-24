@@ -458,8 +458,7 @@ export class TransactionAgent {
       const response = await fetch(fullUrl, {
         method: payload.method,
         headers: {
-          'Content-Type': payload.contentType || 'application/json',
-          apiKey: payload.apiKey || '',
+          apiKey: payload.apiKey,
         },
         body:
           payload.method !== 'GET' ? JSON.stringify(payload.body) : undefined,

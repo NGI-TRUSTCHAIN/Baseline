@@ -64,6 +64,8 @@ async function main() {
     await workstep3Verifier.getAddress(),
   );
 
+  //Romania Workstep 1
+
   const RomaniaWorkstep1Verifier = await hre.ethers.getContractFactory(
     'contracts/originationWorkgroup/romania_workstep1Verifier.sol:PlonkVerifier',
   );
@@ -73,6 +75,54 @@ async function main() {
   console.log(
     'RomaniaWorkstep1Verifier deployed to:',
     await romaniaWorkstep1Verifier.getAddress(),
+  );
+
+  //Serbia Workstep 1
+  const SerbiaWorkstep1Verifier = await hre.ethers.getContractFactory(
+    'contracts/originationWorkgroup/serbia_workstep1Verifier.sol:PlonkVerifier',
+  );
+
+  const serbiaWorkstep1Verifier = await SerbiaWorkstep1Verifier.deploy();
+
+  console.log(
+    'SerbiaWorkstep1Verifier deployed to:',
+    await serbiaWorkstep1Verifier.getAddress(),
+  );
+
+  //Serbia Workstep 2
+  const SerbiaWorkstep2Verifier = await hre.ethers.getContractFactory(
+    'contracts/originationWorkgroup/serbia_workstep2Verifier.sol:PlonkVerifier',
+  );
+
+  const serbiaWorkstep2Verifier = await SerbiaWorkstep2Verifier.deploy();
+
+  console.log(
+    'SerbiaWorkstep2Verifier deployed to:',
+    await serbiaWorkstep2Verifier.getAddress(),
+  );
+
+  //Serbia Workstep 3
+  const SerbiaWorkstep3Verifier = await hre.ethers.getContractFactory(
+    'contracts/originationWorkgroup/serbia_workstep3Verifier.sol:PlonkVerifier',
+  );
+
+  const serbiaWorkstep3Verifier = await SerbiaWorkstep3Verifier.deploy();
+
+  console.log(
+    'SerbiaWorkstep3Verifier deployed to:',
+    await serbiaWorkstep3Verifier.getAddress(),
+  );
+
+  //Serbia Workstep 4
+  const SerbiaWorkstep4Verifier = await hre.ethers.getContractFactory(
+    'contracts/originationWorkgroup/serbia_workstep4Verifier.sol:PlonkVerifier',
+  );
+
+  const serbiaWorkstep4Verifier = await SerbiaWorkstep4Verifier.deploy();
+
+  console.log(
+    'SerbiaWorkstep4Verifier deployed to:',
+    await serbiaWorkstep4Verifier.getAddress(),
   );
 }
 

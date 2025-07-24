@@ -1,6 +1,6 @@
 pragma circom 2.1.5;
 
-include "../../../generalisedCircuit/businessLogic.circom";
+include "../generalisedCircuit/businessLogic.circom";
 
 // Supplier signature is valid
 template InteropSerbiaWorkstep3()
