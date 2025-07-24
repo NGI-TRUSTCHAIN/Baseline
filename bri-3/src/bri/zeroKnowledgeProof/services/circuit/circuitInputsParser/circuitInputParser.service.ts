@@ -211,7 +211,7 @@ export class CircuitInputsParserService {
       }
     }
 
-    return null;
+    return result;
   }
 
   private async handleExtraction(
@@ -391,7 +391,7 @@ export class CircuitInputsParserService {
     mapping: UnifiedCircuitInputMapping,
     value: any,
   ): Promise<Record<string, any>> {
-    const result: Record<string, any> = {};
+    let result: Record<string, any> = {};
     const circuitInput = mapping.circuitInput!;
 
     // Handle different check types with full implementation
@@ -462,7 +462,15 @@ export class CircuitInputsParserService {
         break;
 
       default:
-        await this.processPrimitiveDataType(result, mapping, value);
+        result = {
+          ...result,
+          ...(await this.processPrimitiveDataType(
+            parsedPayload,
+            mapping,
+            value,
+          )),
+        };
+
         break;
     }
 
@@ -470,10 +478,11 @@ export class CircuitInputsParserService {
   }
 
   private async processPrimitiveDataType(
-    result: Record<string, any>,
+    parsedPayload: Record<string, any>,
     mapping: UnifiedCircuitInputMapping,
     value: any,
-  ): Promise<void> {
+  ): Promise<Record<string, any>> {
+    let result: Record<string, any> = {};
     const circuitInput = mapping.circuitInput!;
 
     switch (mapping.dataType) {
@@ -491,20 +500,25 @@ export class CircuitInputsParserService {
         break;
 
       case 'array':
-        await this.processArrayType(result, mapping, value);
+        result = {
+          ...result,
+          ...(await this.processArrayType(mapping, value)),
+        };
         break;
 
       default:
         result[circuitInput] = value;
         break;
     }
+
+    return result;
   }
 
   private async processArrayType(
-    result: Record<string, any>,
     mapping: UnifiedCircuitInputMapping,
     value: any,
-  ): Promise<void> {
+  ): Promise<Record<string, any>> {
+    const result: Record<string, any> = {};
     const circuitInput = mapping.circuitInput!;
 
     if (mapping.arrayType === 'string') {
@@ -534,6 +548,7 @@ export class CircuitInputsParserService {
         );
       }
     }
+    return result;
   }
 
   private setPayloadValueByPath(obj: any, path: string, value: any): void {
