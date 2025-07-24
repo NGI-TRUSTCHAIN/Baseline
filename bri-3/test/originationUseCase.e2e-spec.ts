@@ -251,7 +251,7 @@ describe('Invoice origination use-case end-to-end test', () => {
                 "description": "Common name of certificate signer",
                 "dataType": "string",
                 "checkType": "merkleProof",
-                "merkleTreeInputsPath": ["signerName", "serialNumber"]
+                "merkleTreeInputsPath": ["signerName", "signerName"]
               }
             ]
           }`;
@@ -293,7 +293,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       await bpiService1.addCircuitInputsSchema(createdWorkstep4Id, schema);
     });
 
-    it.skip('Submits transaction for execution of the workstep 1', async () => {
+    it('Submits transaction for execution of the workstep 1', async () => {
       const xmlFilePath = path.join(
         __dirname,
         '../src/shared/testing/interop/supplierInvoice.xml',
@@ -397,7 +397,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       ).toBe(0);
     });
 
-    it.skip('Submits transaction for execution of the workstep 3', async () => {
+    it('Submits transaction for execution of the workstep 3', async () => {
       const xmlFilePath = path.join(
         __dirname,
         '../src/shared/testing/interop/supplierInvoice.xml',
@@ -417,7 +417,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       );
     });
 
-    it.skip('Waits for a single VSM cycle and then verifies that the transaction 3 has been executed', async () => {
+    it('Waits for a single VSM cycle and then verifies that the transaction 3 has been executed', async () => {
       const resultWorkflow = await bpiService1.fetchWorkflow(createdWorkflowId);
       const resultBpiAccount = await waitForTreeUpdate(
         bpiService1,

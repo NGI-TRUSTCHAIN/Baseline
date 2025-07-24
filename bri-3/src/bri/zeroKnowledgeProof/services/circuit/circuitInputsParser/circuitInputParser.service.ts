@@ -166,6 +166,8 @@ export class CircuitInputsParserService {
     schema: UnifiedCircuitInputsMapping,
     payloadType: PayloadFormatType,
   ): Promise<Record<string, any> | null> {
+    let result: Record<string, any> = {};
+
     for (const mapping of schema.mapping) {
       // Handle extraction if needed
       if (mapping.extractionField) {
@@ -198,15 +200,18 @@ export class CircuitInputsParserService {
 
       // Process mapping based on check type and data type
       if (mapping.circuitInput) {
-        return await this.processCircuitInputMapping(
-          parsedPayload,
-          mapping,
-          value,
-        );
+        result = {
+          ...result,
+          ...(await this.processCircuitInputMapping(
+            parsedPayload,
+            mapping,
+            value,
+          )),
+        };
       }
     }
 
-    return null;
+    return result;
   }
 
   private async handleExtraction(
