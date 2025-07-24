@@ -166,8 +166,6 @@ export class CircuitInputsParserService {
     schema: UnifiedCircuitInputsMapping,
     payloadType: PayloadFormatType,
   ): Promise<Record<string, any> | null> {
-    const result: Record<string, any> = {};
-
     for (const mapping of schema.mapping) {
       // Handle extraction if needed
       if (mapping.extractionField) {
@@ -200,11 +198,15 @@ export class CircuitInputsParserService {
 
       // Process mapping based on check type and data type
       if (mapping.circuitInput) {
-        await this.processCircuitInputMapping(parsedPayload, mapping, value);
+        return await this.processCircuitInputMapping(
+          parsedPayload,
+          mapping,
+          value,
+        );
       }
     }
 
-    return result;
+    return null;
   }
 
   private async handleExtraction(
@@ -380,10 +382,11 @@ export class CircuitInputsParserService {
   }
 
   private async processCircuitInputMapping(
-    result: Record<string, any>,
+    parsedPayload: any,
     mapping: UnifiedCircuitInputMapping,
     value: any,
-  ): Promise<void> {
+  ): Promise<Record<string, any>> {
+    const result: Record<string, any> = {};
     const circuitInput = mapping.circuitInput!;
 
     // Handle different check types with full implementation
@@ -407,7 +410,7 @@ export class CircuitInputsParserService {
 
       case 'merkleProof':
         const allLeaves = mapping.merkleTreeInputsPath?.map((path) =>
-          String(this.getPayloadValueByPath(result, path)),
+          String(this.getPayloadValueByPath(parsedPayload, path)),
         );
 
         if ((allLeaves?.length ?? 0) > 0) {
@@ -430,7 +433,7 @@ export class CircuitInputsParserService {
 
         if (mapping.expectedHashPath !== undefined) {
           const expectedHashPreimage = this.getPayloadValueByPath(
-            result,
+            parsedPayload,
             mapping.expectedHashPath,
           );
           const expectedHashHex = Buffer.from(
@@ -457,6 +460,8 @@ export class CircuitInputsParserService {
         await this.processPrimitiveDataType(result, mapping, value);
         break;
     }
+
+    return result;
   }
 
   private async processPrimitiveDataType(
