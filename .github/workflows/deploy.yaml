@@ -1,29 +1,45 @@
-name: Deploy to DigitalOcean Server 1
+name: Deploy to DigitalOcean Server
 
 on:
   push:
     branches:
-      - deploy-staging  # switch to main after
+      - deploy-staging  # Change this to match your deploy branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Set up SSH access
+    - name: Set up SSH access and write key
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
         ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-    - name: Deploy via SSH
+    - name: Debug Check SSH key format and validity
       run: |
-        ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-          cd Baseline
+        echo "=== First 5 lines of SSH private key ==="
+        head -n 5 ~/.ssh/id_ed25519 || echo "Key missing or unreadable"
+        echo "=== ssh-keygen check ==="
+        ssh-keygen -l -f ~/.ssh/id_ed25519 || echo "❌ Invalid SSH key"
+    
+    - name: Debug Test SSH connectivity
+      run: |
+        ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo ✅ SSH connection successful" || echo "❌ SSH failed"
+
+    - name: Deploy over SSH
+      run: |
+        ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          set -e
+          cd Baseline  # Adjust this path to match where your repo lives
+          echo "📦 Pulling latest code..."
           git pull origin main
           cd bri-3
+          echo "🧹 Cleaning up existing containers..."
           make down || true
+          echo "🔄 Pulling latest Docker images..."
           docker compose pull
+          echo "🚀 Starting containers..."
           docker compose up -d --build
         EOF
