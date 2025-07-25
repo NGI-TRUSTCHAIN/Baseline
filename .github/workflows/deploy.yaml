@@ -14,7 +14,11 @@ jobs:
       run: |
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519 
+        echo "===== HEAD of SSH key ====="
+        head -n 5 ~/.ssh/id_ed25519 || echo "❌ Failed to read head"
+        echo "===== TAIL of SSH key ====="
+        tail -n 5 ~/.ssh/id_ed25519 || echo "❌ Failed to read tail"
         ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
     - name: Debug Check SSH key format and validity
