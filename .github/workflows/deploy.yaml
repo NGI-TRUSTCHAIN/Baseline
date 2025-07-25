@@ -15,12 +15,6 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519 
-        echo "===== First 128 bytes of SSH key ====="
-        head -c 128 ~/.ssh/id_ed25519 | xxd
-        echo "===== HEAD of SSH key ====="
-        head -n 5 ~/.ssh/id_ed25519 || echo "❌ Failed to read head"
-        echo "===== TAIL of SSH key ====="
-        tail -n 5 ~/.ssh/id_ed25519 || echo "❌ Failed to read tail"
         ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
     - name: Debug Check SSH key format and validity
@@ -44,8 +38,6 @@ jobs:
           cd bri-3
           echo "🧹 Cleaning up existing containers..."
           make down || true
-          echo "🔄 Pulling latest Docker images..."
-          docker compose pull
-          echo "🚀 Starting containers..."
-          docker compose up -d --build
+          echo "Starting containers..."
+          make up
         EOF
