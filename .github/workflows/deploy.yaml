@@ -10,6 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Doorkeeper open
+      uses: patoroco/doorkeeper@master
+      with:
+        digitaloceanToken: ${{ secrets.DO_TOKEN }}
+        firewallName: "Baseline-Staging-Firewall"
+        actionToDo: "add"
+        dryRun: false
+
     - name: Set up SSH access and write key
       run: |
         mkdir -p ~/.ssh
@@ -41,3 +49,11 @@ jobs:
           echo "Starting containers..."
           make up
         EOF
+
+    - name: Doorkeeper close
+      uses: patoroco/doorkeeper@master
+      with:
+        digitaloceanToken: ${{ secrets.DO_TOKEN }}
+        firewallName: "Baseline-Staging-Firewall"
+        actionToDo: "remove"
+        dryRun: false
