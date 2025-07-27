@@ -3,7 +3,7 @@ name: Deploy to DigitalOcean Server
 on:
   push:
     branches:
-      - deploy-staging  # Change this to match your deploy branch
+      - deploy-staging # TODO: change to main
 
 jobs:
   deploy:
@@ -18,37 +18,20 @@ jobs:
         actionToDo: "add"
         dryRun: false
 
-    - name: Set up SSH access and write key
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519 
-        ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
-
-    - name: Debug Check SSH key format and validity
-      run: |
-        echo "=== First 5 lines of SSH private key ==="
-        head -n 5 ~/.ssh/id_ed25519 || echo "Key missing or unreadable"
-        echo "=== ssh-keygen check ==="
-        ssh-keygen -l -f ~/.ssh/id_ed25519 || echo "❌ Invalid SSH key"
-    
-    - name: Debug Test SSH connectivity
-      run: |
-        ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "echo ✅ SSH connection successful" || echo "❌ SSH failed"
-
-    - name: Deploy over SSH
-      run: |
-        ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+    - name: Deploy
+      uses: appleboy/ssh-action@v1.2.2
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
           set -e
-          cd Baseline  # Adjust this path to match where your repo lives
-          echo "📦 Pulling latest code..."
+          cd Baseline
           git pull origin main
           cd bri-3
-          echo "🧹 Cleaning up existing containers..."
           make down || true
-          echo "Starting containers..."
           make up
-        EOF
 
     - name: Doorkeeper close
       uses: patoroco/doorkeeper@master
