@@ -1,0 +1,40 @@
+name: Deploy to DigitalOcean Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Doorkeeper open
+      uses: patoroco/doorkeeper@master
+      with:
+        digitaloceanToken: ${{ secrets.DO_TOKEN }}
+        firewallName: "Baseline-Staging-Firewall"
+        actionToDo: "add"
+        dryRun: false
+
+    - name: Deploy
+      uses: appleboy/ssh-action@v1.2.2
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          set -e
+          cd Baseline
+          git pull origin main
+          cd bri-3
+          make down || true
+          make up
+
+    - name: Doorkeeper close
+      uses: patoroco/doorkeeper@master
+      with:
+        digitaloceanToken: ${{ secrets.DO_TOKEN }}
+        firewallName: "Baseline-Staging-Firewall"
+        actionToDo: "remove"
+        dryRun: false
