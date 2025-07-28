@@ -1,9 +1,7 @@
 name: Deploy to DigitalOcean Server
 
 on:
-  push:
-    branches:
-      - deploy-staging # TODO: change to main
+  workflow_dispatch:
 
 jobs:
   deploy:
