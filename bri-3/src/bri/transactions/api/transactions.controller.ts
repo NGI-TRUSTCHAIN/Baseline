@@ -17,6 +17,8 @@ import { CreateTransactionDto } from './dtos/request/createTransaction.dto';
 import { UpdateTransactionDto } from './dtos/request/updateTransaction.dto';
 import { TransactionDto } from './dtos/response/transaction.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { VerifyTransactionResultCommand } from '../capabilities/verifyTransactionResult/verifyTransactionResult.command';
+import { VerifyTransactionResultDto } from './dtos/request/verifyTransactionResult.dto';
 
 @Controller('transactions')
 @ApiBearerAuth()
@@ -71,5 +73,18 @@ export class TransactionController {
   @Delete('/:id')
   async deleteTransaction(@Param('id') id: string): Promise<void> {
     return await this.commandBus.execute(new DeleteTransactionCommand(id));
+  }
+
+  @Post('/verify')
+  async verifyTransactionResult(
+    @Body() requestDto: VerifyTransactionResultDto,
+  ): Promise<string> {
+    return await this.commandBus.execute(
+      new VerifyTransactionResultCommand(
+        requestDto.workflowId,
+        requestDto.workstepId,
+        requestDto.transactionResult,
+      ),
+    );
   }
 }
