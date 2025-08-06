@@ -78,7 +78,7 @@ export class TransactionController {
   @Post('/verify')
   async verifyTransactionResult(
     @Body() requestDto: VerifyTransactionResultDto,
-  ): Promise<string> {
+  ): Promise<boolean> {
     return await this.commandBus.execute(
       new VerifyTransactionResultCommand(
         requestDto.workflowId,

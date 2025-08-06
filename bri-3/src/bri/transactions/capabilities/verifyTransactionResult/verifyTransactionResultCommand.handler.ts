@@ -51,11 +51,7 @@ export class VerifyTransactionResultCommandHandler
         txResult,
       );
 
-      if (verifiedTxResult.verifiedOnChain) {
-        return 'Proof verified on chain.';
-      } else {
-        return 'Proof not verified on chain.';
-      }
+      return verifiedTxResult.verifiedOnChain;
     } catch (error) {
       console.error('Error verifying transaction result:', error);
       return;
