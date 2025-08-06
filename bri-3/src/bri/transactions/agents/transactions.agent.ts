@@ -299,6 +299,26 @@ export class TransactionAgent {
     return txResult;
   }
 
+  public async verifyTransactionResult(
+    workgroup: Workgroup,
+    workstep: Workstep,
+    txResult: TransactionResult,
+  ): Promise<TransactionResult> {
+    const { verifierContractAbiFilePath } =
+      this.constructCircuitPathsFromWorkgroupAndWorkstepName(
+        workgroup.name,
+        workstep.name,
+      );
+
+    txResult.verifiedOnChain = await this.ccsmService.verifyProof(
+      workstep.workstepConfig.executionParams.verifierContractAddress,
+      verifierContractAbiFilePath,
+      txResult.witness,
+    );
+
+    return txResult;
+  }
+
   private constructCircuitPathsFromWorkgroupAndWorkstepName(
     workgroupName: string,
     workstepName: string,

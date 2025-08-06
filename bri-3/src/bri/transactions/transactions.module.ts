@@ -20,12 +20,14 @@ import { CcsmModule } from '../ccsm/ccsm.module';
 import { LoggingModule } from '../../shared/logging/logging.module';
 import { CommunicationModule } from '../communication/communication.module';
 import { ProcessInboundTransactionCommandHandler } from './capabilities/processInboundTransaction/processInboundTransactionCommand.handler';
+import { VerifyTransactionResultCommandHandler } from './capabilities/verifyTransactionResult/verifyTransactionResultCommand.handler';
 
 export const CommandHandlers = [
   CreateTransactionCommandHandler,
   UpdateTransactionCommandHandler,
   DeleteTransactionCommandHandler,
   ProcessInboundTransactionCommandHandler,
+  VerifyTransactionResultCommandHandler,
 ];
 
 export const QueryHandlers = [
