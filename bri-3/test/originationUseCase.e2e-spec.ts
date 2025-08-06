@@ -367,14 +367,15 @@ describe('Invoice origination use-case end-to-end test', () => {
       expect(stateTreeLeafValue).toBeTruthy();
       expect(stateTreeLeafValue.leafIndex).toBe(0);
 
-      console.log(stateTreeLeafValue);
-
       //Verify ZK proof on chain
-      // const isVerified = await bpiService1.verifyTransactionResult(
-      //   resultTransaction.workflowId,
-      //   resultTransaction.workstepId,
-      //   JSON.stringify(stateTreeLeafValue),
-      // );
+      const verifiedTransactionResult =
+        await bpiService1.verifyTransactionResult(
+          resultTransaction.workflowId,
+          resultTransaction.workstepId,
+          JSON.stringify(stateTreeLeafValue),
+        );
+
+      expect(verifiedTransactionResult).toBe('Proof verified on chain.');
     });
 
     it.skip('Submits transaction for execution of the workstep 2', async () => {
