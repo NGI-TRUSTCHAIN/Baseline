@@ -155,4 +155,16 @@ export class BpiService {
   async fetchStateTreeLeafViaCAH(cah: string): Promise<any> {
     return this.apiClient.get('/state', { leafValue: cah });
   }
+
+  async verifyTransactionResult(
+    workflowId: string,
+    workstepId: string,
+    transactionResult: string,
+  ): Promise<any> {
+    return this.apiClient.post('/transactions/verify', {
+      workflowId,
+      workstepId,
+      transactionResult,
+    });
+  }
 }
