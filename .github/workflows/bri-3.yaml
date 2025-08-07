@@ -67,6 +67,7 @@ jobs:
       - name: Download and extract zeroKnowledgeArtifacts
         working-directory: bri-3
         run: |
+          rm -rf zeroKnowledgeArtifacts
           ls -lh
           curl -L https://zkartifacts.sfo3.digitaloceanspaces.com/zeroKnowledgeArtifacts.zip -o zeroKnowledgeArtifacts.zip
           unzip -q zeroKnowledgeArtifacts.zip -d zeroKnowledgeArtifacts
