@@ -6,7 +6,7 @@ npx hardhat node &
 NODE_PID=$!
 
 # Wait for node to become available
-sleep 5
+sleep 30
 
 echo "[HARDHAT] Deploying contracts..."
 npx hardhat run --no-compile scripts/deploy.ts --network localhost
