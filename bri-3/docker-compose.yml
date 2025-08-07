@@ -68,7 +68,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-      - ./artifacts/zeroKnowledgeArtifacts:/app/zeroKnowledgeArtifacts
+      - ${ZK_ARTIFACTS_DIR:-./zeroKnowledgeArtifacts}:/app/zeroKnowledgeArtifacts
     ports:
       - "3000:3000"
     env_file:
@@ -99,7 +99,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-      - ./artifacts/zeroKnowledgeArtifacts:/app/zeroKnowledgeArtifacts
+      - ${ZK_ARTIFACTS_DIR:-./zeroKnowledgeArtifacts}:/app/zeroKnowledgeArtifacts
     ports:
       - "3001:3000"
     env_file:
