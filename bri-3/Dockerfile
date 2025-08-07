@@ -2,6 +2,8 @@ FROM node:23-slim
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y curl
+
 COPY package*.json ./
 RUN npm install
 RUN npm install -g prisma
