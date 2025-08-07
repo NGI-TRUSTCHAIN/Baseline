@@ -8,7 +8,6 @@ ZIP_URL="https://zkartifacts.sfo3.digitaloceanspaces.com/zeroKnowledgeArtifacts.
 if [ ! -d "$ARTIFACT_DIR" ]; then
   echo "[ARTIFACTS] Downloading artifacts..."
   curl -L "$ZIP_URL" -o /tmp/artifacts.zip
-  mkdir -p "$ARTIFACT_DIR"
   unzip -q /tmp/artifacts.zip -d /app/
   rm /tmp/artifacts.zip
   echo "[ARTIFACTS] Done extracting artifacts"
@@ -16,5 +15,5 @@ else
   echo "[ARTIFACTS] Already present. Skipping download."
 fi
 
-# Now hand over to whatever CMD is set in Dockerfile or Compose
+# Handover to CMD from Dockerfile or docker-compose
 exec "$@"
