@@ -2,7 +2,7 @@ FROM node:23-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y curl && apt-get install -y unzip
 
 COPY package*.json ./
 RUN npm install
