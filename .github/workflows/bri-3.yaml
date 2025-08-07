@@ -70,7 +70,7 @@ jobs:
           rm -rf zeroKnowledgeArtifacts
           ls -lh
           curl -L https://zkartifacts.sfo3.digitaloceanspaces.com/zeroKnowledgeArtifacts.zip -o zeroKnowledgeArtifacts.zip
-          unzip -q zeroKnowledgeArtifacts.zip -d zeroKnowledgeArtifacts
+          unzip -q zeroKnowledgeArtifacts.zip -d .
           rm zeroKnowledgeArtifacts.zip
           ls -lh
           echo "zk artifacts"
