@@ -2,18 +2,15 @@ FROM node:23-slim
 
 WORKDIR /app
 
-# Copy only package manifests to install dependencies first and cache this layer
 COPY package*.json ./
-
-# Install all base dependencies
 RUN npm install
-
-# Install global tools separately to cache them independently
 RUN npm install -g prisma
 
-# Copy the rest of the app (source code, Prisma schema, etc.)
 COPY . .
+COPY fetch-artifacts.sh /usr/local/bin/fetch-artifacts.sh
+RUN chmod +x /usr/local/bin/fetch-artifacts.sh
 
 EXPOSE 3000
 
+ENTRYPOINT ["/usr/local/bin/fetch-artifacts.sh"]
 CMD ["npm", "run", "start:dev"]
