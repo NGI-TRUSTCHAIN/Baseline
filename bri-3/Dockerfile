@@ -9,10 +9,9 @@ RUN npm install
 RUN npm install -g prisma
 
 COPY . .
-COPY fetch-artifacts.sh /usr/local/bin/fetch-artifacts.sh
-RUN chmod +x /usr/local/bin/fetch-artifacts.sh
+RUN chmod +x fetch-artifacts.sh
 
 EXPOSE 3000
 
-ENTRYPOINT ["/usr/local/bin/fetch-artifacts.sh"]
+ENTRYPOINT ["fetch-artifacts.sh"]
 CMD ["npm", "run", "start:dev"]
