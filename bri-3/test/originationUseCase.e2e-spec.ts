@@ -104,8 +104,12 @@ describe('Invoice origination use-case end-to-end test', () => {
     bpiService1 = new BpiService(new ApiClient(server, accessToken1));
     bpiService2 = new BpiService(new ApiClient(server2, accessToken2));
 
-    contract1 = getContractFromLocalNode(process.env.LOCALHOST_RPC_URL as string);
-    contract2 = getContractFromLocalNode(process.env.LOCALHOST_RPC_URL2 as string);
+    contract1 = getContractFromLocalNode(
+      process.env.LOCALHOST_RPC_URL as string,
+    );
+    contract2 = getContractFromLocalNode(
+      process.env.LOCALHOST_RPC_URL2 as string,
+    );
   });
 
   describe('Serbia BPI service', () => {
