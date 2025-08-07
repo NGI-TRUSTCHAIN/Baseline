@@ -67,9 +67,14 @@ jobs:
       - name: Download and extract zeroKnowledgeArtifacts
         working-directory: bri-3
         run: |
+          ls -lh
           curl -L https://zkartifacts.sfo3.digitaloceanspaces.com/zeroKnowledgeArtifacts.zip -o zeroKnowledgeArtifacts.zip
           unzip -q zeroKnowledgeArtifacts.zip -d zeroKnowledgeArtifacts
           rm zeroKnowledgeArtifacts.zip
+          ls -lh
+          echo "zk artifacts"
+          cd zeroKnowledgeArtifacts
+          ls -lh
 
       - name: Install project dependencies
         working-directory: bri-3
