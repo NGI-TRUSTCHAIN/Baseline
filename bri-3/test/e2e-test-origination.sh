@@ -24,15 +24,6 @@ make up
 log_message "Waiting for services to be ready..."
 sleep 30
 
-# Check inside both NestJS containers
-for container in nestjs-app nestjs-app-2; do
-  log_message "Checking container: $container"
-
-  docker exec "$container" bash -c 'if [ -d /app/zeroKnowledgeArtifacts ]; then echo "[DEBUG] /app/zeroKnowledgeArtifacts exists in container"; else echo "[DEBUG] /app/zeroKnowledgeArtifacts NOT FOUND in container"; fi'
-
-  docker exec "$container" bash -c 'ls -lah /app/zeroKnowledgeArtifacts || echo "[DEBUG] Failed to list /app/zeroKnowledgeArtifacts"'
-done
-
 log_message "Running E2E tests"
 run_command "npm run test:e2e:origination"
 
