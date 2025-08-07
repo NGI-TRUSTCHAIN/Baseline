@@ -64,11 +64,12 @@ jobs:
         working-directory: bri-3
         run: cat .env
 
-      - name: Download zeroKnowledgeArtifacts
+      - name: Download and extract zeroKnowledgeArtifacts
+        working-directory: bri-3
         run: |
-          curl -L https://zkartifacts.sfo3.digitaloceanspaces.com/zeroKnowledgeArtifacts.zip -o ${{ runner.temp }}/zeroKnowledgeArtifacts.zip
-          unzip -q ${{ runner.temp }}/zeroKnowledgeArtifacts.zip -d ${{ runner.temp }}/zeroKnowledgeArtifacts
-          rm ${{ runner.temp }}/zeroKnowledgeArtifacts.zip
+          curl -L https://zkartifacts.sfo3.digitaloceanspaces.com/zeroKnowledgeArtifacts.zip -o zeroKnowledgeArtifacts.zip
+          unzip -q zeroKnowledgeArtifacts.zip -d zeroKnowledgeArtifacts
+          rm zeroKnowledgeArtifacts.zip
 
       - name: Install project dependencies
         working-directory: bri-3
@@ -97,8 +98,6 @@ jobs:
       - name: Run origination tests
         working-directory: bri-3
         run: make test-origination
-        env:
-          ZK_ARTIFACTS_DIR: ${{ runner.temp }}/zeroKnowledgeArtifacts
 
       - name: Cleanup Docker containers
         if: always()

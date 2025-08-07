@@ -68,7 +68,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-      - ${ZK_ARTIFACTS_DIR:-./zeroKnowledgeArtifacts}:/app/zeroKnowledgeArtifacts
+      - ./zeroKnowledgeArtifacts:/app/zeroKnowledgeArtifacts
     ports:
       - "3000:3000"
     env_file:
@@ -81,7 +81,7 @@ services:
     command: >
       sh -c "
         npx prisma migrate reset --force &&
-        npm run start:dev
+        command: sh -c "ls -lah /app/zeroKnowledgeArtifacts && npm run start:dev"
       "
 
   nestjs-app-2:
@@ -99,7 +99,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-      - ${ZK_ARTIFACTS_DIR:-./zeroKnowledgeArtifacts}:/app/zeroKnowledgeArtifacts
+      - ./zeroKnowledgeArtifacts:/app/zeroKnowledgeArtifacts
     ports:
       - "3001:3000"
     env_file:
@@ -112,7 +112,7 @@ services:
     command: >
       sh -c "
         npx prisma migrate reset --force &&
-        npm run start:dev
+        command: sh -c "ls -lah /app/zeroKnowledgeArtifacts && npm run start:dev"
       "
 
   nats:
