@@ -71,9 +71,9 @@ jobs:
           unzip -q artifacts/tmp.zip -d artifacts/
           rm artifacts/tmp.zip
 
-      # - name: Install project dependencies
-      #   working-directory: bri-3
-      #   run: npm ci
+      - name: Install project dependencies
+        working-directory: bri-3
+        run: npm ci
 
       # - name: Run build
       #   working-directory: bri-3
