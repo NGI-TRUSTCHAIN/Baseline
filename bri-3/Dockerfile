@@ -13,5 +13,5 @@ RUN chmod +x fetch-artifacts.sh
 
 EXPOSE 3000
 
-ENTRYPOINT ["fetch-artifacts.sh"]
+ENTRYPOINT ["./fetch-artifacts.sh"]
 CMD ["npm", "run", "start:dev"]
