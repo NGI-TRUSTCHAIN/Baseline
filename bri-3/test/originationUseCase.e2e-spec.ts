@@ -64,7 +64,8 @@ let createdTransaction1Id: string;
 let createdTransaction2Id: string;
 let createdTransaction3Id: string;
 let createdTransaction4Id: string;
-let contract: ethers.Contract;
+let contract1: ethers.Contract;
+let contract2: ethers.Contract;
 
 describe('Invoice origination use-case end-to-end test', () => {
   beforeAll(async () => {
@@ -103,7 +104,12 @@ describe('Invoice origination use-case end-to-end test', () => {
     bpiService1 = new BpiService(new ApiClient(server, accessToken1));
     bpiService2 = new BpiService(new ApiClient(server2, accessToken2));
 
-    contract = getContractFromLocalNode();
+    contract1 = getContractFromLocalNode(
+      process.env.LOCALHOST_RPC_URL as string,
+    );
+    contract2 = getContractFromLocalNode(
+      process.env.LOCALHOST_RPC_URL2 as string,
+    );
   });
 
   describe('Serbia BPI service', () => {
@@ -360,7 +366,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
       //Verify Content Addressable Hash
-      const contentAddressableHash = await contract.getAnchorHash(
+      const contentAddressableHash = await contract1.getAnchorHash(
         resultWorkstepInstanceId,
       );
 
@@ -451,7 +457,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
       //Verify Content Addressable Hash
-      const contentAddressableHash = await contract.getAnchorHash(
+      const contentAddressableHash = await contract1.getAnchorHash(
         resultWorkstepInstanceId,
       );
 
@@ -535,7 +541,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
       //Verify Content Addressable Hash
-      const contentAddressableHash = await contract.getAnchorHash(
+      const contentAddressableHash = await contract1.getAnchorHash(
         resultWorkstepInstanceId,
       );
 
@@ -628,8 +634,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
       //Verify Content Addressable Hash
-      const contract = getContractFromLocalNode();
-      const contentAddressableHash = await contract.getAnchorHash(
+      const contentAddressableHash = await contract1.getAnchorHash(
         resultWorkstepInstanceId,
       );
 
@@ -863,7 +868,7 @@ describe('Invoice origination use-case end-to-end test', () => {
       const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
       //Verify Content Addressable Hash
-      const contentAddressableHash = await contract.getAnchorHash(
+      const contentAddressableHash = await contract2.getAnchorHash(
         resultWorkstepInstanceId,
       );
 
@@ -918,8 +923,8 @@ async function waitForTreeUpdate(
   throw new Error('State tree was not updated after maximum retries');
 }
 
-function getContractFromLocalNode(): ethers.Contract {
-  const provider = new JsonRpcProvider(process.env.LOCALHOST_RPC_URL);
+function getContractFromLocalNode(rpcUrl: string): ethers.Contract {
+  const provider = new JsonRpcProvider(rpcUrl);
   const contractAddress = `${process.env.LOCALHOST_CCSM_CONTRACT_ADDRESS}`;
 
   const contractABI = [

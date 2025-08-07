@@ -22,7 +22,7 @@ log_message "Starting Docker containers"
 make up
 
 log_message "Waiting for services to be ready..."
-sleep 10
+sleep 30
 
 log_message "Running E2E tests"
 run_command "npm run test:e2e:origination"
