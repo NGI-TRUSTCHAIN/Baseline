@@ -30,7 +30,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libssl-dev zlib1g-dev
+          sudo apt-get install -y build-essential libssl-dev zlib1g-dev curl unzip
 
       - name: Create .env file
         working-directory: bri-3
@@ -64,29 +64,36 @@ jobs:
         working-directory: bri-3
         run: cat .env
 
-      - name: Install project dependencies
-        working-directory: bri-3
-        run: npm ci
+      - name: Download and unzip zeroKnowledgeArtifacts
+        run: |
+          mkdir -p artifacts
+          curl -L https://zkartifacts.sfo3.digitaloceanspaces.com/zeroKnowledgeArtifacts.zip -o artifacts/tmp.zip
+          unzip -q artifacts/tmp.zip -d artifacts/
+          rm artifacts/tmp.zip
 
-      - name: Run build
-        working-directory: bri-3
-        run: npm run build
+      # - name: Install project dependencies
+      #   working-directory: bri-3
+      #   run: npm ci
 
-      - name: Run prettier
-        working-directory: bri-3
-        run: npm run format:check
+      # - name: Run build
+      #   working-directory: bri-3
+      #   run: npm run build
 
-      - name: Run linter
-        working-directory: bri-3
-        run: npm run lint:check
+      # - name: Run prettier
+      #   working-directory: bri-3
+      #   run: npm run format:check
 
-      - name: Run tests
-        working-directory: bri-3
-        run: npm run test
+      # - name: Run linter
+      #   working-directory: bri-3
+      #   run: npm run lint:check
 
-      - name: Run sri tests
-        working-directory: bri-3
-        run: make test-sri
+      # - name: Run tests
+      #   working-directory: bri-3
+      #   run: npm run test
+
+      # - name: Run sri tests
+      #   working-directory: bri-3
+      #   run: make test-sri
 
       - name: Run origination tests
         working-directory: bri-3

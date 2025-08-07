@@ -34,3 +34,5 @@ jest-coverage/
 
 # Env files you don't want in the image (unless you copy them explicitly)
 .env*
+
+zeroKnowledgeArtifacts/
