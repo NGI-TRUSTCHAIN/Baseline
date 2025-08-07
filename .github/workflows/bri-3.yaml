@@ -99,6 +99,10 @@ jobs:
         working-directory: bri-3
         run: make test-origination
 
+      - name: Dump docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2
+
       - name: Cleanup Docker containers
         if: always()
         working-directory: bri-3
