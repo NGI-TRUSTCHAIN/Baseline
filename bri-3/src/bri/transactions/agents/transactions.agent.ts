@@ -274,6 +274,9 @@ export class TransactionAgent {
         workgroup.name,
         workstep.name,
       );
+
+      console.log("merkelized payload done 2")
+
   
       txResult.witness = await this.circuitService.createWitness(
         await this.prepareCircuitInputs(
@@ -289,12 +292,16 @@ export class TransactionAgent {
         circuitWitnessFilePath,
       );
   
+      console.log("merkelized payload done 3")
+
       txResult.verifiedOnChain = await this.ccsmService.verifyProof(
         workstep.workstepConfig.executionParams.verifierContractAddress,
         verifierContractAbiFilePath,
         txResult.witness,
       );
   
+      console.log("merkelized payload done 4")
+
       txResult.hash = this.constructTxHash(
         txResult.merkelizedPayload,
         txResult.witness,
