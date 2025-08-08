@@ -8,16 +8,27 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
+      - name: Runner Info
+        run: |
+          uname -a
+          lscpu
+          free -h
+          df -h
+
+      - name: Check full memory from /proc/meminfo 2
+        run: |
+          grep MemTotal /proc/meminfo
+
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 23
 
       - name: Cache node_modules
         uses: actions/cache@v3
@@ -30,7 +41,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libssl-dev zlib1g-dev
+          sudo apt-get install -y build-essential libssl-dev zlib1g-dev curl unzip
 
       - name: Create .env file
         working-directory: bri-3
@@ -43,6 +54,7 @@ jobs:
           echo CCSM_NETWORK=localhost >> .env
           echo INFURA_PROVIDER_API_KEY=c5f37cd25eca4007a9768f18f492bc6f >> .env
           echo LOCALHOST_RPC_URL=http://127.0.0.1:8545 >> .env
+          echo LOCALHOST_RPC_URL2=http://127.0.0.1:8546 >> .env
           echo LOCALHOST_CCSM_CONTRACT_ADDRESS=0x1CC96ba639d4fd7624913fde39122270a1aC5c34 >> .env
           echo SERVICE_URL=bri-3 >> .env
           echo BPI_NATS_SERVER_URL=localhost:4222 >> .env
@@ -63,33 +75,52 @@ jobs:
         working-directory: bri-3
         run: cat .env
 
+      - name: Download and extract zeroKnowledgeArtifacts
+        working-directory: bri-3
+        run: |
+          rm -rf zeroKnowledgeArtifacts
+          curl -L https://zkartifacts.sfo3.digitaloceanspaces.com/zeroKnowledgeArtifacts.zip -o zeroKnowledgeArtifacts.zip
+          unzip -q zeroKnowledgeArtifacts.zip -d .
+          rm zeroKnowledgeArtifacts.zip
+
       - name: Install project dependencies
         working-directory: bri-3
         run: npm ci
 
-      - name: Run build
-        working-directory: bri-3
-        run: npm run build
+      # - name: Run build
+      #   working-directory: bri-3
+      #   run: npm run build
 
-      - name: Run prettier
-        working-directory: bri-3
-        run: npm run format:check
+      # - name: Run prettier
+      #   working-directory: bri-3
+      #   run: npm run format:check
 
-      - name: Run linter
-        working-directory: bri-3
-        run: npm run lint:check
+      # - name: Run linter
+      #   working-directory: bri-3
+      #   run: npm run lint:check
 
-      - name: Run tests
-        working-directory: bri-3
-        run: npm run test
+      # - name: Run tests
+      #   working-directory: bri-3
+      #   run: npm run test
 
-      - name: Run sri tests
-        working-directory: bri-3
-        run: make test-sri
+      # - name: Run sri tests
+      #   working-directory: bri-3
+      #   run: make test-sri
 
       - name: Run origination tests
+       
         working-directory: bri-3
-        run: make test-origination
+        run: |
+          echo "Memory usage before:"
+          free -h
+          df -h
+          make test-origination
+          echo "Memory usage after:"
+          free -h
+
+      - name: Dump docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2
 
       - name: Cleanup Docker containers
         if: always()

@@ -254,49 +254,67 @@ export class TransactionAgent {
         );
     }
 
-    txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
-      parsedPayload,
-      `${process.env.MERKLE_TREE_HASH_ALGH}`,
-    );
+    console.log("start processing")
+    try {
+      txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
+        parsedPayload,
+        `${process.env.MERKLE_TREE_HASH_ALGH}`,
+      );
+  
+      console.log("merkelized payload done")
+  
+      const {
+        circuitProvingKeyPath,
+        circuitVerificatioKeyPath,
+        circuitPath,
+        circuitWitnessCalculatorPath,
+        circuitWitnessFilePath,
+        verifierContractAbiFilePath,
+      } = this.constructCircuitPathsFromWorkgroupAndWorkstepName(
+        workgroup.name,
+        workstep.name,
+      );
 
-    const {
-      circuitProvingKeyPath,
-      circuitVerificatioKeyPath,
-      circuitPath,
-      circuitWitnessCalculatorPath,
-      circuitWitnessFilePath,
-      verifierContractAbiFilePath,
-    } = this.constructCircuitPathsFromWorkgroupAndWorkstepName(
-      workgroup.name,
-      workstep.name,
-    );
+      console.log("merkelized payload done 2")
 
-    txResult.witness = await this.circuitService.createWitness(
-      await this.prepareCircuitInputs(
-        tx,
-        payload,
-        workstep.circuitInputsTranslationSchema,
-        payloadFormatType,
-      ),
-      circuitPath,
-      circuitProvingKeyPath,
-      circuitVerificatioKeyPath,
-      circuitWitnessCalculatorPath,
-      circuitWitnessFilePath,
-    );
+  
+      txResult.witness = await this.circuitService.createWitness(
+        await this.prepareCircuitInputs(
+          tx,
+          payload,
+          workstep.circuitInputsTranslationSchema,
+          payloadFormatType,
+        ),
+        circuitPath,
+        circuitProvingKeyPath,
+        circuitVerificatioKeyPath,
+        circuitWitnessCalculatorPath,
+        circuitWitnessFilePath,
+      );
+  
+      console.log("merkelized payload done 3")
 
-    txResult.verifiedOnChain = await this.ccsmService.verifyProof(
-      workstep.workstepConfig.executionParams.verifierContractAddress,
-      verifierContractAbiFilePath,
-      txResult.witness,
-    );
+      txResult.verifiedOnChain = await this.ccsmService.verifyProof(
+        workstep.workstepConfig.executionParams.verifierContractAddress,
+        verifierContractAbiFilePath,
+        txResult.witness,
+      );
+  
+      console.log("merkelized payload done 4")
 
-    txResult.hash = this.constructTxHash(
-      txResult.merkelizedPayload,
-      txResult.witness,
-    );
-
-    return txResult;
+      txResult.hash = this.constructTxHash(
+        txResult.merkelizedPayload,
+        txResult.witness,
+      );
+  
+      console.log('returning result')
+      return txResult;
+    }
+    catch (e) {
+      console.log("error while processing", e)
+      throw e
+    }
+    
   }
 
   public async verifyTransactionResult(

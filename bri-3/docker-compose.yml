@@ -10,6 +10,15 @@ services:
     ports:
       - "8545:8545"
 
+  hardhat-2:
+    build:
+      context: ./ccsm
+      dockerfile: Dockerfile.hardhat
+    container_name: hardhat-2
+    hostname: hardhat-2
+    ports:
+      - "8546:8545"
+
   postgres:
     image: postgres:15
     container_name: postgres
@@ -59,6 +68,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - ./zeroKnowledgeArtifacts:/app/zeroKnowledgeArtifacts
     ports:
       - "3000:3000"
     env_file:
@@ -70,6 +80,8 @@ services:
       LOCALHOST_RPC_URL: "http://hardhat:8545"
     command: >
       sh -c "
+        echo '[DEBUG] Contents of /app/zeroKnowledgeArtifacts:' &&
+        ls -lah /app/zeroKnowledgeArtifacts &&
         npx prisma migrate reset --force &&
         npm run start:dev
       "
@@ -82,13 +94,14 @@ services:
         condition: service_healthy
       nats:
         condition: service_started
-      hardhat:
+      hardhat-2:
         condition: service_started
       efaktura-mock:
         condition: service_started
     volumes:
       - .:/app
       - /app/node_modules
+      - ./zeroKnowledgeArtifacts:/app/zeroKnowledgeArtifacts
     ports:
       - "3001:3000"
     env_file:
@@ -97,12 +110,13 @@ services:
       DATABASE_URL: "postgresql://postgres:example@postgres-2:5432/postgres"
       BPI_NATS_SERVER_URL: "nats://nats:4222"
       EFAKTURA_URL: "http://efaktura-mock:3005/api/publicApi/sales-invoice/xml"
-      LOCALHOST_RPC_URL: "http://hardhat:8545"
+      LOCALHOST_RPC_URL: "http://hardhat-2:8545"
     command: >
       sh -c "
         npx prisma migrate reset --force &&
         npm run start:dev
       "
+
   nats:
     image: nats:alpine
     container_name: nats

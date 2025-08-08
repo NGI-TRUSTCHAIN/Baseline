@@ -27,6 +27,7 @@ export class DidJwtAuthGuard implements CanActivate {
     const request = this.getRequest<any>(context);
     try {
       const token = this.getToken(request);
+      console.log("TOKEN", token)
       const verified = await this.verifyJwt(token);
       await this.attachBpiSubjectToCurrentRequestContext(verified, context);
       return verified.verified;

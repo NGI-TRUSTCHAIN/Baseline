@@ -64,7 +64,8 @@ let createdTransaction1Id: string;
 let createdTransaction2Id: string;
 let createdTransaction3Id: string;
 let createdTransaction4Id: string;
-let contract: ethers.Contract;
+let contract1: ethers.Contract;
+let contract2: ethers.Contract;
 
 describe('Invoice origination use-case end-to-end test', () => {
   beforeAll(async () => {
@@ -103,7 +104,12 @@ describe('Invoice origination use-case end-to-end test', () => {
     bpiService1 = new BpiService(new ApiClient(server, accessToken1));
     bpiService2 = new BpiService(new ApiClient(server2, accessToken2));
 
-    contract = getContractFromLocalNode();
+    contract1 = getContractFromLocalNode(
+      process.env.LOCALHOST_RPC_URL as string,
+    );
+    contract2 = getContractFromLocalNode(
+      process.env.LOCALHOST_RPC_URL2 as string,
+    );
   });
 
   describe('Serbia BPI service', () => {
@@ -360,10 +366,11 @@ describe('Invoice origination use-case end-to-end test', () => {
       const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
       //Verify Content Addressable Hash
-      const contentAddressableHash = await contract.getAnchorHash(
+      const contentAddressableHash = await contract1.getAnchorHash(
         resultWorkstepInstanceId,
       );
 
+      console.log("CAH", contentAddressableHash)
       expect(contentAddressableHash).toBeTruthy();
       expect(contentAddressableHash.length).toBeGreaterThan(0);
       expect(stateBpiMerkleTree1.getLeaf(0)).toEqual(contentAddressableHash);
@@ -451,10 +458,11 @@ describe('Invoice origination use-case end-to-end test', () => {
       const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
       //Verify Content Addressable Hash
-      const contentAddressableHash = await contract.getAnchorHash(
+      const contentAddressableHash = await contract1.getAnchorHash(
         resultWorkstepInstanceId,
       );
 
+      console.log("CAH", contentAddressableHash)
       expect(contentAddressableHash).toBeTruthy();
       expect(contentAddressableHash.length).toBeGreaterThan(0);
       expect(stateBpiMerkleTree2.getLeaf(1)).toEqual(contentAddressableHash);
@@ -535,10 +543,11 @@ describe('Invoice origination use-case end-to-end test', () => {
       const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
       //Verify Content Addressable Hash
-      const contentAddressableHash = await contract.getAnchorHash(
+      const contentAddressableHash = await contract1.getAnchorHash(
         resultWorkstepInstanceId,
       );
 
+      console.log("CAH", contentAddressableHash)
       expect(contentAddressableHash).toBeTruthy();
       expect(contentAddressableHash.length).toBeGreaterThan(0);
       expect(stateBpiMerkleTree3.getLeaf(2)).toEqual(contentAddressableHash);
@@ -628,11 +637,11 @@ describe('Invoice origination use-case end-to-end test', () => {
       const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
       //Verify Content Addressable Hash
-      const contract = getContractFromLocalNode();
-      const contentAddressableHash = await contract.getAnchorHash(
+      const contentAddressableHash = await contract1.getAnchorHash(
         resultWorkstepInstanceId,
       );
 
+      console.log("CAH", contentAddressableHash)
       expect(contentAddressableHash).toBeTruthy();
       expect(contentAddressableHash.length).toBeGreaterThan(0);
       expect(stateBpiMerkleTree4.getLeaf(3)).toEqual(contentAddressableHash);
@@ -863,10 +872,11 @@ describe('Invoice origination use-case end-to-end test', () => {
       const resultWorkstepInstanceId = resultTransaction.workstepInstanceId;
 
       //Verify Content Addressable Hash
-      const contentAddressableHash = await contract.getAnchorHash(
+      const contentAddressableHash = await contract2.getAnchorHash(
         resultWorkstepInstanceId,
       );
 
+      console.log("CAH", contentAddressableHash)
       expect(contentAddressableHash).toBeTruthy();
       expect(contentAddressableHash.length).toBeGreaterThan(0);
       expect(stateBpiMerkleTree1.getLeaf(0)).toEqual(contentAddressableHash);
@@ -897,8 +907,10 @@ async function waitForTreeUpdate(
   bpiAccountId,
   workstep,
   maxTries = 10,
-  delay = 20000,
+  delay = 80000,
 ) {
+  await new Promise((r) => setTimeout(r, delay));
+
   for (let i = 0; i < maxTries; i++) {
     const result = await bpiServiceName.fetchBpiAccount(bpiAccountId);
     const tree = JSON.parse(result?.stateTree?.tree);
@@ -918,8 +930,8 @@ async function waitForTreeUpdate(
   throw new Error('State tree was not updated after maximum retries');
 }
 
-function getContractFromLocalNode(): ethers.Contract {
-  const provider = new JsonRpcProvider(process.env.LOCALHOST_RPC_URL);
+function getContractFromLocalNode(rpcUrl: string): ethers.Contract {
+  const provider = new JsonRpcProvider(rpcUrl);
   const contractAddress = `${process.env.LOCALHOST_CCSM_CONTRACT_ADDRESS}`;
 
   const contractABI = [
