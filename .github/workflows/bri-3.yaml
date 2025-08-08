@@ -11,6 +11,17 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+      - name: Runner Info
+        run: |
+          uname -a
+          lscpu
+          free -h
+          df -h
+
+      - name: Check full memory from /proc/meminfo
+        run: |
+          grep MemTotal /proc/meminfo
+
       - name: Checkout
         uses: actions/checkout@v3
 
