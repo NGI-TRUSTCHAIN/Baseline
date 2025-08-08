@@ -370,6 +370,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         resultWorkstepInstanceId,
       );
 
+      console.log("CAH", contentAddressableHash)
       expect(contentAddressableHash).toBeTruthy();
       expect(contentAddressableHash.length).toBeGreaterThan(0);
       expect(stateBpiMerkleTree1.getLeaf(0)).toEqual(contentAddressableHash);
@@ -461,6 +462,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         resultWorkstepInstanceId,
       );
 
+      console.log("CAH", contentAddressableHash)
       expect(contentAddressableHash).toBeTruthy();
       expect(contentAddressableHash.length).toBeGreaterThan(0);
       expect(stateBpiMerkleTree2.getLeaf(1)).toEqual(contentAddressableHash);
@@ -545,6 +547,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         resultWorkstepInstanceId,
       );
 
+      console.log("CAH", contentAddressableHash)
       expect(contentAddressableHash).toBeTruthy();
       expect(contentAddressableHash.length).toBeGreaterThan(0);
       expect(stateBpiMerkleTree3.getLeaf(2)).toEqual(contentAddressableHash);
@@ -638,6 +641,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         resultWorkstepInstanceId,
       );
 
+      console.log("CAH", contentAddressableHash)
       expect(contentAddressableHash).toBeTruthy();
       expect(contentAddressableHash.length).toBeGreaterThan(0);
       expect(stateBpiMerkleTree4.getLeaf(3)).toEqual(contentAddressableHash);
@@ -872,6 +876,7 @@ describe('Invoice origination use-case end-to-end test', () => {
         resultWorkstepInstanceId,
       );
 
+      console.log("CAH", contentAddressableHash)
       expect(contentAddressableHash).toBeTruthy();
       expect(contentAddressableHash.length).toBeGreaterThan(0);
       expect(stateBpiMerkleTree1.getLeaf(0)).toEqual(contentAddressableHash);
