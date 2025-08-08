@@ -96,6 +96,9 @@ jobs:
       #   working-directory: bri-3
       #   run: make test-sri
 
+      - name: Collect Workflow Telemetry
+        uses: catchpoint/workflow-telemetry-action@v2
+
       - name: Run origination tests
         working-directory: bri-3
         run: make test-origination
