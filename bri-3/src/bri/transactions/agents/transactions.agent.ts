@@ -300,6 +300,7 @@ export class TransactionAgent {
         txResult.witness,
       );
   
+      console.log('returning result')
       return txResult;
     }
     catch (e) {
