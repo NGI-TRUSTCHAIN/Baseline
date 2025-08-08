@@ -18,7 +18,7 @@ jobs:
           free -h
           df -h
 
-      - name: Check full memory from /proc/meminfo
+      - name: Check full memory from /proc/meminfo 2
         run: |
           grep MemTotal /proc/meminfo
 
