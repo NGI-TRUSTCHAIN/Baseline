@@ -907,7 +907,7 @@ async function waitForTreeUpdate(
   bpiAccountId,
   workstep,
   maxTries = 10,
-  delay = 20000,
+  delay = 40000,
 ) {
   for (let i = 0; i < maxTries; i++) {
     const result = await bpiServiceName.fetchBpiAccount(bpiAccountId);
