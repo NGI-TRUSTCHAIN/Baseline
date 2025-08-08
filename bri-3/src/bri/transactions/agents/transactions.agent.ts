@@ -254,49 +254,59 @@ export class TransactionAgent {
         );
     }
 
-    txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
-      parsedPayload,
-      `${process.env.MERKLE_TREE_HASH_ALGH}`,
-    );
-
-    const {
-      circuitProvingKeyPath,
-      circuitVerificatioKeyPath,
-      circuitPath,
-      circuitWitnessCalculatorPath,
-      circuitWitnessFilePath,
-      verifierContractAbiFilePath,
-    } = this.constructCircuitPathsFromWorkgroupAndWorkstepName(
-      workgroup.name,
-      workstep.name,
-    );
-
-    txResult.witness = await this.circuitService.createWitness(
-      await this.prepareCircuitInputs(
-        tx,
-        payload,
-        workstep.circuitInputsTranslationSchema,
-        payloadFormatType,
-      ),
-      circuitPath,
-      circuitProvingKeyPath,
-      circuitVerificatioKeyPath,
-      circuitWitnessCalculatorPath,
-      circuitWitnessFilePath,
-    );
-
-    txResult.verifiedOnChain = await this.ccsmService.verifyProof(
-      workstep.workstepConfig.executionParams.verifierContractAddress,
-      verifierContractAbiFilePath,
-      txResult.witness,
-    );
-
-    txResult.hash = this.constructTxHash(
-      txResult.merkelizedPayload,
-      txResult.witness,
-    );
-
-    return txResult;
+    console.log("start processing")
+    try {
+      txResult.merkelizedPayload = this.merkleTreeService.merkelizePayload(
+        parsedPayload,
+        `${process.env.MERKLE_TREE_HASH_ALGH}`,
+      );
+  
+      console.log("merkelized payload done")
+  
+      const {
+        circuitProvingKeyPath,
+        circuitVerificatioKeyPath,
+        circuitPath,
+        circuitWitnessCalculatorPath,
+        circuitWitnessFilePath,
+        verifierContractAbiFilePath,
+      } = this.constructCircuitPathsFromWorkgroupAndWorkstepName(
+        workgroup.name,
+        workstep.name,
+      );
+  
+      txResult.witness = await this.circuitService.createWitness(
+        await this.prepareCircuitInputs(
+          tx,
+          payload,
+          workstep.circuitInputsTranslationSchema,
+          payloadFormatType,
+        ),
+        circuitPath,
+        circuitProvingKeyPath,
+        circuitVerificatioKeyPath,
+        circuitWitnessCalculatorPath,
+        circuitWitnessFilePath,
+      );
+  
+      txResult.verifiedOnChain = await this.ccsmService.verifyProof(
+        workstep.workstepConfig.executionParams.verifierContractAddress,
+        verifierContractAbiFilePath,
+        txResult.witness,
+      );
+  
+      txResult.hash = this.constructTxHash(
+        txResult.merkelizedPayload,
+        txResult.witness,
+      );
+  
+      return txResult;
+    }
+    catch (e) {
+      console.log("error while processing", e)
+      throw e
+    }
+    
   }
 
   public async verifyTransactionResult(
