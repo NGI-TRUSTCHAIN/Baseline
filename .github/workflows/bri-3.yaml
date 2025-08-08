@@ -8,7 +8,7 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-22.04
+    runs-on: self-hosted
 
     steps:
       - name: Runner Info
