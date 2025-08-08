@@ -96,12 +96,16 @@ jobs:
       #   working-directory: bri-3
       #   run: make test-sri
 
-      - name: Collect Workflow Telemetry
-        uses: catchpoint/workflow-telemetry-action@v2
-
       - name: Run origination tests
+       
         working-directory: bri-3
-        run: make test-origination
+        run: |
+          echo "Memory usage before:"
+          free -h
+          df -h
+          make test-origination
+          echo "Memory usage after:"
+          free -h
 
       - name: Dump docker logs on failure
         if: failure()
