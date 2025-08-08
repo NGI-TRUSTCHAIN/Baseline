@@ -23,6 +23,7 @@ export class BpiService {
     });
     const loginResponse = JSON.parse(loginResponseText);
 
+    console.log("AT", loginResponse.access_token)
     return loginResponse.access_token;
   }
 
